@@ -22,14 +22,18 @@ async function start(page: Page, fighter: 'Ali' | 'Elton' = 'Ali') {
 test('desktop controls, combat, pause and clearing held input on exit', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
+  await page.addInitScript(() => { Math.random = () => .99; });
   await page.clock.install();
   await start(page, 'Elton');
   const status = page.locator('.match-status');
   await page.clock.runFor(2100);
   await expect(status).toHaveAttribute('data-phase', 'active');
   await expect(status).toContainText('Elton health 100');
-  await page.keyboard.down('d'); await page.clock.runFor(600); await page.keyboard.up('d');
+  // Keep approaching during the combo: real AI knockback can otherwise leave a
+  // stationary player out of light-attack range, making this input check random.
+  await page.keyboard.down('d'); await page.clock.runFor(600);
   for (let i = 0; i < 20; i++) { await page.keyboard.press('j'); await page.clock.runFor(130); }
+  await page.keyboard.up('d');
   expect(Number(await status.getAttribute('data-cpu-health'))).toBeLessThan(100);
   await page.keyboard.press('p');
   const timer = await status.getAttribute('data-timer');

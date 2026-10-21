@@ -14,10 +14,12 @@ test('atlas clips loop, respect frame durations, and anchor feet by default', ()
   assert.equal(sampleFrame(atlas, 'idle', .35), atlas.frames.a);
   assert.equal(atlas.frames.a.pivotX, 50); assert.equal(atlas.frames.a.pivotY, 200);
 });
-test('non-looping KO holds its last frame and absent animations fall back to idle', () => {
+test('non-looping KO holds its last frame and absent animations request geometric fallback', () => {
   const atlas = parseAtlas(fixture());
   assert.equal(sampleFrame(atlas, 'ko', 100), atlas.frames.b);
-  assert.equal(sampleFrame(atlas, 'heavy', .05), atlas.frames.a);
+  for (const pose of ['walk', 'jump', 'fall', 'guard', 'light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'victory'] as const) {
+    assert.equal(sampleFrame(atlas, pose, .05), null, pose);
+  }
   assert.equal(sampleFrame(atlas, 'idle', -10), atlas.frames.a);
 });
 test('malformed metadata and out-of-bounds images are rejected', () => {
@@ -30,4 +32,20 @@ test('malformed metadata and out-of-bounds images are rejected', () => {
   assert.doesNotThrow(() => validateAtlasImage(atlas, 200, 200));
   assert.throws(() => validateAtlasImage(atlas, 199, 200), /exceeds/);
   assert.throws(() => validateAtlasImage(atlas, 0, 0), /empty/);
+  for (const invalid of [NaN, Infinity, -1, 1.5]) assert.throws(() => validateAtlasImage(atlas, invalid, 200));
+});
+test('HD sampling and source direction have compatible defaults and explicit overrides', () => {
+  const atlas = parseAtlas(fixture());
+  assert.equal(atlas.sampling, 'smooth'); assert.equal(atlas.facing, 'right');
+  const alternate = parseAtlas({ ...fixture(), sampling: 'pixelated', facing: 'left' });
+  assert.equal(alternate.sampling, 'pixelated'); assert.equal(alternate.facing, 'left');
+  assert.throws(() => parseAtlas({ ...fixture(), sampling: 'unknown' }), /sampling/);
+  assert.throws(() => parseAtlas({ ...fixture(), facing: 'up' }), /facing/);
+});
+test('clip boundaries, non-finite clocks and independent foot pivots sample predictably', () => {
+  const atlas = parseAtlas(fixture());
+  assert.equal(sampleFrame(atlas, 'idle', .1), atlas.frames.b);
+  assert.equal(sampleFrame(atlas, 'idle', NaN), atlas.frames.a);
+  assert.equal(sampleFrame(atlas, 'idle', Infinity), atlas.frames.a);
+  assert.equal(sampleFrame(atlas, 'idle', .15)?.pivotY, 190);
 });
