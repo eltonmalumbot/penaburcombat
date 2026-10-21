@@ -14,8 +14,11 @@ Validation:
 npm run check                       # combat/animation tests, all TS checks, production build
 npx playwright install chromium     # once, unless Chromium is already installed
 npm run test:e2e                    # production browser gameplay tests
+npm run test:atlas                  # dev-module sprite tests, synthetic artwork only
 ```
 
 For a system Chromium installation, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium`. Browser tests start and stop their own preview server on port 4173. For an existing deployment, use `E2E_BASE_URL=https://your-deployment.example EXPECTED_DEPLOY_SHA=<full-sha> npm run test:e2e`; this tests the public site rather than starting a local server. `/build-info.json` identifies the commit used for the production build.
 
 Implementation and regression audit: [docs/AUDIT.md](docs/AUDIT.md). Original/licensed sprite atlas integration: [docs/SPRITE_ATLASES.md](docs/SPRITE_ATLASES.md). No external fighter art has been added.
+
+Phase 2 partial-atlas audit and remaining artwork issues: [docs/PHASE2_REVIEW.md](docs/PHASE2_REVIEW.md). Missing sprite poses retain the original geometric animation. Review-only artwork is kept outside the repository and is not part of the build or automated test fixtures.

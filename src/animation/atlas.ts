@@ -2,7 +2,10 @@ import type { Pose } from '../game/types.ts';
 
 export interface AtlasFrame { x: number; y: number; w: number; h: number; pivotX: number; pivotY: number }
 export interface Clip { frames: { frame: string; duration: number }[]; loop: boolean }
-export interface AtlasMetadata { version: 1; image: string; scale: number; frames: Record<string, AtlasFrame>; clips: Record<string, Clip> }
+export interface AtlasMetadata {
+  version: 1; image: string; scale: number; frames: Record<string, AtlasFrame>; clips: Record<string, Clip>;
+  sampling: 'smooth' | 'pixelated'; facing: 'right' | 'left';
+}
 export interface SpriteAtlas { metadata: AtlasMetadata; image: HTMLImageElement }
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
@@ -33,11 +36,16 @@ export function parseAtlas(value: unknown): AtlasMetadata {
   if (!Object.hasOwn(clips, 'idle')) throw new Error('An idle clip is required');
   const scale = value.scale ?? 1;
   if (!finite(scale) || scale <= 0 || scale > 10) throw new Error('Invalid sprite scale');
-  return { version: 1, image: value.image, scale, frames, clips };
+  const sampling = value.sampling ?? 'smooth', facing = value.facing ?? 'right';
+  if (sampling !== 'smooth' && sampling !== 'pixelated') throw new Error('Invalid sprite sampling');
+  if (facing !== 'right' && facing !== 'left') throw new Error('Invalid sprite facing');
+  return { version: 1, image: value.image, scale, sampling, facing, frames, clips };
 }
 
-export function sampleFrame(metadata: AtlasMetadata, pose: Pose, elapsed: number): AtlasFrame {
-  const clip = metadata.clips[pose] ?? metadata.clips.idle;
+/** Missing poses must retain their geometric animation, never masquerade as idle. */
+export function sampleFrame(metadata: AtlasMetadata, pose: Pose, elapsed: number): AtlasFrame | null {
+  const clip = metadata.clips[pose];
+  if (!clip) return null;
   const total = clip.frames.reduce((sum, frame) => sum + frame.duration, 0);
   let time = Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0;
   time = clip.loop ? time % total : Math.min(time, total);
@@ -49,7 +57,7 @@ export function sampleFrame(metadata: AtlasMetadata, pose: Pose, elapsed: number
 }
 
 export function validateAtlasImage(metadata: AtlasMetadata, width: number, height: number): void {
-  if (!(width > 0 && height > 0)) throw new Error('Atlas image is empty');
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) throw new Error('Atlas image is empty or has invalid dimensions');
   for (const [id, frame] of Object.entries(metadata.frames)) {
     if (frame.x + frame.w > width || frame.y + frame.h > height) throw new Error(`Frame exceeds atlas image: ${id}`);
   }
@@ -67,9 +75,14 @@ export function loadAtlas(url: string): Promise<SpriteAtlas> {
       const metadata = parseAtlas(await response.json());
       const imageUrl = new URL(metadata.image, absolute);
       if (imageUrl.origin !== window.location.origin) throw new Error('Use same-origin atlas images');
+      // Revalidate bytes on a failed-atlas retry instead of reusing the document's
+      // previously decoded Image (which may still have invalid dimensions).
+      const imageResponse = await fetch(imageUrl, { cache: 'no-cache' });
+      if (!imageResponse.ok) throw new Error(`Atlas image request failed: ${imageResponse.status}`);
       const image = new Image();
-      image.src = imageUrl.href;
-      await image.decode();
+      const objectUrl = URL.createObjectURL(await imageResponse.blob());
+      try { image.src = objectUrl; await image.decode(); }
+      finally { URL.revokeObjectURL(objectUrl); }
       validateAtlasImage(metadata, image.naturalWidth, image.naturalHeight);
       return { metadata, image };
     })();

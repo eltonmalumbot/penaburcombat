@@ -15,9 +15,12 @@ export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1
   ctx.save(); ctx.translate(f.x, f.y);
   ctx.fillStyle = '#07132977'; ctx.beginPath(); ctx.ellipse(0, 0, 54 * scale, 10 * scale, 0, 0, Math.PI * 2); ctx.fill();
   ctx.scale(f.face * scale, scale);
-  if (atlas) {
-    const frame = sampleFrame(atlas.metadata, f.pose, t), size = atlas.metadata.scale;
-    ctx.imageSmoothingEnabled = false;
+  const frame = atlas ? sampleFrame(atlas.metadata, f.pose, t) : null;
+  if (atlas && frame) {
+    const size = atlas.metadata.scale;
+    if (atlas.metadata.facing === 'left') ctx.scale(-1, 1);
+    ctx.imageSmoothingEnabled = atlas.metadata.sampling === 'smooth';
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(atlas.image, frame.x, frame.y, frame.w, frame.h, -frame.pivotX * size, -frame.pivotY * size, frame.w * size, frame.h * size);
     ctx.restore(); return;
   }
@@ -86,6 +89,7 @@ export class GameRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly stage = document.createElement('canvas');
   private readonly atlases = new Map<FighterId, SpriteAtlas>();
+  private preparation = 0;
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private sparks: Spark[] = [];
   private shake = 0;
@@ -100,13 +104,21 @@ export class GameRenderer {
   }
 
   async prepare(fighters: readonly FighterId[]): Promise<void> {
-    await Promise.all(fighters.map(async id => {
+    const preparation = ++this.preparation;
+    const ready = await Promise.all(fighters.map(async id => {
       const url = character(id).atlasUrl;
       if (url) {
-        try { this.atlases.set(id, await loadAtlas(url)); }
+        try { return [id, await loadAtlas(url)] as const; }
         catch (error) { console.warn(`Using original Canvas art for ${id}:`, error); }
       }
+      return [id, null] as const;
     }));
+    // Replace the pair together: no half-loaded matchup, stale atlas or late request overwrite.
+    if (preparation !== this.preparation) return;
+    for (const [id, atlas] of ready) {
+      if (atlas) this.atlases.set(id, atlas);
+      else this.atlases.delete(id);
+    }
   }
 
   resize(): void {
