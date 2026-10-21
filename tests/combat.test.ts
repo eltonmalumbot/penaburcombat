@@ -52,6 +52,11 @@ test('jumping over a fighter changes facing after landing', () => {
   assert.ok(e.state.player.x > e.state.cpu.x);
   assert.equal(e.state.player.face, -1); assert.equal(e.state.cpu.face, 1);
 });
+test('a jump at its apex evades a grounded heavy at the height of the drawn fist', () => {
+  const e = active(); e.update(FIXED_STEP, input({ jump: true })); frames(e, 9);
+  e.update(FIXED_STEP, input(), input({ attack: 'heavy' })); frames(e, 20);
+  assert.equal(e.state.player.hp, 100);
+});
 test('a strike deals damage once during its active frames and not during startup', () => {
   const e = active(); e.update(FIXED_STEP, input({ attack: 'heavy' }));
   frames(e, 6); assert.equal(e.state.cpu.hp, 100);
@@ -81,7 +86,7 @@ test('three light presses chain once each, then return to the first combo step',
   frames(e, 6); e.update(FIXED_STEP, input({ attack: 'light' }));
   frames(e, 18); assert.equal(e.state.player.attack?.combo, 2);
   e.update(FIXED_STEP, input({ attack: 'light' }));
-  frames(e, 50); assert.equal(e.state.cpu.hp, 72); assert.equal(e.state.player.attack, null);
+  frames(e, 50); assert.equal(e.state.cpu.hp, 72); assert.equal(Boolean(e.state.player.attack), false);
   e.update(FIXED_STEP, input({ attack: 'light' })); assert.equal(e.state.player.attack?.combo, 1);
 });
 test('hitstun cancels the victim attack and queued combo', () => {

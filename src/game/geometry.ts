@@ -11,8 +11,10 @@ export function hitbox(fighter: Fighter): Rect | null {
   if (!fighter.attack) return null;
   const data = moveData(fighter.attack);
   if (fighter.attack.elapsed + 1e-8 < data.startup || fighter.attack.elapsed >= data.startup + data.active) return null;
-  return { x: fighter.face === 1 ? fighter.x + 24 : fighter.x - data.reach, y: fighter.y - 215,
-    w: data.reach - 24, h: fighter.attack.move === 'ultimate' ? 190 : 145 };
+  const energy = fighter.attack.move === 'ultimate' || fighter.attack.move === 'skill';
+  return { x: fighter.face === 1 ? fighter.x + 24 : fighter.x - data.reach,
+    y: fighter.y - (energy ? 215 : 180), w: data.reach - 24,
+    h: fighter.attack.move === 'ultimate' ? 190 : energy ? 145 : 110 };
 }
 
 /** Split penetration, then give wall-constrained space to the other fighter. */

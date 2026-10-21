@@ -73,7 +73,7 @@ export class CombatEngine {
     if (!f.comboTime && !f.attack) f.combo = 0;
     const enemy = f === this.state.player ? this.state.cpu : this.state.player;
     if (!f.attack && f.stun === 0) f.face = f.x <= enemy.x ? 1 : -1;
-    f.guard = input.guard && grounded(f) && f.stun === 0 && !f.attack && f.dashTime === 0;
+    f.guard = input.guard && grounded(f) && (f.stun === 0 || f.guard) && !f.attack && f.dashTime === 0;
     if (f.stun === 0 && f.hp > 0) {
       if (input.attack) this.beginAttack(f, input.attack);
       if (!f.attack && !f.guard) {
