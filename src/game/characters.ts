@@ -1,13 +1,15 @@
 import type { Fighter, FighterDefinition, FighterId, Direction } from './types.ts';
 
 export const ROSTER: readonly FighterDefinition[] = [
-  { id: 'Ali', title: 'DATA STRATEGIST', available: true, color: '#42d6ee', body: '#315e94', speed: 310 },
+  { id: 'Ali', title: 'DATA STRATEGIST', available: true, color: '#42d6ee', body: '#315e94', speed: 310,
+    atlasUrl: '/assets/fighters/ali.json', ultimateName: 'HEIST PROTOCOL' },
   { id: 'Patrick', title: 'COMING SOON', available: false, color: '#7bb7f8', body: '#31517d', speed: 310 },
   { id: 'Niko', title: 'COMING SOON', available: false, color: '#67ccca', body: '#34536a', speed: 310 },
   { id: 'Marco', title: 'COMING SOON', available: false, color: '#a4cbff', body: '#4a5ed1', speed: 310 },
   { id: 'Lia', title: 'COMING SOON', available: false, color: '#ffce7d', body: '#4973af', speed: 310 },
   { id: 'Kris', title: 'COMING SOON', available: false, color: '#ffcb68', body: '#306397', speed: 310 },
-  { id: 'Elton', title: 'SHADOW DEVELOPER', available: true, color: '#aa8aff', body: '#222c59', speed: 310 },
+  { id: 'Elton', title: 'SHADOW DEVELOPER', available: true, color: '#ff5c73', body: '#172440', speed: 310,
+    atlasUrl: '/assets/fighters/elton.json', ultimateName: 'NIGHT DEPLOY' },
 ];
 export function character(id: FighterId): FighterDefinition {
   const definition = ROSTER.find(fighter => fighter.id === id);

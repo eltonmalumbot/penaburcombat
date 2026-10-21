@@ -1,24 +1,33 @@
-# Penabur Combat — Office Clash: 16.59
+# PENABUR Combat
 
-Independent, fictional, browser-based 2D fighting game prototype. This is not an official BPK PENABUR project. All fighter drawings are original stand-ins; no employees' photographs or likenesses are embedded.
+**16.59 — Fight for Friday!**
 
-The project uses TypeScript + HTML Canvas 2D + Vite. The playable MVP features Ali vs Elton with CPU, combo attacks, damage, ultimates, rounds, score, and seven roster slots. Work in progress.
+An independent, fictional browser fighting game built with TypeScript, HTML Canvas 2D and Vite. This is **not an official BPK PENABUR product** and uses no official organization logo. Repository and production domain remain `eltonmalumbot/penaburcombat` and https://penaburcombat.vercel.app.
 
-Use Node 24 (`.nvmrc`) and npm. Development: `npm ci && npm run dev`; production: `npm run build` (output `dist`). No backend or secret credentials are needed to play.
+Ali, the **Data Strategist**, faces Elton, the **Shadow Developer**, in a best-of-three CPU duel. Ali's ultimate is **HEIST PROTOCOL**; Elton's is **NIGHT DEPLOY**. The roster still contains Ali, Patrick, Niko, Marco, Lia, Kris and Elton. Only Ali and Elton are playable.
 
-Controls: **A/D** move, **W** jump, **S** guard, **J** three-hit combo (press repeatedly), **K** heavy, **L** skill (20 meter), **U** ultimate (65 meter), **Shift** dash, **P** pause, **Escape** fighter selection. Arrow keys/space are also supported. Touch controls appear on narrow screens. Hit or block to earn meter; the first fighter to win two rounds wins. Draws replay without awarding a point. Rematch resets all combat state.
+The project owner confirmed permission to publish the supplied Ali/Elton likeness artwork for this game. Their original PNG atlases are included unchanged, with curated idle/walk clips and foot-aligned metadata. Menus, selection cards and the arena use HD art. Missing jump/fall, guard, attacks, hurt, KO and victory clips keep the geometric combat animation. **This is partial HD coverage, not finished rigged animation.** See [the integration/visual report](docs/PHASE2_INTEGRATION.md) and [asset provenance](public/assets/fighters/README.md).
 
-Validation:
+## Development
+
+Use Node 24 (`.nvmrc`) and npm. No backend or secret credentials are required.
 
 ```sh
-npm run check                       # combat/animation tests, all TS checks, production build
-npx playwright install chromium     # once, unless Chromium is already installed
-npm run test:e2e                    # production browser gameplay tests
-npm run test:atlas                  # dev-module sprite tests, synthetic artwork only
+npm ci
+npm run dev
 ```
 
-For a system Chromium installation, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium`. Browser tests start and stop their own preview server on port 4173. For an existing deployment, use `E2E_BASE_URL=https://your-deployment.example EXPECTED_DEPLOY_SHA=<full-sha> npm run test:e2e`; this tests the public site rather than starting a local server. `/build-info.json` identifies the commit used for the production build.
+Production: `npm run build` (output `dist`). Controls: **A/D** move, **W** jump, **S** guard, **J** three-hit combo (press repeatedly), **K** heavy, **L** skill (20 meter), **U** ultimate (65 meter), **Shift** dash, **P** pause, **Escape** fighter selection. Arrow keys/space also work. Mobile touch controls use separate movement and attack rows. Earn meter by hitting/blocking; two round wins take the match. Draws replay without a point; rematch resets combat state.
 
-Implementation and regression audit: [docs/AUDIT.md](docs/AUDIT.md). Original/licensed sprite atlas integration: [docs/SPRITE_ATLASES.md](docs/SPRITE_ATLASES.md). No external fighter art has been added.
+## Validation
 
-Phase 2 partial-atlas audit and remaining artwork issues: [docs/PHASE2_REVIEW.md](docs/PHASE2_REVIEW.md). Missing sprite poses retain the original geometric animation. Review-only artwork is kept outside the repository and is not part of the build or automated test fixtures.
+```sh
+npm run check                      # unit/asset tests, source/test typechecks, production build
+npx playwright install chromium    # once, unless system Chromium is installed
+npm run test:e2e                    # production gameplay, branding, real sprites, fallback and mobile
+npm run test:atlas                  # synthetic Canvas/loader regression tests on a dev server
+```
+
+For system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium`. The suites manage their own servers on ports 4173 and 5174. For a real deployment, run `E2E_BASE_URL=https://your-deployment.example EXPECTED_DEPLOY_SHA=<full-sha> npm run test:e2e` with the platform's required network/proxy configuration. `/build-info.json` identifies the deployed commit; a deployment is current only when its SHA matches the intended commit and its smoke checks succeed.
+
+[Sprite atlas format](docs/SPRITE_ATLASES.md) · [Current Phase 2 integration](docs/PHASE2_INTEGRATION.md) · [Historical MVP audit](docs/AUDIT.md) · [Historical code-only atlas review](docs/PHASE2_REVIEW.md)

@@ -9,6 +9,26 @@ function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h:
   ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
 }
 
+/** Static portraits share the fight atlas/cache and keep a drawn fallback while loading. */
+export async function drawPortraits(canvas: HTMLCanvasElement, portraits: readonly { fighter: Fighter; scale: number }[]): Promise<void> {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const paint = (atlases: (SpriteAtlas | undefined)[]) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    portraits.forEach(({ fighter, scale }, i) => drawFighter(ctx, fighter, scale, atlases[i]));
+  };
+  paint([]);
+  const atlases = await Promise.all(portraits.map(async ({ fighter }) => {
+    const url = character(fighter.id).atlasUrl;
+    if (!url) return undefined;
+    try { return await loadAtlas(url); } catch { return undefined; }
+  }));
+  if (canvas.isConnected) {
+    paint(atlases);
+    canvas.dataset.artwork = atlases.every(Boolean) ? 'hd' : 'fallback';
+  }
+}
+
 /** Original geometric stand-in artwork, retained while approved sprite assets are prepared. */
 export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1, atlas?: SpriteAtlas): void {
   const theme = character(f.id), t = f.animationTime;
@@ -168,15 +188,18 @@ export class GameRenderer {
       rect(ctx, x + (i === 1 ? 538 - meter : 0), 67, meter, 12, f.meter >= 65 ? '#ffe5a1' : '#f5d17a');
       ctx.fillStyle = '#fff'; ctx.textAlign = i === 0 ? 'left' : 'right'; ctx.font = 'bold 26px system-ui'; ctx.fillText(f.id.toUpperCase(), i === 0 ? x : x + 538, 116);
       ctx.font = 'bold 15px system-ui'; ctx.fillStyle = f.meter >= 65 ? '#ffe5a1' : '#b3c8dd';
-      ctx.fillText(f.meter >= 65 ? 'ULTIMATE READY [U]' : `METER ${Math.floor(f.meter)} / 100`, i === 0 ? x : x + 538, 141);
+      const ultimate = character(f.id).ultimateName ?? 'ULTIMATE';
+      ctx.fillText(f.meter >= 65 ? `${ultimate} [U]` : `METER ${Math.floor(f.meter)} / 100 · ${ultimate}`, i === 0 ? x : x + 538, 141);
     }
     rect(ctx, 565, 4, 153, 104, '#0a1939'); ctx.fillStyle = '#ffe7b1'; ctx.textAlign = 'center'; ctx.font = 'bold 54px system-ui';
     ctx.fillText(String(Math.ceil(match.timer)), 641, 62); ctx.font = 'bold 16px system-ui';
     ctx.fillText(`ROUND ${match.round} • ${match.score[0]} : ${match.score[1]}`, 641, 95);
     if (match.notice) {
+      const fighter = [match.player, match.cpu].find(f => match.notice === `${f.id.toUpperCase()} ULTIMATE!`);
+      const notice = fighter ? `${fighter.id.toUpperCase()} · ${character(fighter.id).ultimateName ?? 'ULTIMATE'}` : match.notice;
       ctx.fillStyle = '#fff'; ctx.strokeStyle = '#142541'; ctx.lineWidth = 8;
-      ctx.font = `900 ${match.notice.length > 18 ? 42 : 64}px system-ui`;
-      ctx.strokeText(match.notice, 640, 331); ctx.fillText(match.notice, 640, 331);
+      ctx.font = `900 ${notice.length > 18 ? 42 : 64}px system-ui`;
+      ctx.strokeText(notice, 640, 331); ctx.fillText(notice, 640, 331);
     }
   }
 }

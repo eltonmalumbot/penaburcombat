@@ -1,5 +1,7 @@
 # MVP combat audit
 
+Historical MVP baseline. The current game is **PENABUR Combat — 16.59 — Fight for Friday!** and now has approved partial HD sprite coverage; see [PHASE2_INTEGRATION.md](PHASE2_INTEGRATION.md). Statements about stand-in-only art and optional web fonts below describe the earlier baseline, not the current build.
+
 This change continues the existing TypeScript/Vite/Canvas game and retains its identity, arena, original stand-in art, seven roster slots, two playable fighters, keyboard/touch controls, attacks, meters, best-of-three rounds, score, pause, fighter change and rematch.
 
 | Area | Existing problem | Change and regression coverage |
