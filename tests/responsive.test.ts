@@ -43,8 +43,7 @@ test('horizontal acceleration and braking are responsive and deterministic', () 
   e.update(FIXED_STEP, { ...emptyInput(), move: 1 });
   const firstSpeed = e.state.player.vx;
   assert.ok(firstSpeed > 0 && firstSpeed < 310);
-  run(e, 8);
-  e.update(FIXED_STEP, { ...emptyInput(), move: 1 });
+  for (let i = 0; i < 8; i++) e.update(FIXED_STEP, { ...emptyInput(), move: 1 });
   assert.equal(e.state.player.vx, 310);
   e.update(FIXED_STEP);
   assert.ok(e.state.player.vx < 310);
