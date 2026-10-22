@@ -135,6 +135,7 @@ function drawArena(ctx: CanvasRenderingContext2D): void {
 }
 
 interface Spark { x: number; y: number; vx: number; vy: number; life: number; color: string }
+interface Impact { x: number; y: number; life: number; color: string; blocked: boolean }
 export class GameRenderer {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -143,6 +144,7 @@ export class GameRenderer {
   private preparation = 0;
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private sparks: Spark[] = [];
+  private impacts: Impact[] = [];
   private shake = 0;
   private time = 0;
 
@@ -182,6 +184,7 @@ export class GameRenderer {
     for (const event of events) {
       if (event.type !== 'hit' || this.reducedMotion) continue;
       this.shake = event.blocked ? 2 : 6;
+      this.impacts.push({ x: event.x, y: event.y, life: .16, color: event.color, blocked: event.blocked });
       for (let i = 0; i < 12 && this.sparks.length < 144; i++) {
         const angle = Math.random() * Math.PI * 2;
         this.sparks.push({ x: event.x, y: event.y, vx: Math.cos(angle) * 200, vy: Math.sin(angle) * 200, life: .3, color: event.color });
@@ -194,6 +197,8 @@ export class GameRenderer {
     if (!paused) {
       this.time += dt; this.shake = Math.max(0, this.shake - dt * 24);
       this.sparks = this.sparks.filter(spark => spark.life > 0);
+      this.impacts = this.impacts.filter(impact => impact.life > 0);
+      for (const impact of this.impacts) impact.life -= dt;
       for (const spark of this.sparks) { spark.x += spark.vx * dt; spark.y += spark.vy * dt; spark.vy += 600 * dt; spark.life -= dt; }
     }
     ctx.setTransform(this.canvas.width / 1280, 0, 0, this.canvas.height / 720, 0, 0);
@@ -202,6 +207,16 @@ export class GameRenderer {
     drawFighter(ctx, match.player, 1, this.atlases.get(match.player.id));
     drawFighter(ctx, match.cpu, 1, this.atlases.get(match.cpu.id));
     for (const spark of this.sparks) { ctx.globalAlpha = Math.max(0, Math.min(1, spark.life * 3)); rect(ctx, spark.x, spark.y, 7, 7, spark.color); }
+    ctx.globalAlpha = 1;
+    for (const impact of this.impacts) {
+      const progress = 1 - Math.max(0, impact.life) / .16;
+      ctx.globalAlpha = Math.max(0, 1 - progress);
+      ctx.lineWidth = impact.blocked ? 4 : 7;
+      ctx.strokeStyle = impact.blocked ? '#deecff' : impact.color;
+      ctx.beginPath(); ctx.arc(impact.x, impact.y, 20 + progress * 62, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(impact.x, impact.y, (impact.blocked ? 7 : 13) * (1 - progress), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
     ctx.restore(); this.hud(match);
     if (paused) {
       rect(ctx, 0, 0, 1280, 720, '#081020bb'); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '900 70px system-ui';

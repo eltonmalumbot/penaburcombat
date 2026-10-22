@@ -18,6 +18,6 @@ export function character(id: FighterId): FighterDefinition {
 }
 export function createFighter(id: FighterId, x: number, face: Direction): Fighter {
   return { id, x, face, y: 570, vy: 0, hp: 100, meter: 0, guard: false, attack: null,
-    stun: 0, knockback: 0, dashTime: 0, dashCooldown: 0, combo: 0, comboTime: 0,
+    stun: 0, knockback: 0, dashTime: 0, dashCooldown: 0, combo: 0, comboTime: 0, vx: 0, bufferedAttack: null, attackBufferTime: 0,
     pose: 'idle', animationTime: 0 };
 }

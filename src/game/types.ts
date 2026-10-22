@@ -14,6 +14,7 @@ export interface Fighter {
   id: FighterId; x: number; y: number; vy: number; hp: number; meter: number; face: Direction;
   guard: boolean; attack: AttackState | null; stun: number; knockback: number;
   dashTime: number; dashCooldown: number; combo: number; comboTime: number;
+  vx: number; bufferedAttack: Move | null; attackBufferTime: number;
   pose: Pose; animationTime: number;
 }
 export interface Brain { thinkIn: number; guardFor: number; jumpCooldown: number }
