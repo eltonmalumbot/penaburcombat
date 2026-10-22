@@ -9,6 +9,7 @@ export class InputController {
   private readonly held = new Map<string, string>();
   private readonly pressed = new Set<string>();
   private readonly pointers = new Map<number, string>();
+  private readonly pointerButtons = new Map<number, HTMLButtonElement>();
 
   constructor(onPause: () => void, onExit: () => void, onBlur: () => void) {
     window.addEventListener('keydown', event => {
@@ -31,15 +32,41 @@ export class InputController {
     document.addEventListener('visibilitychange', () => { if (document.hidden) blur(); });
   }
   setEnabled(enabled: boolean): void { this.enabled = enabled; this.clear(); }
-  clear(): void { this.held.clear(); this.pressed.clear(); this.pointers.clear(); }
+  clear(): void {
+    this.held.clear(); this.pressed.clear(); this.pointers.clear();
+    // A pause, page hide or rematch must never leave a button visibly held.
+    const captured = [...this.pointerButtons];
+    this.pointerButtons.clear();
+    for (const [, button] of captured) button.classList.remove('is-held');
+    for (const [pointerId, button] of captured) {
+      try {
+        if (button.hasPointerCapture(pointerId)) button.releasePointerCapture(pointerId);
+      } catch { /* Capture may already have ended as the page was removed. */ }
+    }
+  }
   bind(button: HTMLButtonElement, key: string): void {
+    button.addEventListener('contextmenu', event => event.preventDefault());
     button.addEventListener('pointerdown', event => {
-      if (!this.enabled) return;
-      event.preventDefault(); button.setPointerCapture(event.pointerId);
-      this.pointers.set(event.pointerId, key); this.pressed.add(key);
+      if (!this.enabled || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      event.preventDefault();
+      // Pointer capture keeps press/release paired even when a thumb slides away.
+      try { button.setPointerCapture(event.pointerId); }
+      catch { /* Some touch browsers lack active capture during a synthetic event. */ }
+      this.pointers.set(event.pointerId, key);
+      this.pointerButtons.set(event.pointerId, button);
+      button.classList.add('is-held');
+      this.pressed.add(key);
     });
-    const release = (event: PointerEvent) => this.pointers.delete(event.pointerId);
-    button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release);
+    const release = (event: PointerEvent) => {
+      const pressed = this.pointerButtons.get(event.pointerId);
+      if (pressed !== button) return;
+      this.pointerButtons.delete(event.pointerId);
+      this.pointers.delete(event.pointerId);
+      // Two fingers may be touching the same button; keep its feedback until both release.
+      if (![...this.pointerButtons.values()].includes(button)) button.classList.remove('is-held');
+    };
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
     button.addEventListener('lostpointercapture', release);
   }
   sample(): CombatInput {

@@ -17,10 +17,39 @@ export class Screens {
   private status: HTMLDivElement | null = null;
   private announcement: HTMLDivElement | null = null;
   private pauseButton: HTMLButtonElement | null = null;
-  constructor(root: HTMLElement, actions: Actions) { this.root = root; this.actions = actions; }
+  private fullscreenButton: HTMLButtonElement | null = null;
+  constructor(root: HTMLElement, actions: Actions) {
+    this.root = root; this.actions = actions;
+    document.addEventListener('fullscreenchange', () => {
+      this.fullscreenButton?.setAttribute('aria-pressed', String(Boolean(document.fullscreenElement)));
+    });
+  }
+
+  private async toggleFullscreen(): Promise<void> {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+      await document.documentElement.requestFullscreen();
+      // Orientation lock is best-effort; Safari and some Android browsers disallow it.
+      try {
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (mode: 'landscape') => Promise<void>;
+        };
+        await orientation.lock?.('landscape');
+      }
+      catch { /* Players can rotate their phone manually. */ }
+    } catch {
+      if (this.announcement) this.announcement.textContent =
+        'Layar penuh tidak didukung browser ini. Putar HP ke landscape untuk bermain.';
+    }
+  }
 
   private page(): HTMLElement {
-    this.status = null; this.announcement = null; this.pauseButton = null;
+    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null;
+    // Leaving a match always returns to the regular browser layout.
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     const header = element('header', 'top'), logo = element('a', 'logo', 'PENABUR Combat');
     logo.href = '#'; logo.addEventListener('click', event => { event.preventDefault(); this.actions.menu(); });
     header.append(logo, element('span', 'tag', '16.59 — Fight for Friday!'));
@@ -76,7 +105,14 @@ export class Screens {
   fight(input: InputController): HTMLCanvasElement {
     const page = this.page(), bar = element('div', 'battle-bar');
     this.pauseButton = button('PAUSE / RESUME', this.actions.pause, true); this.pauseButton.setAttribute('aria-pressed', 'false');
-    bar.append(element('span', 'eyebrow', 'PENABUR Combat • LIVE MATCH • 16.59'), this.pauseButton, button('EXIT', this.actions.select, true));
+    bar.append(element('span', 'eyebrow', 'PENABUR Combat • LIVE MATCH • 16.59'));
+    if (document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function') {
+      this.fullscreenButton = button('FULL SCREEN', () => { void this.toggleFullscreen(); }, true);
+      this.fullscreenButton.classList.add('fullscreen-toggle');
+      this.fullscreenButton.setAttribute('aria-pressed', 'false');
+      bar.append(this.fullscreenButton);
+    }
+    bar.append(this.pauseButton, button('EXIT', this.actions.select, true));
     const wrap = element('div', 'game-wrap'), canvas = element('canvas');
     canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
     wrap.append(canvas);

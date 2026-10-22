@@ -96,12 +96,47 @@ test.describe('mobile Chromium touch emulation', () => {
     await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [
       { ...center(moveBox!), id: 1 }, { ...center(lightBox!), id: 2 },
     ] });
+    // Both pointers must remain independently pressed until release.
+    await expect(move).toHaveClass(/is-held/);
+    await expect(light).toHaveClass(/is-held/);
     await page.waitForTimeout(100);
     await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(move).not.toHaveClass(/is-held/);
+    await expect(light).not.toHaveClass(/is-held/);
     await expect(page.locator('#game')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(errors).toEqual([]);
   });
+});
+
+test('gamepad feedback resets on focus loss, and optional fullscreen leaves layout intact', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 844, height: 390 });
+  await start(page);
+  const guard = page.getByRole('button', { name: 'Control s', exact: true });
+  const box = await guard.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await expect(guard).toHaveClass(/is-held/);
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await expect(guard).not.toHaveClass(/is-held/);
+  await page.mouse.up();
+  await expect(page.locator('.match-status')).toHaveAttribute('data-paused', 'true');
+
+  const fullscreen = page.getByRole('button', { name: 'FULL SCREEN', exact: true });
+  const supportsFullscreen = await page.evaluate(() =>
+    document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function');
+  if (supportsFullscreen) {
+    await expect(fullscreen).toBeVisible();
+    await fullscreen.click();
+    await expect(page.locator('#game')).toBeVisible();
+  } else await expect(fullscreen).toHaveCount(0);
+  await page.getByRole('button', { name: 'EXIT', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'SELECT FIGHTER' })).toBeVisible();
+  await expect(page.locator('#app')).not.toHaveClass(/in-fight/);
+  expect(errors).toEqual([]);
 });
 
 test('desktop controls, combat, pause and clearing held input on exit', async ({ page }) => {
