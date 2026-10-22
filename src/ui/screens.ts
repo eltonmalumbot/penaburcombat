@@ -33,7 +33,12 @@ export class Screens {
       }
       await document.documentElement.requestFullscreen();
       // Orientation lock is best-effort; Safari and some Android browsers disallow it.
-      try { await screen.orientation?.lock?.('landscape'); }
+      try {
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (mode: 'landscape') => Promise<void>;
+        };
+        await orientation.lock?.('landscape');
+      }
       catch { /* Players can rotate their phone manually. */ }
     } catch {
       if (this.announcement) this.announcement.textContent =
