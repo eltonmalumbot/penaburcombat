@@ -19,6 +19,26 @@ async function start(page: Page, fighter: 'Ali' | 'Elton' = 'Ali') {
   await expect(page.locator('#game')).toBeVisible();
 }
 
+test('on-screen combat buttons are available on desktop and mobile', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await start(page);
+  const pad = page.getByRole('region', { name: 'On-screen combat controls' });
+  await expect(pad).toBeVisible();
+  for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
+    const control = page.getByRole('button', { name: `Control ${key}`, exact: true });
+    await expect(control).toBeVisible();
+  }
+  await expect(pad.getByText('MOVEMENT')).toBeVisible();
+  await expect(pad.getByText('ATTACK')).toBeVisible();
+  await page.getByRole('button', { name: 'Control j', exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(pad).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Control u', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test('desktop controls, combat, pause and clearing held input on exit', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
