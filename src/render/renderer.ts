@@ -2,26 +2,51 @@ import { character } from '../game/characters.ts';
 import { ARENA } from '../game/geometry.ts';
 import { moveData } from '../game/moves.ts';
 import type { CombatEvent, Fighter, FighterId, Match } from '../game/types.ts';
-import { loadAtlas, sampleFrame } from '../animation/atlas.ts';
+import { loadAtlas } from '../animation/atlas.ts';
+import { spritePresentation } from '../animation/presentation.ts';
 import type { SpriteAtlas } from '../animation/atlas.ts';
 
 function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
   ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
 }
 
-/** Original geometric stand-in artwork, retained while approved sprite assets are prepared. */
+/** Static portraits share the fight atlas/cache and keep a drawn fallback while loading. */
+export async function drawPortraits(canvas: HTMLCanvasElement, portraits: readonly { fighter: Fighter; scale: number }[]): Promise<void> {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const paint = (atlases: (SpriteAtlas | undefined)[]) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    portraits.forEach(({ fighter, scale }, i) => drawFighter(ctx, fighter, scale, atlases[i]));
+  };
+  paint([]);
+  const atlases = await Promise.all(portraits.map(async ({ fighter }) => {
+    const url = character(fighter.id).atlasUrl;
+    if (!url) return undefined;
+    try { return await loadAtlas(url); } catch { return undefined; }
+  }));
+  if (canvas.isConnected) {
+    paint(atlases);
+    canvas.dataset.artwork = atlases.every(Boolean) ? 'hd' : 'fallback';
+  }
+}
+
+/** Use approved HD art whenever available; geometric bodies are only an asset-load fallback. */
 export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1, atlas?: SpriteAtlas): void {
   const theme = character(f.id), t = f.animationTime;
   ctx.save(); ctx.translate(f.x, f.y);
   ctx.fillStyle = '#07132977'; ctx.beginPath(); ctx.ellipse(0, 0, 54 * scale, 10 * scale, 0, 0, Math.PI * 2); ctx.fill();
   ctx.scale(f.face * scale, scale);
-  const frame = atlas ? sampleFrame(atlas.metadata, f.pose, t) : null;
-  if (atlas && frame) {
-    const size = atlas.metadata.scale;
+  if (atlas) {
+    const presentation = spritePresentation(atlas.metadata, f, atlas.idleBounds);
+    const { frame } = presentation, size = atlas.metadata.scale;
+    ctx.save();
+    ctx.translate(presentation.x, presentation.y); ctx.rotate(presentation.rotation);
     if (atlas.metadata.facing === 'left') ctx.scale(-1, 1);
     ctx.imageSmoothingEnabled = atlas.metadata.sampling === 'smooth';
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(atlas.image, frame.x, frame.y, frame.w, frame.h, -frame.pivotX * size, -frame.pivotY * size, frame.w * size, frame.h * size);
+    ctx.restore();
+    if (presentation.temporary) drawTemporaryEffects(ctx, f, theme.color);
     ctx.restore(); return;
   }
   if (f.pose === 'ko') { ctx.rotate(Math.PI / 2); ctx.scale(.8, .8); }
@@ -64,6 +89,32 @@ export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1
     ctx.strokeStyle = theme.color; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, -150, 110 + Math.sin(t * 20) * 8, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.restore();
+}
+
+/** Read-only combat cues separate from the reused cutout; no replacement limbs or hitboxes. */
+function drawTemporaryEffects(ctx: CanvasRenderingContext2D, f: Fighter, color: string): void {
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 4;
+  if (f.pose === 'guard') {
+    ctx.beginPath(); ctx.arc(15, -145, 115, -1.25, 1.25); ctx.stroke();
+  }
+  if (f.attack) {
+    const data = moveData(f.attack);
+    const active = f.attack.elapsed >= data.startup && f.attack.elapsed < data.startup + data.active;
+    ctx.globalAlpha = active ? .9 : .3;
+    ctx.lineWidth = active ? 7 : 2;
+    ctx.beginPath(); ctx.ellipse(55, -150, Math.max(20, data.reach - 55), 65, 0, -1.1, 1.1); ctx.stroke();
+    if (f.attack.move === 'skill' || f.attack.move === 'ultimate') {
+      ctx.beginPath(); ctx.arc(0, -150, f.attack.move === 'ultimate' ? 165 : 125, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (f.pose === 'hurt') {
+    ctx.strokeStyle = '#fff1cf'; ctx.beginPath();
+    ctx.moveTo(-40, -210); ctx.lineTo(40, -150); ctx.moveTo(-40, -150); ctx.lineTo(40, -210); ctx.stroke();
+  }
+  if (f.pose === 'victory') {
+    ctx.strokeStyle = '#ffe5a1'; ctx.beginPath(); ctx.ellipse(0, -325, 45, 10, 0, 0, Math.PI * 2); ctx.stroke();
+  }
 }
 
 function drawArena(ctx: CanvasRenderingContext2D): void {
@@ -168,15 +219,18 @@ export class GameRenderer {
       rect(ctx, x + (i === 1 ? 538 - meter : 0), 67, meter, 12, f.meter >= 65 ? '#ffe5a1' : '#f5d17a');
       ctx.fillStyle = '#fff'; ctx.textAlign = i === 0 ? 'left' : 'right'; ctx.font = 'bold 26px system-ui'; ctx.fillText(f.id.toUpperCase(), i === 0 ? x : x + 538, 116);
       ctx.font = 'bold 15px system-ui'; ctx.fillStyle = f.meter >= 65 ? '#ffe5a1' : '#b3c8dd';
-      ctx.fillText(f.meter >= 65 ? 'ULTIMATE READY [U]' : `METER ${Math.floor(f.meter)} / 100`, i === 0 ? x : x + 538, 141);
+      const ultimate = character(f.id).ultimateName ?? 'ULTIMATE';
+      ctx.fillText(f.meter >= 65 ? `${ultimate} [U]` : `METER ${Math.floor(f.meter)} / 100 · ${ultimate}`, i === 0 ? x : x + 538, 141);
     }
     rect(ctx, 565, 4, 153, 104, '#0a1939'); ctx.fillStyle = '#ffe7b1'; ctx.textAlign = 'center'; ctx.font = 'bold 54px system-ui';
     ctx.fillText(String(Math.ceil(match.timer)), 641, 62); ctx.font = 'bold 16px system-ui';
     ctx.fillText(`ROUND ${match.round} • ${match.score[0]} : ${match.score[1]}`, 641, 95);
     if (match.notice) {
+      const fighter = [match.player, match.cpu].find(f => match.notice === `${f.id.toUpperCase()} ULTIMATE!`);
+      const notice = fighter ? `${fighter.id.toUpperCase()} · ${character(fighter.id).ultimateName ?? 'ULTIMATE'}` : match.notice;
       ctx.fillStyle = '#fff'; ctx.strokeStyle = '#142541'; ctx.lineWidth = 8;
-      ctx.font = `900 ${match.notice.length > 18 ? 42 : 64}px system-ui`;
-      ctx.strokeText(match.notice, 640, 331); ctx.fillText(match.notice, 640, 331);
+      ctx.font = `900 ${notice.length > 18 ? 42 : 64}px system-ui`;
+      ctx.strokeText(notice, 640, 331); ctx.fillText(notice, 640, 331);
     }
   }
 }

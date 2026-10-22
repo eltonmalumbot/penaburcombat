@@ -6,6 +6,7 @@ export interface FighterDefinition {
   id: FighterId; title: string; available: boolean; color: string; body: string; speed: number;
   /** Optional URL of original/licensed art; missing atlases use the original Canvas stand-in. */
   atlasUrl?: string;
+  ultimateName?: string;
 }
 export interface CombatInput { move: -1 | 0 | 1; guard: boolean; jump: boolean; dash: boolean; attack: Move | null }
 export interface AttackState { move: Move; elapsed: number; combo: number; connected: boolean; queued: boolean }

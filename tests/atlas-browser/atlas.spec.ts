@@ -53,28 +53,58 @@ test('decoded sprites keep their feet anchored across frames, size, facing and s
   expect(result.modes).toEqual([true, false, false]); expect(result.restored).toBe(true);
 });
 
-test('unsupported attacks, guard, jump, hurt and KO exactly retain the geometric animation', async ({ page }) => {
-  const matching = await page.evaluate(async () => {
+test('missing combat clips keep HD bodies for every pose and facing, without geometric rectangles', async ({ page }) => {
+  const results = await page.evaluate(async () => {
     const { loadAtlas } = await import('/src/animation/atlas.ts' as string);
     const { drawFighter } = await import('/src/render/renderer.ts' as string);
     const { createFighter } = await import('/src/game/characters.ts' as string);
     const atlas = await loadAtlas('/__atlas-test/fixture.json');
-    const a = document.createElement('canvas'), b = document.createElement('canvas');
-    a.width = b.width = 800; a.height = b.height = 700;
-    const ca = a.getContext('2d')!, cb = b.getContext('2d')!;
-    const poses = ['jump', 'fall', 'guard', 'light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'ko', 'victory'];
-    return poses.map(pose => {
-      const f = createFighter('Elton', 400, -1); f.y = 570; f.pose = pose;
+    const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 700;
+    const ctx = canvas.getContext('2d')!;
+    let sprites = 0, rectangles = 0;
+    const image = ctx.drawImage.bind(ctx), rect = ctx.fillRect.bind(ctx);
+    ctx.drawImage = ((...args: Parameters<typeof ctx.drawImage>) => { sprites++; image(...args); }) as typeof ctx.drawImage;
+    ctx.fillRect = (...args) => { rectangles++; rect(...args); };
+    const results = [];
+    for (const face of [-1, 1]) for (const pose of ['jump', 'fall', 'guard', 'light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'ko', 'victory']) {
+      const f = createFighter('Elton', 400, face); f.y = 570; f.pose = pose;
       if (['heavy', 'skill', 'ultimate'].includes(pose) || pose.startsWith('light')) {
-        f.attack = { move: pose.startsWith('light') ? 'light' : pose, combo: pose.startsWith('light') ? Number(pose.at(-1)) : 0, elapsed: .3, connected: false, queued: false };
+        f.attack = { move: pose.startsWith('light') ? 'light' : pose, combo: 1, elapsed: .15, connected: false, queued: false };
       }
-      f.guard = pose === 'guard';
-      ca.clearRect(0, 0, 800, 700); cb.clearRect(0, 0, 800, 700);
-      drawFighter(ca, f, 1, atlas); drawFighter(cb, f);
-      return a.toDataURL() === b.toDataURL();
-    });
+      sprites = 0; rectangles = 0;
+      drawFighter(ctx, f, 1, atlas);
+      results.push({ sprites, rectangles });
+    }
+    return results;
   });
-  expect(matching).toHaveLength(12); expect(matching.every(Boolean)).toBe(true);
+  expect(results).toHaveLength(24);
+  for (const result of results) expect(result).toEqual({ sprites: 1, rectangles: 0 });
+});
+
+test('approved Ali and Elton pose boards retain original HD cutouts in both directions', async ({ page }, testInfo) => {
+  for (const fighter of ['Ali', 'Elton']) {
+    await page.evaluate(async fighter => {
+      const { loadAtlas } = await import('/src/animation/atlas.ts' as string);
+      const { drawFighter } = await import('/src/render/renderer.ts' as string);
+      const { createFighter } = await import('/src/game/characters.ts' as string);
+      const atlas = await loadAtlas(`/assets/fighters/${fighter.toLowerCase()}.json`);
+      const canvas = document.createElement('canvas'); canvas.id = 'pose-board'; canvas.width = 2100; canvas.height = 1600;
+      document.body.replaceChildren(canvas);
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#172440'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const poses = ['idle', 'walk', 'jump', 'fall', 'guard', 'light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'ko', 'victory'];
+      for (const [direction, face] of [1, -1].entries()) for (const [i, pose] of poses.entries()) {
+        const x = i % 7 * 300 + 150, y = (Math.floor(i / 7) + direction * 2) * 400 + 360;
+        const f = createFighter(fighter, x, face); f.y = y; f.pose = pose; f.animationTime = .16;
+        if (['heavy', 'skill', 'ultimate'].includes(pose) || pose.startsWith('light')) {
+          f.attack = { move: pose.startsWith('light') ? 'light' : pose, combo: 1, elapsed: .15, connected: false, queued: false };
+        }
+        drawFighter(ctx, f, .85, atlas);
+        ctx.fillStyle = '#ffffff'; ctx.font = '18px system-ui'; ctx.fillText(`${pose} / ${face}`, x - 120, y + 30);
+      }
+    }, fighter);
+    await page.locator('#pose-board').screenshot({ path: testInfo.outputPath(`${fighter}-poses.png`) });
+  }
 });
 
 test('image bounds fail safely, corrected images retry, and a removed atlas cannot stay on screen', async ({ page }) => {

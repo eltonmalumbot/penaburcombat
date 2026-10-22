@@ -1,5 +1,7 @@
 # Phase 2: partial atlas review
 
+Historical code-only review at `2b109ac`, before permission was confirmed. The project owner subsequently confirmed permission to publish the supplied character likeness artwork. Current branding, curated clips, integration and limitations are documented in [PHASE2_INTEGRATION.md](PHASE2_INTEGRATION.md); the original observations below remain a record of the earlier review.
+
 ## Scope and permission boundary
 
 Audit baseline: `main` at `d7d0c1c2f55dbb1764077b14a8f8626259efad56`, fetched before inspection. The supplied review pack targets that same commit. Its README and Phase 2 prompt explicitly mark its human-inspired art as review-only; permission to publish that art has not been supplied.

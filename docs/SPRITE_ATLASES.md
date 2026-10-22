@@ -1,6 +1,6 @@
-# Original sprite atlas integration
+# PENABUR Combat sprite atlas integration
 
-The default fighters retain this project's original geometric Canvas drawings. No employee photos, likenesses, Aether Clash art or third-party fighter assets were added. Only set an `atlasUrl` in `src/game/characters.ts` after the art's ownership/permission has been confirmed.
+Ali and Elton use the project-owner-supplied HD atlases after the owner confirmed permission to publish their likeness artwork for this game. Menus, cards and fights share the same decoded atlas cache. Poses with no sprite clip use explicit temporary HD presentation; only missing/failed atlases use geometric bodies. No employee photos or Aether Clash assets are used. See `PHASE2_INTEGRATION.md` and `public/assets/fighters/README.md` for provenance and remaining visual limitations.
 
 Put an approved image and metadata in `public/assets/fighters/`. For example, `Ali.atlasUrl = '/assets/fighters/ali.json'`. Both metadata and image must have the same origin as the game. The loader caches assets, validates rectangles against the decoded image, and falls back to the original Canvas drawing if loading fails. Keep the fallback until the asset pipeline has been verified.
 
@@ -24,7 +24,7 @@ Metadata version 1 uses untrimmed image rectangles in pixels and durations in se
 }
 ```
 
-An `idle` clip is required. Other supported clips are `walk`, `jump`, `fall`, `guard`, `light1`, `light2`, `light3`, `heavy`, `skill`, `ultimate`, `hurt`, `ko`, and `victory`. **Missing clips use the original geometric animation for that pose**, not an idle sprite. This applies to attacks, guard, jump/fall, hit reactions and KO. Non-looping clips hold their final frame. An intentional switch from sprite art to geometric art is visible until approved artwork for that pose exists; no missing attack art is invented.
+An `idle` clip is required. Other supported clips are `walk`, `jump`, `fall`, `guard`, `light1`, `light2`, `light3`, `heavy`, `skill`, `ultimate`, `hurt`, `ko`, and `victory`. **Missing clips use `spritePresentation`**, which selects a stable first idle frame as a temporary cutout, with separate pose cues in the renderer. This is not authored combat animation. Exact clips always take precedence and non-looping clips hold their final frame. See `PHASE2B.md`.
 
 The pivot defaults to bottom-center; align the planted foot/sole to that pivot, not the entire rectangle. `scale` converts source pixels to logical arena pixels. Set a single scale per fighter from a known upright reference, then retain it across poses. Do not stretch crouched/leaning frames to identical heights: that distorts anatomy and hides source-art defects. Fix unintended root/foot movement in local metadata or the source drawing; never adjust combat coordinates, hitboxes or damage to fit the image.
 
@@ -34,8 +34,8 @@ Animation resets when the engine pose changes. Combat startup/active/recovery an
 
 The arena remains 1280×720 logical units. The renderer scales the backing canvas for viewport size and pixel density, caches the static stage and bounds particles. Reduced-motion users receive no hit shake or particles.
 
-Atlas preparation commits both loaded fighters together; a superseded load cannot replace newer settings. Invalid/removed atlases revert to the original drawings. Failed loads evict their promise, and retries revalidate image bytes instead of silently reusing an invalid decoded image. Blob URLs are revoked after decoding. No runtime image/atlas path is enabled by default.
+Atlas preparation commits both loaded fighters together; a superseded load cannot replace newer settings. Invalid/removed atlases revert to the original drawings. Failed loads evict their promise, and retries revalidate image bytes instead of silently reusing an invalid decoded image. Blob URLs are revoked after decoding. Ali and Elton's default paths are `/assets/fighters/ali.json` and `/assets/fighters/elton.json`; no other roster slot has an atlas or is playable.
 
-Run `npm run test:atlas` for real Chromium decoding and Canvas pixel tests using synthetic colored rectangles only. These tests cover foot pivots, scale, mirroring, HD/pixel sampling, missing-pose equivalence, invalid image bounds, retry, and asynchronous preparation. They run separately from the production gameplay suite (`npm run test:e2e`). No review-pack image or metadata is included in either suite.
+Run `npm run test:atlas` for real Chromium decoding and Canvas pixel tests using synthetic colored rectangles and the approved original atlases. These tests cover foot pivots, scale, mirroring, HD/pixel sampling, HD-only missing-pose drawing, invalid image bounds, retry, and asynchronous preparation. They run separately from the production gameplay suite (`npm run test:e2e`). The approved-art test captures pose boards in both directions; production tests cover real matches and forced image failure.
 
-Keep review-only human-inspired assets outside the repository. A local browser can intercept same-origin atlas requests from the existing `atlasUrl` hook and fulfill them from private files for validation; do not copy them into `public/` where a production build would silently bundle them. Only publish such art after the user explicitly confirms permission. See `PHASE2_REVIEW.md` for the technical audit and remaining artwork issues.
+Keep any future unapproved review art outside the repository. A local browser can intercept same-origin atlas requests for private validation. Only copy assets into `public/` after permission to publish is confirmed, since production builds include that directory. `PHASE2_REVIEW.md` records the earlier code-only review before the current owner confirmation; `PHASE2_INTEGRATION.md` is the active integration report.
