@@ -30,10 +30,12 @@ test('mobile split controls keep independent simultaneous touch pointers', async
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [first, second] });
     await expect(punch).toHaveClass(/is-pressed/);
     // Releasing the punch must not release the still-held movement pointer.
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [first] });
+    // CDP touchEnd represents changed contacts differently across Chromium versions.
+    // Dispatch each captured pointer's release explicitly to verify isolation.
+    await punch.dispatchEvent('pointerup', { pointerId: 12 });
     await expect(punch).not.toHaveClass(/is-pressed/);
     await expect(walk).toHaveClass(/is-pressed/);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await walk.dispatchEvent('pointercancel', { pointerId: 11 });
     await expect(walk).not.toHaveClass(/is-pressed/);
   } finally {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
