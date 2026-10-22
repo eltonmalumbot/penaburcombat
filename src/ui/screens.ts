@@ -79,15 +79,37 @@ export class Screens {
     const wrap = element('div', 'game-wrap'), canvas = element('canvas');
     canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
     wrap.append(canvas); page.append(bar, wrap);
-    page.append(element('div', 'controls', 'A/D MOVE • W JUMP • S GUARD • J COMBO ×3 • K HEAVY • L SKILL (20) • U ULTIMATE (65) • SHIFT DASH • P PAUSE'));
-    const pad = element('div', 'touch-pad');
-    for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
-      const control = element('button', `touch${key === 'u' ? ' super' : ''}`, key === 'shift' ? '»' : key.toUpperCase());
-      control.type = 'button'; control.setAttribute('aria-label', `Control ${key}`); input.bind(control, key); pad.append(control);
+
+    const pad = element('section', 'touch-pad');
+    pad.setAttribute('aria-label', 'On-screen combat controls');
+    const groups: readonly { title: string; keys: readonly [string, string, string][] }[] = [
+      { title: 'MOVEMENT', keys: [
+        ['a', '◀', 'LEFT'], ['d', '▶', 'RIGHT'], ['w', '↑', 'JUMP'],
+        ['s', '◈', 'GUARD'], ['shift', '»', 'DASH'],
+      ] },
+      { title: 'ATTACK', keys: [
+        ['j', 'J', 'COMBO'], ['k', 'K', 'HEAVY'],
+        ['l', 'L', 'SKILL'], ['u', 'U', 'ULTIMATE'],
+      ] },
+    ];
+    for (const group of groups) {
+      const section = element('div', 'touch-group');
+      section.append(element('span', 'touch-heading', group.title));
+      const buttons = element('div', 'touch-buttons');
+      for (const [key, glyph, label] of group.keys) {
+        const control = element('button', `touch touch-${key}${key === 'u' ? ' super' : ''}`);
+        control.type = 'button';
+        control.setAttribute('aria-label', `Control ${key}`);
+        control.dataset.key = key;
+        control.append(element('span', 'touch-glyph', glyph), element('span', 'touch-label', label));
+        input.bind(control, key);
+        buttons.append(control);
+      }
+      section.append(buttons); pad.append(section);
     }
     this.status = element('div', 'sr-only match-status'); this.status.setAttribute('role', 'group'); this.status.setAttribute('aria-label', 'Match status');
     this.announcement = element('div', 'sr-only'); this.announcement.setAttribute('role', 'status');
-    page.append(pad, this.status, this.announcement); canvas.focus({ preventScroll: true }); return canvas;
+    page.append(pad, element('div', 'controls', 'KEYBOARD: A/D MOVE • W JUMP • S GUARD • SHIFT DASH • J COMBO • K HEAVY • L SKILL • U ULTIMATE • P PAUSE'), this.status, this.announcement); canvas.focus({ preventScroll: true }); return canvas;
   }
 
   update(match: Match, paused: boolean): void {
