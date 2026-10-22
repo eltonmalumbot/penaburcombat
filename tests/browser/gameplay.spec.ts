@@ -75,6 +75,35 @@ test('responsive gamepad fits portrait and landscape phone sizes without clipped
   expect(errors).toEqual([]);
 });
 
+test.describe('mobile Chromium touch emulation', () => {
+  test.use({ isMobile: true, hasTouch: true, deviceScaleFactor: 2, viewport: { width: 844, height: 390 } });
+
+  test('touch taps and simultaneous movement + light attack remain responsive', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await start(page);
+    const move = page.getByRole('button', { name: 'Control d', exact: true });
+    const light = page.getByRole('button', { name: 'Control j', exact: true });
+    const guard = page.getByRole('button', { name: 'Control s', exact: true });
+    await move.tap();
+    await guard.tap();
+    await light.tap();
+    const moveBox = await move.boundingBox(), lightBox = await light.boundingBox();
+    expect(moveBox).not.toBeNull(); expect(lightBox).not.toBeNull();
+    const center = (box: NonNullable<typeof moveBox>) =>
+      ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    const session = await page.context().newCDPSession(page);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [
+      { ...center(moveBox!), id: 1 }, { ...center(lightBox!), id: 2 },
+    ] });
+    await page.waitForTimeout(100);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(page.locator('#game')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+});
+
 test('desktop controls, combat, pause and clearing held input on exit', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
