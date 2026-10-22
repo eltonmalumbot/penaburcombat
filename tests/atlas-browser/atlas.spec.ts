@@ -81,6 +81,46 @@ test('missing combat clips keep HD bodies for every pose and facing, without geo
   for (const result of results) expect(result).toEqual({ sprites: 1, rectangles: 0 });
 });
 
+test('authored synthetic heavy attack uses distinct frames and keeps fallback for missing poses', async ({ page }) => {
+  const source = metadata();
+  await page.route('**/__atlas-test/combat.json', route => route.fulfill({ json: {
+    ...source, clips: { ...source.clips, heavy: {
+      frames: [{ frame: 'a', duration: .12 }, { frame: 'b', duration: .18 }],
+      loop: false,
+    } },
+  } }));
+  const result = await page.evaluate(async () => {
+    const { loadAtlas } = await import('/src/animation/atlas.ts' as string);
+    const { drawFighter } = await import('/src/render/renderer.ts' as string);
+    const { createFighter } = await import('/src/game/characters.ts' as string);
+    const atlas = await loadAtlas('/__atlas-test/combat.json');
+    const canvas = document.createElement('canvas');
+    canvas.width = 600; canvas.height = 500;
+    const ctx = canvas.getContext('2d')!;
+    const original = ctx.drawImage.bind(ctx);
+    const sourceXs: number[] = [];
+    ctx.drawImage = ((...args: Parameters<CanvasRenderingContext2D['drawImage']>) => {
+      if (args.length === 9) sourceXs.push(args[1] as number);
+      original(...args);
+    }) as typeof ctx.drawImage;
+    const fighter = createFighter('Ali', 300, 1);
+    fighter.y = 400;
+    const before = { x: fighter.x, y: fighter.y };
+    for (const time of [.05, .13, 10]) {
+      fighter.pose = 'heavy'; fighter.animationTime = time;
+      fighter.attack = { move: 'heavy', elapsed: time, combo: 1, connected: false, queued: false };
+      drawFighter(ctx, fighter, 1, atlas);
+    }
+    fighter.pose = 'hurt'; fighter.animationTime = .13; fighter.attack = null;
+    drawFighter(ctx, fighter, 1, atlas); // Fallback is still allowed for missing authored poses.
+    fighter.pose = 'heavy'; fighter.face = -1; fighter.animationTime = .13;
+    drawFighter(ctx, fighter, 1, atlas);
+    return { sourceXs, untouched: fighter.x === before.x && fighter.y === before.y };
+  });
+  expect(result.sourceXs).toEqual([0, 100, 100, 0, 100]);
+  expect(result.untouched).toBe(true);
+});
+
 test('approved Ali and Elton pose boards retain original HD cutouts in both directions', async ({ page }, testInfo) => {
   for (const fighter of ['Ali', 'Elton']) {
     await page.evaluate(async fighter => {

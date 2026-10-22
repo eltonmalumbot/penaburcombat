@@ -1,5 +1,15 @@
 import type { Pose } from '../game/types.ts';
 
+/** Single source of truth for atlas clip IDs supported by the fighting engine. */
+export const ATLAS_POSES: readonly Pose[] = [
+  'idle', 'walk', 'jump', 'fall', 'guard', 'light1', 'light2', 'light3',
+  'heavy', 'skill', 'ultimate', 'hurt', 'ko', 'victory',
+];
+const validClips = new Set<string>(ATLAS_POSES);
+const oneShotClips = new Set<string>([
+  'light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'ko',
+]);
+
 export interface AtlasFrame { x: number; y: number; w: number; h: number; pivotX: number; pivotY: number }
 export interface Clip { frames: { frame: string; duration: number }[]; loop: boolean }
 export interface AtlasMetadata {
@@ -16,16 +26,18 @@ export function parseAtlas(value: unknown): AtlasMetadata {
     || !record(value.frames) || !record(value.clips)) throw new Error('Invalid atlas header');
   const frames: Record<string, AtlasFrame> = Object.create(null);
   for (const [id, frame] of Object.entries(value.frames)) {
-    if (!record(frame) || !['x', 'y', 'w', 'h'].every(key => finite(frame[key]))
+    if (!record(frame) || !['x', 'y', 'w', 'h'].every(key => Number.isSafeInteger(frame[key]))
       || (frame.x as number) < 0 || (frame.y as number) < 0 || (frame.w as number) <= 0 || (frame.h as number) <= 0) throw new Error(`Invalid frame: ${id}`);
     const { x, y, w, h } = frame as unknown as AtlasFrame;
     const pivotX = frame.pivotX ?? w / 2, pivotY = frame.pivotY ?? h;
-    if (!finite(pivotX) || !finite(pivotY)) throw new Error(`Invalid pivot: ${id}`);
+    if (!finite(pivotX) || !finite(pivotY) || pivotX < 0 || pivotX > w || pivotY < 0 || pivotY > h) throw new Error(`Invalid pivot: ${id}`);
     frames[id] = { x, y, w, h, pivotX, pivotY };
   }
   const clips: Record<string, Clip> = Object.create(null);
   for (const [id, clip] of Object.entries(value.clips)) {
+    if (!validClips.has(id)) throw new Error(`Unknown atlas pose: ${id}`);
     if (!record(clip) || !Array.isArray(clip.frames) || clip.frames.length === 0 || typeof clip.loop !== 'boolean') throw new Error(`Invalid clip: ${id}`);
+    if (oneShotClips.has(id) && clip.loop) throw new Error(`Non-looping combat clip required: ${id}`);
     const entries = clip.frames.map(entry => {
       if (!record(entry) || typeof entry.frame !== 'string' || !Object.hasOwn(frames, entry.frame)
         || !finite(entry.duration) || entry.duration <= 0 || entry.duration > 60) throw new Error(`Invalid clip frame: ${id}`);

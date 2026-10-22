@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseAtlas, sampleFrame, validateAtlasImage } from '../src/animation/atlas.ts';
+import { ATLAS_POSES, parseAtlas, sampleFrame, validateAtlasImage } from '../src/animation/atlas.ts';
 
 const fixture = () => ({ version: 1, image: './original.png', frames: {
   a: { x: 0, y: 0, w: 100, h: 200 }, b: { x: 100, y: 0, w: 100, h: 200, pivotX: 40, pivotY: 190 },
@@ -48,4 +48,59 @@ test('clip boundaries, non-finite clocks and independent foot pivots sample pred
   assert.equal(sampleFrame(atlas, 'idle', NaN), atlas.frames.a);
   assert.equal(sampleFrame(atlas, 'idle', Infinity), atlas.frames.a);
   assert.equal(sampleFrame(atlas, 'idle', .15)?.pivotY, 190);
+});
+
+test('Phase 3A atlas contract rejects fractional pixel crops and pivots outside the frame', () => {
+  const base = fixture();
+  for (const invalidFrame of [
+    { x: .5, y: 0, w: 100, h: 200 },
+    { x: 0, y: 0, w: 100.5, h: 200 },
+    { x: 0, y: 0, w: 100, h: 200, pivotX: -1, pivotY: 200 },
+    { x: 0, y: 0, w: 100, h: 200, pivotX: 101, pivotY: 200 },
+    { x: 0, y: 0, w: 100, h: 200, pivotX: 50, pivotY: 201 },
+    { x: 0, y: 0, w: 100, h: 200, pivotX: 50, pivotY: -2 },
+  ]) {
+    assert.throws(() => parseAtlas({ ...base, frames: { ...base.frames, a: invalidFrame } }));
+  }
+  // Feet may be planted on the last pixel edge, including the exact bottom border.
+  assert.doesNotThrow(() => parseAtlas({ ...base, frames: {
+    ...base.frames, a: { x: 0, y: 0, w: 100, h: 200, pivotX: 0, pivotY: 200 },
+  } }));
+});
+
+test('Phase 3A clip validation catches typos and looping one-shot combat animations', () => {
+  const base = fixture();
+  assert.equal(new Set(ATLAS_POSES).size, 14);
+  assert.deepEqual(ATLAS_POSES, [
+    'idle', 'walk', 'jump', 'fall', 'guard', 'light1', 'light2', 'light3',
+    'heavy', 'skill', 'ultimate', 'hurt', 'ko', 'victory',
+  ]);
+  const once = { frames: [{ frame: 'a', duration: .1 }, { frame: 'b', duration: .15 }], loop: false };
+  for (const pose of ['light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'ko']) {
+    assert.throws(() => parseAtlas({ ...base, clips: {
+      ...base.clips, [pose]: { ...once, loop: true },
+    } }), /Non-looping combat clip/, pose);
+    assert.doesNotThrow(() => parseAtlas({ ...base, clips: { ...base.clips, [pose]: once } }), pose);
+  }
+  assert.throws(() => parseAtlas({ ...base, clips: { ...base.clips,
+    light_1: once,
+  } }), /Unknown atlas pose/);
+});
+
+test('Phase 3A authored one-shot strike samples startup, impact and recovery deterministically', () => {
+  const base = fixture();
+  const atlas = parseAtlas({ ...base, clips: { ...base.clips,
+    heavy: { loop: false, frames: [
+      { frame: 'a', duration: .12 },
+      { frame: 'b', duration: .18 },
+      { frame: 'a', duration: .30 },
+    ] },
+  } });
+  assert.equal(sampleFrame(atlas, 'heavy', 0), atlas.frames.a);
+  assert.equal(sampleFrame(atlas, 'heavy', .12), atlas.frames.b);
+  assert.equal(sampleFrame(atlas, 'heavy', .299), atlas.frames.b);
+  assert.equal(sampleFrame(atlas, 'heavy', .31), atlas.frames.a);
+  assert.equal(sampleFrame(atlas, 'heavy', 50), atlas.frames.a);
+  assert.equal(sampleFrame(atlas, 'heavy', Number.NaN), atlas.frames.a);
+  assert.equal(sampleFrame(atlas, 'ultimate', .2), null);
 });
