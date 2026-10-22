@@ -31,14 +31,21 @@ export class InputController {
     document.addEventListener('visibilitychange', () => { if (document.hidden) blur(); });
   }
   setEnabled(enabled: boolean): void { this.enabled = enabled; this.clear(); }
-  clear(): void { this.held.clear(); this.pressed.clear(); this.pointers.clear(); }
+  clear(): void { this.held.clear(); this.pressed.clear(); this.pointers.clear();
+    document.querySelectorAll('.touch.is-pressed').forEach(button => button.classList.remove('is-pressed'));
+  }
   bind(button: HTMLButtonElement, key: string): void {
     button.addEventListener('pointerdown', event => {
       if (!this.enabled) return;
       event.preventDefault(); button.setPointerCapture(event.pointerId);
       this.pointers.set(event.pointerId, key); this.pressed.add(key);
+      button.classList.add('is-pressed');
+      if (navigator.vibrate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) navigator.vibrate(8);
     });
-    const release = (event: PointerEvent) => this.pointers.delete(event.pointerId);
+    const release = (event: PointerEvent) => {
+      this.pointers.delete(event.pointerId);
+      if (![...this.pointers.values()].includes(key)) button.classList.remove('is-pressed');
+    };
     button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release);
     button.addEventListener('lostpointercapture', release);
   }

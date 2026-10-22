@@ -81,10 +81,18 @@ export class Screens {
     wrap.append(canvas); page.append(bar, wrap);
     page.append(element('div', 'controls', 'A/D MOVE • W JUMP • S GUARD • J COMBO ×3 • K HEAVY • L SKILL (20) • U ULTIMATE (65) • SHIFT DASH • P PAUSE'));
     const pad = element('div', 'touch-pad');
-    for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
-      const control = element('button', `touch${key === 'u' ? ' super' : ''}`, key === 'shift' ? '»' : key.toUpperCase());
-      control.type = 'button'; control.setAttribute('aria-label', `Control ${key}`); input.bind(control, key); pad.append(control);
+    const movement = element('div', 'touch-movement'), attacks = element('div', 'touch-attacks');
+    movement.setAttribute('aria-label', 'Movement controls');
+    attacks.setAttribute('aria-label', 'Attack controls');
+    const labels: Record<string, string> = { a: '◀', d: '▶', w: '▲', s: 'GUARD', shift: 'DASH',
+      j: 'LIGHT', k: 'HEAVY', l: 'SKILL', u: 'ULTIMATE' };
+    for (const key of ['w', 'a', 's', 'd', 'shift', 'j', 'k', 'l', 'u']) {
+      const control = element('button', `touch key-${key}${key === 'u' ? ' super' : ''}`, labels[key]);
+      control.type = 'button'; control.setAttribute('aria-label', `Control ${key}`);
+      input.bind(control, key);
+      (['w', 'a', 's', 'd', 'shift'].includes(key) ? movement : attacks).append(control);
     }
+    pad.append(movement, attacks);
     this.status = element('div', 'sr-only match-status'); this.status.setAttribute('role', 'group'); this.status.setAttribute('aria-label', 'Match status');
     this.announcement = element('div', 'sr-only'); this.announcement.setAttribute('role', 'status');
     page.append(pad, this.status, this.announcement); canvas.focus({ preventScroll: true }); return canvas;

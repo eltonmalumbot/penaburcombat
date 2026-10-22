@@ -6,6 +6,11 @@ import { emptyInput } from './types.ts';
 import type { Brain, CombatEvent, CombatInput, Fighter, FighterId, Match, Move, Pose } from './types.ts';
 
 export const FIXED_STEP = 1 / 60;
+const ATTACK_BUFFER_SECONDS = .14;
+const COMBO_CANCEL_RECOVERY = .055;
+const ACCELERATION = 6200;
+const BRAKING = 7600;
+const approach = (current: number, target: number, delta: number): number => current + Math.sign(target - current) * Math.min(Math.abs(target - current), delta);
 interface Options { ai?: boolean; random?: () => number }
 
 export class CombatEngine {
@@ -71,33 +76,77 @@ export class CombatEngine {
     f.dashCooldown = Math.max(0, f.dashCooldown - dt);
     f.comboTime = Math.max(0, f.comboTime - dt);
     if (!f.comboTime && !f.attack) f.combo = 0;
+
+    // Store one button press briefly in simulation time, not wall-clock time.
+    // This survives recovery frames but cannot leak into a later round.
+    f.attackBufferTime = Math.max(0, f.attackBufferTime - dt);
+    if (f.attackBufferTime === 0) f.bufferedAttack = null;
+    if (input.attack) {
+      f.bufferedAttack = input.attack;
+      f.attackBufferTime = ATTACK_BUFFER_SECONDS;
+    }
+
     const enemy = f === this.state.player ? this.state.cpu : this.state.player;
     if (!f.attack && f.stun === 0) f.face = f.x <= enemy.x ? 1 : -1;
     f.guard = input.guard && grounded(f) && (f.stun === 0 || f.guard) && !f.attack && f.dashTime === 0;
+
     if (f.stun === 0 && f.hp > 0) {
-      if (input.attack) this.beginAttack(f, input.attack);
+      if (f.attack && f.bufferedAttack === 'light' && f.attack.move === 'light'
+        && f.attack.combo < 3 && f.attack.elapsed >= .05) {
+        f.attack.queued = true;
+        f.bufferedAttack = null;
+        f.attackBufferTime = 0;
+      } else if (!f.attack && f.bufferedAttack && this.beginAttack(f, f.bufferedAttack)) {
+        f.bufferedAttack = null;
+        f.attackBufferTime = 0;
+      }
+
       if (!f.attack && !f.guard) {
         if (input.jump && grounded(f)) f.vy = -850;
-        if (input.dash && grounded(f) && f.dashCooldown === 0) { f.dashTime = .10; f.dashCooldown = .55; }
-        if (f.dashTime > 0) {
-          f.x += f.face * 880 * Math.min(dt, f.dashTime);
-          f.dashTime = Math.max(0, f.dashTime - dt);
-        } else f.x += input.move * character(f.id).speed * speedScale * dt;
+        if (input.dash && grounded(f) && f.dashCooldown === 0) {
+          f.dashTime = .10;
+          f.dashCooldown = .55;
+          f.vx = 0;
+        }
       }
     }
+
+    // A connected light attack can regain limited movement during recovery.
+    // Hitboxes, damage and special-attack movement remain unchanged.
+    const lightRecovery = f.attack?.move === 'light'
+      && f.attack.elapsed >= moveData(f.attack).startup + moveData(f.attack).active;
+    const canMove = f.stun === 0 && f.hp > 0 && !f.guard && f.dashTime === 0
+      && (!f.attack || lightRecovery);
+    const target = canMove ? input.move * character(f.id).speed * speedScale * (lightRecovery ? .35 : 1) : 0;
+    f.vx = approach(f.vx, target, (target === 0 ? BRAKING : ACCELERATION) * dt);
+
+    if (f.dashTime > 0) {
+      f.x += f.face * 880 * Math.min(dt, f.dashTime);
+      f.dashTime = Math.max(0, f.dashTime - dt);
+      f.vx = 0;
+    } else if (canMove) f.x += f.vx * dt;
+    else f.vx = 0;
+
     if (f.attack) {
       f.attack.elapsed += dt;
-      if (f.attack.elapsed + 1e-8 >= attackDuration(f.attack)) {
-        const ended = f.attack;
+      const ended = f.attack, data = moveData(ended);
+      const canCancel = ended.move === 'light' && ended.combo < 3 && ended.queued && ended.connected
+        && ended.elapsed >= data.startup + data.active + COMBO_CANCEL_RECOVERY;
+      if (canCancel || ended.elapsed + 1e-8 >= attackDuration(ended)) {
         f.attack = null;
         f.comboTime = ended.move === 'light' && ended.connected && ended.combo < 3 ? .24 : 0;
-        if (ended.queued && ended.combo < 3) { f.comboTime = .24; this.beginAttack(f, 'light'); }
+        if (ended.queued && ended.combo < 3) {
+          f.comboTime = .24;
+          this.beginAttack(f, 'light');
+        }
       }
     }
+
     f.x = clampX(f.x + f.knockback * dt);
     f.knockback = Math.sign(f.knockback) * Math.max(0, Math.abs(f.knockback) - 1100 * dt);
     this.gravity(f, dt);
-    if (!f.attack && f.stun === 0 && !f.guard) this.animate(f, 0, input.move !== 0 || f.dashTime > 0 ? 'walk' : 'idle');
+    if (!f.attack && f.stun === 0 && !f.guard)
+      this.animate(f, 0, input.move !== 0 || Math.abs(f.vx) > 16 || f.dashTime > 0 ? 'walk' : 'idle');
   }
 
   private gravity(f: Fighter, dt: number): void {
@@ -132,7 +181,8 @@ export class CombatEngine {
     defender.stun = blocked ? .09 : data.stun;
     defender.knockback = attacker.face * data.push * (blocked ? .35 : 1);
     defender.dashTime = 0;
-    if (!blocked) { defender.attack = null; defender.combo = 0; defender.comboTime = 0; defender.guard = false; }
+    if (!blocked) { defender.attack = null; defender.combo = 0; defender.comboTime = 0; defender.guard = false;
+      defender.bufferedAttack = null; defender.attackBufferTime = 0; defender.vx = 0; }
     attacker.meter = Math.min(100, attacker.meter + (attack.move === 'ultimate' ? 0 : blocked ? 5 : 12));
     defender.meter = Math.min(100, defender.meter + (blocked ? 9 : 7));
     this.events.push({ type: 'hit', x: defender.x - attacker.face * 25, y: Math.max(defender.y - 150, attacker.y - 175),
@@ -146,7 +196,8 @@ export class CombatEngine {
     g.phase = 'between'; g.phaseTime = 2.1;
     const knockout = g.player.hp === 0 || g.cpu.hp === 0;
     this.notice(winner === null ? 'DRAW — REPLAY' : `${knockout ? 'KO! ' : 'TIME! '}${(winner === 0 ? g.player.id : g.cpu.id).toUpperCase()} WINS`, 2.1);
-    for (const fighter of [g.player, g.cpu]) { fighter.attack = null; fighter.guard = false; fighter.dashTime = 0; }
+    for (const fighter of [g.player, g.cpu]) { fighter.attack = null; fighter.guard = false; fighter.dashTime = 0;
+      fighter.vx = 0; fighter.bufferedAttack = null; fighter.attackBufferTime = 0; }
     this.events.push({ type: 'round', winner });
   }
 
