@@ -107,9 +107,11 @@ test('authored synthetic heavy attack uses distinct frames and keeps fallback fo
     fighter.y = 400;
     const before = { x: fighter.x, y: fighter.y };
     for (const time of [.05, .13, 10]) {
-      fighter.pose = 'heavy'; fighter.animationTime = time;
+      fighter.pose = 'heavy'; fighter.animationTime = 100; // Stale pose clock after a repeated strike.
       fighter.attack = { move: 'heavy', elapsed: time, combo: 1, connected: false, queued: false };
+      const snapshot = JSON.stringify(fighter);
       drawFighter(ctx, fighter, 1, atlas);
+      if (JSON.stringify(fighter) !== snapshot) throw new Error('Rendering changed combat state');
     }
     fighter.pose = 'hurt'; fighter.animationTime = .13; fighter.attack = null;
     drawFighter(ctx, fighter, 1, atlas); // Fallback is still allowed for missing authored poses.

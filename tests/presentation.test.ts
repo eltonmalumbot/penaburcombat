@@ -31,3 +31,28 @@ test('sideways KO ignores transparent padding for either native orientation', ()
   metadata.facing = 'left';
   assert.equal(spritePresentation(metadata, f, bounds).y, -(200 - 60) * metadata.scale);
 });
+
+for (const move of ['light', 'heavy', 'skill', 'ultimate'] as const) {
+  test(`${move}: authored strikes follow combat time and restart even when the pose is unchanged`, () => {
+    const metadata = parseAtlas(JSON.parse(readFileSync('public/assets/fighters/ali.json', 'utf8')));
+    const f = createFighter('Ali', 400, 1);
+    const pose = move === 'light' ? 'light2' : move;
+    metadata.clips[pose] = { loop: false, frames: [
+      { frame: 'idle-0', duration: .1 }, { frame: 'walk-0', duration: .2 },
+    ] };
+    f.pose = pose; f.animationTime = 10;
+    f.attack = { move, combo: 2, elapsed: .12, connected: false, queued: false };
+    const before = structuredClone(f);
+    assert.equal(spritePresentation(metadata, f).frame, metadata.frames['walk-0']);
+    assert.deepEqual(f, before);
+    // A new strike can retain the same pose and stale pose time.
+    f.attack.elapsed = 0;
+    assert.equal(spritePresentation(metadata, f).frame, metadata.frames['idle-0']);
+    f.attack.elapsed = 20;
+    assert.equal(spritePresentation(metadata, f).frame, metadata.frames['walk-0']);
+    f.pose = 'walk'; f.animationTime = .16;
+    assert.equal(spritePresentation(metadata, f).frame, sampleFrame(metadata, 'walk', .16));
+    f.pose = pose; f.attack = null; f.animationTime = .12;
+    assert.equal(spritePresentation(metadata, f).frame, metadata.frames['walk-0']);
+  });
+}
