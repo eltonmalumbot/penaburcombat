@@ -39,6 +39,42 @@ test('on-screen combat buttons are available on desktop and mobile', async ({ pa
   expect(errors).toEqual([]);
 });
 
+test('responsive gamepad fits portrait and landscape phone sizes without clipped controls', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await start(page);
+  const gamepad = page.getByRole('region', { name: 'On-screen combat controls' });
+  await expect(gamepad).toBeVisible();
+  await expect(page.locator('.rotate-hint')).toBeVisible();
+  for (const [key, label] of [['j', 'LIGHT'], ['k', 'HEAVY'], ['l', 'SKILL'], ['u', 'ULTIMATE']]) {
+    await expect(page.getByRole('button', { name: `Control ${key}`, exact: true }).locator('.touch-label')).toHaveText(label);
+  }
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(page.locator('.fight-page .game-wrap')).toBeVisible();
+  await expect(gamepad).toBeVisible();
+  await expect(page.locator('.top')).toBeHidden();
+  await expect(page.locator('.rotate-hint')).toBeHidden();
+  for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
+    const target = page.getByRole('button', { name: `Control ${key}`, exact: true });
+    await expect(target).toBeVisible();
+    const bounds = await target.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(-1);
+    expect(bounds!.y).toBeGreaterThanOrEqual(-1);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(845);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(391);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 2)).toBe(true);
+  await page.getByRole('button', { name: 'Control j', exact: true }).click();
+  await page.getByRole('button', { name: 'Control s', exact: true }).click();
+  await page.setViewportSize({ width: 320, height: 640 });
+  await expect(gamepad).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test('desktop controls, combat, pause and clearing held input on exit', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
