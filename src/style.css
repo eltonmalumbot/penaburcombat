@@ -35,7 +35,7 @@
   .touch-attacks .key-j {background:#146078}
   .touch-attacks .key-k {background:#78445e}
   .touch-attacks .key-l {background:#5d488d}
-  .touch-attacks .key-u {grid-column:2;background:#8b6220;border-color:#e1b665}
+  .touch-pad .touch-attacks .key-u {grid-column:2;background:#8b6220;border-color:#e1b665}
 }
 @media(max-width:380px) {
   .touch-pad {gap:6px}

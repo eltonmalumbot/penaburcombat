@@ -10,6 +10,7 @@ test('mobile split controls keep independent simultaneous touch pointers', async
   await expect(pad).toBeVisible();
   await expect(pad.locator('.touch-movement .touch')).toHaveCount(5);
   await expect(pad.locator('.touch-attacks .touch')).toHaveCount(4);
+  await expect(pad.locator('.key-u')).toHaveCSS('grid-column-start', '2');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   const walk = page.getByRole('button', { name: 'Control d', exact: true });
