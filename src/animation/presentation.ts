@@ -4,7 +4,12 @@ import type { Fighter } from '../game/types.ts';
 
 /** Temporary whole-sprite staging, never a claim that a missing pose has authored frames. */
 export function spritePresentation(metadata: AtlasMetadata, fighter: Fighter, idleBounds?: { left: number; right: number }) {
-  const authored = sampleFrame(metadata, fighter.pose, fighter.animationTime);
+  // The simulation clock is authoritative for strikes, including consecutive
+  // attacks with the same pose (which do not reset the general pose clock).
+  const attack = fighter.attack;
+  const attackPose = attack?.move === 'light' ? `light${attack.combo}` : attack?.move;
+  const elapsed = attack && fighter.pose === attackPose ? attack.elapsed : fighter.animationTime;
+  const authored = sampleFrame(metadata, fighter.pose, elapsed);
   const frame = authored ?? sampleFrame(metadata, 'idle', 0)!;
   const temporary = !authored;
   const down = temporary && fighter.pose === 'ko';
