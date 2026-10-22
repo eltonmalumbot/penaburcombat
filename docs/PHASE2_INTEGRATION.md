@@ -6,7 +6,7 @@
 
 The project owner confirmed permission to publish the supplied Ali/Elton likeness artwork for this game in the Phase 2 implementation request. The consented integration package repeats that statement. No staff photographs, official organization logos, or claims of organizational affiliation are included. The game is explicitly independent, not an official BPK PENABUR product. The text wordmark is original; this release does not assert ownership of an organization's marks or authorize unrelated reuse.
 
-Code-only PR #1 at `2b109ac1f6c1010c297e4cecc38215c2d75ce9a5` had successful build, SonarCloud and Vercel checks, was conflict-free, and was made ready before merging. Its merge commit is `5d344815711729fd54307eafab664799b857f8c7`. This integration is a separate follow-up PR, retaining its missing-pose fallback, HD sampling, direction support, retry and asynchronous loading protections.
+Code-only PR #1 at `2b109ac1f6c1010c297e4cecc38215c2d75ce9a5` had successful build, SonarCloud and Vercel checks, was conflict-free, and was made ready before merging. Its merge commit is `5d344815711729fd54307eafab664799b857f8c7`. This integration is a separate follow-up PR, retaining its loader safeguards and HD sampling, direction support, retry and asynchronous loading protections.
 
 ## Assets and curation
 
@@ -20,7 +20,7 @@ The sole edge remains at the logical ground line, including after facing flips. 
 
 ## Rendering and UI
 
-Menu, character cards and selection preview share the fight atlas/cache and redraw once decoded. A removed screen is not repainted by late portrait loads. Loading/decode failure draws the original stand-in, without blocking navigation or combat. Battles still load the pair together; unsupported poses immediately use geometric art rather than pretending to be idle.
+Menu, character cards and selection preview share the fight atlas/cache and redraw once decoded. A removed screen is not repainted by late portrait loads. Loading/decode failure draws the original stand-in, without blocking navigation or combat. Battles still load the pair together; unsupported poses now use explicitly temporary HD staging as described in `PHASE2B.md`.
 
 The PENABUR Combat text wordmark/subtitle appears in header, menu, selection context, match bar and result screen; tab title, description and OpenGraph metadata match. Dark blue/cyan, red and gold accents, system typography, responsive cards and larger two-row mobile controls replace the prior styling. There is no external font request, CSS blur, official logo or extra continuously animated menu loop. Static portraits do not add per-frame work. Two decoded atlas images are shared across portraits and fights.
 
@@ -28,12 +28,12 @@ Ali remains Data Strategist, with **HEIST PROTOCOL**; Elton remains Shadow Devel
 
 ## Missing HD poses
 
-Both characters still use geometric **jump/fall, guard, light1/2/3, heavy, skill, ultimate, hurt, KO and victory**. The switch in art style is visible and intentional. No idle frame is substituted for these states; the structure is ready for additional approved atlas clips.
+Both characters lack authored **jump/fall, guard, light1/2/3, heavy, skill, ultimate, hurt, KO and victory**. Phase 2B supersedes the original geometric-pose policy: these states keep the stable HD cutout with explicit temporary staging/effects. See `PHASE2B.md`; these are not final combat animations.
 
 ## Validation and publication checks
 
 - Unit tests cover combat, schema/sampling, supplied asset checksums/dimensions, all sixteen rectangles, pivots, curated playback, declared paths and missing poses.
 - Production browser tests exercise branding/metadata, actual decoded sprite draw calls (two distinct atlas images, idle/walk rows, both facing signs), both full-match outcomes, mobile Elton, skills/ultimates, KO, rounds, rematch, and forced 404 image fallback.
-- Synthetic browser tests cover pixel-level foot alignment across frames/scale/facing, filter isolation, exact geometric equivalence for missing poses, retry and concurrent loading.
+- Synthetic browser tests cover pixel-level foot alignment across frames/scale/facing, filter isolation, HD-only drawing for missing poses, retry and concurrent loading.
 - Visual review uses real desktop/mobile screenshots of menu, Ali/Elton selection and battle, followed by Vercel preview review. Automatic tests validate integration, not final illustration quality.
 - Before merge, verify CI, conflicts and preview. After merge, verify Vercel success, HTTP 200, `/build-info.json` SHA, JS/CSS/image responses and production browser gameplay. Report the actual resulting SHA and test outcomes, without labeling incomplete animation final.

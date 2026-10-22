@@ -2,7 +2,8 @@ import { character } from '../game/characters.ts';
 import { ARENA } from '../game/geometry.ts';
 import { moveData } from '../game/moves.ts';
 import type { CombatEvent, Fighter, FighterId, Match } from '../game/types.ts';
-import { loadAtlas, sampleFrame } from '../animation/atlas.ts';
+import { loadAtlas } from '../animation/atlas.ts';
+import { spritePresentation } from '../animation/presentation.ts';
 import type { SpriteAtlas } from '../animation/atlas.ts';
 
 function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
@@ -29,19 +30,23 @@ export async function drawPortraits(canvas: HTMLCanvasElement, portraits: readon
   }
 }
 
-/** Original geometric stand-in artwork, retained while approved sprite assets are prepared. */
+/** Use approved HD art whenever available; geometric bodies are only an asset-load fallback. */
 export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1, atlas?: SpriteAtlas): void {
   const theme = character(f.id), t = f.animationTime;
   ctx.save(); ctx.translate(f.x, f.y);
   ctx.fillStyle = '#07132977'; ctx.beginPath(); ctx.ellipse(0, 0, 54 * scale, 10 * scale, 0, 0, Math.PI * 2); ctx.fill();
   ctx.scale(f.face * scale, scale);
-  const frame = atlas ? sampleFrame(atlas.metadata, f.pose, t) : null;
-  if (atlas && frame) {
-    const size = atlas.metadata.scale;
+  if (atlas) {
+    const presentation = spritePresentation(atlas.metadata, f, atlas.idleBounds);
+    const { frame } = presentation, size = atlas.metadata.scale;
+    ctx.save();
+    ctx.translate(presentation.x, presentation.y); ctx.rotate(presentation.rotation);
     if (atlas.metadata.facing === 'left') ctx.scale(-1, 1);
     ctx.imageSmoothingEnabled = atlas.metadata.sampling === 'smooth';
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(atlas.image, frame.x, frame.y, frame.w, frame.h, -frame.pivotX * size, -frame.pivotY * size, frame.w * size, frame.h * size);
+    ctx.restore();
+    if (presentation.temporary) drawTemporaryEffects(ctx, f, theme.color);
     ctx.restore(); return;
   }
   if (f.pose === 'ko') { ctx.rotate(Math.PI / 2); ctx.scale(.8, .8); }
@@ -84,6 +89,32 @@ export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1
     ctx.strokeStyle = theme.color; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, -150, 110 + Math.sin(t * 20) * 8, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.restore();
+}
+
+/** Read-only combat cues separate from the reused cutout; no replacement limbs or hitboxes. */
+function drawTemporaryEffects(ctx: CanvasRenderingContext2D, f: Fighter, color: string): void {
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 4;
+  if (f.pose === 'guard') {
+    ctx.beginPath(); ctx.arc(15, -145, 115, -1.25, 1.25); ctx.stroke();
+  }
+  if (f.attack) {
+    const data = moveData(f.attack);
+    const active = f.attack.elapsed >= data.startup && f.attack.elapsed < data.startup + data.active;
+    ctx.globalAlpha = active ? .9 : .3;
+    ctx.lineWidth = active ? 7 : 2;
+    ctx.beginPath(); ctx.ellipse(55, -150, Math.max(20, data.reach - 55), 65, 0, -1.1, 1.1); ctx.stroke();
+    if (f.attack.move === 'skill' || f.attack.move === 'ultimate') {
+      ctx.beginPath(); ctx.arc(0, -150, f.attack.move === 'ultimate' ? 165 : 125, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (f.pose === 'hurt') {
+    ctx.strokeStyle = '#fff1cf'; ctx.beginPath();
+    ctx.moveTo(-40, -210); ctx.lineTo(40, -150); ctx.moveTo(-40, -150); ctx.lineTo(40, -210); ctx.stroke();
+  }
+  if (f.pose === 'victory') {
+    ctx.strokeStyle = '#ffe5a1'; ctx.beginPath(); ctx.ellipse(0, -325, 45, 10, 0, 0, Math.PI * 2); ctx.stroke();
+  }
 }
 
 function drawArena(ctx: CanvasRenderingContext2D): void {

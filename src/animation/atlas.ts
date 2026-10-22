@@ -6,7 +6,7 @@ export interface AtlasMetadata {
   version: 1; image: string; scale: number; frames: Record<string, AtlasFrame>; clips: Record<string, Clip>;
   sampling: 'smooth' | 'pixelated'; facing: 'right' | 'left';
 }
-export interface SpriteAtlas { metadata: AtlasMetadata; image: HTMLImageElement }
+export interface SpriteAtlas { metadata: AtlasMetadata; image: HTMLImageElement; idleBounds?: { left: number; right: number } }
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
@@ -42,7 +42,7 @@ export function parseAtlas(value: unknown): AtlasMetadata {
   return { version: 1, image: value.image, scale, sampling, facing, frames, clips };
 }
 
-/** Missing poses must retain their geometric animation, never masquerade as idle. */
+/** Sample authored clips only. The presentation layer explicitly handles missing poses. */
 export function sampleFrame(metadata: AtlasMetadata, pose: Pose, elapsed: number): AtlasFrame | null {
   const clip = metadata.clips[pose];
   if (!clip) return null;
@@ -61,6 +61,20 @@ export function validateAtlasImage(metadata: AtlasMetadata, width: number, heigh
   for (const [id, frame] of Object.entries(metadata.frames)) {
     if (frame.x + frame.w > width || frame.y + frame.h > height) throw new Error(`Frame exceeds atlas image: ${id}`);
   }
+}
+
+/** Measure once at load, never read pixels in the rendering loop. */
+function measureIdleBounds(metadata: AtlasMetadata, image: HTMLImageElement) {
+  const idle = sampleFrame(metadata, 'idle', 0)!;
+  const canvas = document.createElement('canvas'); canvas.width = idle.w; canvas.height = idle.h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(image, idle.x, idle.y, idle.w, idle.h, 0, 0, idle.w, idle.h);
+  const pixels = ctx.getImageData(0, 0, idle.w, idle.h).data;
+  let left = idle.w, right = 0;
+  for (let y = 0; y < idle.h; y++) for (let x = 0; x < idle.w; x++) {
+    if (pixels[(y * idle.w + x) * 4 + 3] >= 128) { left = Math.min(left, x); right = Math.max(right, x + 1); }
+  }
+  return right > left ? { left, right } : undefined;
 }
 
 const cache = new Map<string, Promise<SpriteAtlas>>();
@@ -84,7 +98,7 @@ export function loadAtlas(url: string): Promise<SpriteAtlas> {
       try { image.src = objectUrl; await image.decode(); }
       finally { URL.revokeObjectURL(objectUrl); }
       validateAtlasImage(metadata, image.naturalWidth, image.naturalHeight);
-      return { metadata, image };
+      return { metadata, image, idleBounds: measureIdleBounds(metadata, image) };
     })();
     cache.set(absolute.href, pending);
     // Allow an explicit retry after an asset is corrected during development.

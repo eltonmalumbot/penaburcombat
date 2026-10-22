@@ -6,7 +6,7 @@ An independent, fictional browser fighting game built with TypeScript, HTML Canv
 
 Ali, the **Data Strategist**, faces Elton, the **Shadow Developer**, in a best-of-three CPU duel. Ali's ultimate is **HEIST PROTOCOL**; Elton's is **NIGHT DEPLOY**. The roster still contains Ali, Patrick, Niko, Marco, Lia, Kris and Elton. Only Ali and Elton are playable.
 
-The project owner confirmed permission to publish the supplied Ali/Elton likeness artwork for this game. Their original PNG atlases are included unchanged, with curated idle/walk clips and foot-aligned metadata. Menus, selection cards and the arena use HD art. Missing jump/fall, guard, attacks, hurt, KO and victory clips keep the geometric combat animation. **This is partial HD coverage, not finished rigged animation.** See [the integration/visual report](docs/PHASE2_INTEGRATION.md) and [asset provenance](public/assets/fighters/README.md).
+The project owner confirmed permission to publish the supplied Ali/Elton likeness artwork for this game. Their original PNG atlases are included unchanged, with curated idle/walk clips and foot-aligned metadata. Menus, selection cards and the arena use HD art. Missing combat clips use temporary whole-sprite HD staging and separate Canvas effects. Geometric bodies are reserved for missing or failed atlases. See [Phase 2B](docs/PHASE2B.md) for the explicit temporary-pose inventory. **This is partial HD coverage, not finished rigged animation.** See [the integration/visual report](docs/PHASE2_INTEGRATION.md) and [asset provenance](public/assets/fighters/README.md).
 
 ## Development
 

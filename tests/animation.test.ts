@@ -14,7 +14,7 @@ test('atlas clips loop, respect frame durations, and anchor feet by default', ()
   assert.equal(sampleFrame(atlas, 'idle', .35), atlas.frames.a);
   assert.equal(atlas.frames.a.pivotX, 50); assert.equal(atlas.frames.a.pivotY, 200);
 });
-test('non-looping KO holds its last frame and absent animations request geometric fallback', () => {
+test('non-looping KO holds its last frame and absent animations remain distinguishable from authored clips', () => {
   const atlas = parseAtlas(fixture());
   assert.equal(sampleFrame(atlas, 'ko', 100), atlas.frames.b);
   for (const pose of ['walk', 'jump', 'fall', 'guard', 'light1', 'light2', 'light3', 'heavy', 'skill', 'ultimate', 'hurt', 'victory'] as const) {
