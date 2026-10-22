@@ -17,8 +17,8 @@ test('mobile split controls keep independent simultaneous touch pointers', async
   const punch = page.getByRole('button', { name: 'Control j', exact: true });
   // Chromium maps CDP touch ids to its own PointerEvent.pointerId values.
   // Capture the actual browser ids before checking release isolation.
-  await walk.evaluate(node => node.addEventListener('pointerdown', e => { (node as HTMLElement).dataset.qaPointer = String(e.pointerId); }));
-  await punch.evaluate(node => node.addEventListener('pointerdown', e => { (node as HTMLElement).dataset.qaPointer = String(e.pointerId); }));
+  await walk.evaluate(node => node.addEventListener('pointerdown', e => { (node as HTMLElement).dataset.qaPointer = String((e as PointerEvent).pointerId); }));
+  await punch.evaluate(node => node.addEventListener('pointerdown', e => { (node as HTMLElement).dataset.qaPointer = String((e as PointerEvent).pointerId); }));
   const left = await walk.boundingBox();
   const right = await punch.boundingBox();
   expect(left && right).toBeTruthy();
