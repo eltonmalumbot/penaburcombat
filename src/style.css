@@ -32,3 +32,69 @@
 @media(max-width:900px){.touch-pad{grid-template-columns:1fr}.touch-group{gap:7px}.touch-heading{font-size:9px}}
 @media(max-width:700px){.touch-pad{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px;padding:10px}.touch-pad .touch{min-height:52px;padding:6px 2px}.touch-glyph{font-size:17px}.touch-label{font-size:8px}.touch-pad .touch.super{grid-column:auto}.controls{padding:14px 2px}}
 @media(max-width:360px){.touch-label{font-size:7px}.touch-pad .touch.super .touch-label{font-size:7px}}
+
+/* Gamepad: D-pad + arcade actions, modelled on the approved mobile layout.
+   Above the battlefield on wide screens; overlaid only in short landscape viewports. */
+.fight-layout{position:relative;min-width:0}
+.fight-layout .touch-pad{--dpad-button:clamp(42px,5.5vw,66px);--attack-button:clamp(54px,6.5vw,78px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:16px;padding:12px 18px;margin-top:12px;isolation:isolate}
+.gamepad .touch-group{min-width:0;align-items:center;gap:7px}
+.gamepad .touch-heading{display:block;width:100%;text-align:center;font-size:10px;letter-spacing:.15em}
+.gamepad .touch-group.move .touch-buttons{display:grid;grid-template-columns:repeat(3,var(--dpad-button));grid-template-rows:repeat(3,var(--dpad-button));gap:3px;justify-content:center;align-content:center}
+.gamepad .touch-group.attack .touch-buttons{display:block;position:relative;width:min(100%,290px);height:calc(var(--dpad-button) * 3 + 6px)}
+.gamepad .touch{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;padding:2px;min-width:0;min-height:0;width:100%;height:100%;border-radius:13px;border:2px solid #7198be;background:linear-gradient(145deg,#405e7d,#284361);box-shadow:inset 0 2px 2px #ffffff1c,0 3px 7px #0007;color:#f6f9ff;touch-action:none;-webkit-user-select:none;user-select:none}
+.gamepad .touch:active{transform:scale(.94);filter:brightness(1.22)}
+.gamepad .touch:focus-visible{outline:3px solid #e7f2ff;outline-offset:2px}
+.gamepad .touch-glyph{font-size:clamp(19px,2.4vw,29px);font-weight:900;line-height:1}
+.gamepad .touch-label{font-size:9px;letter-spacing:.025em;line-height:1.1;font-weight:900}
+.gamepad .move .touch-a{grid-column:1;grid-row:2}
+.gamepad .move .touch-d{grid-column:3;grid-row:2}
+.gamepad .move .touch-w{grid-column:2;grid-row:1}
+.gamepad .move .touch-s{grid-column:2;grid-row:3}
+.gamepad .move .touch-shift{grid-column:3;grid-row:3;background:linear-gradient(145deg,#256175,#143b5f);border-color:#60b8dc}
+.gamepad .attack .touch{position:absolute;width:var(--attack-button);height:var(--attack-button);border-radius:50%;border-width:2px}
+.gamepad .attack .touch-glyph{display:none}
+.gamepad .attack .touch-label{font-size:clamp(9px,1.1vw,13px)}
+.gamepad .attack .touch-j{left:0;top:25%;background:#23749a;border-color:#4c9fca}
+.gamepad .attack .touch-k{right:17%;top:0;background:#985169;border-color:#c57e98}
+.gamepad .attack .touch-l{right:0;top:42%;background:#7b4c9d;border-color:#a982c9}
+.gamepad .attack .touch-u{left:0;bottom:0;top:auto;width:60%;min-width:90px;height:clamp(42px,5vw,54px);border-radius:100px;background:#96702e;border-color:#d5a957}
+.gamepad .attack .touch-u .touch-label{font-size:clamp(10px,1.2vw,14px)}
+.rotate-hint{display:none;text-align:center;font-size:12px;line-height:1.45;color:#b2dcf3;margin:10px 4px}
+@media(max-width:700px){
+  .fight-page{padding:12px 12px 20px}
+  .fight-page .battle-bar{gap:7px}
+  .fight-layout .touch-pad{--dpad-button:clamp(38px,11vw,54px);--attack-button:clamp(48px,14vw,64px);grid-template-columns:1fr 1fr;gap:6px;padding:12px 6px}
+  .gamepad .touch-heading{font-size:9px}
+  .gamepad .touch-label{font-size:8px}
+  .gamepad .attack .touch-label{font-size:10px}
+  .gamepad .attack .touch-u .touch-label{font-size:10px}
+  .rotate-hint{display:block}
+}
+/* Small phones in landscape: stay in the browser, use the visible canvas as a
+   16:9 stage and float translucent gamepad buttons above its lower corners. */
+@media(orientation:landscape) and (max-height:600px) and (max-width:1200px){
+  #app.in-fight .top,#app.in-fight .foot{display:none}
+  #app.in-fight{height:100vh;height:100dvh;overflow:hidden}
+  .fight-page{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:0;height:100vh;height:100dvh;max-width:none;overflow:hidden;padding:4px max(8px,env(safe-area-inset-right)) 4px max(8px,env(safe-area-inset-left))}
+  .fight-page .battle-bar{width:100%;height:34px;min-height:34px;flex-wrap:nowrap;gap:8px;margin:0 0 2px;flex:none}
+  .fight-page .battle-bar .eyebrow{flex:1;flex-basis:auto;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fight-page .battle-bar .button{padding:5px 10px;min-height:30px;margin:0;white-space:nowrap}
+  .fight-layout{width:min(100%,150dvh);margin:auto;flex:none}
+  .fight-layout .game-wrap{width:100%;aspect-ratio:16/9;box-shadow:none}
+  .fight-layout .touch-pad{--dpad-button:clamp(37px, min(7.5vw,13.5dvh),55px);--attack-button:clamp(46px, min(9vw,17dvh),70px);position:absolute;z-index:2;inset:auto 6px 8px;display:grid;grid-template-columns:1fr 1fr;align-items:end;height:auto;margin:0;padding:0;gap:10px;border:0;background:transparent;pointer-events:none}
+  .gamepad .touch-group{align-items:center;gap:4px}
+  .gamepad .touch-heading{text-shadow:0 1px 4px #00152b;font-size:9px}
+  .gamepad .touch-group.move .touch-buttons{gap:2px}
+  .gamepad .touch-group.attack .touch-buttons{width:min(100%,220px);height:calc(var(--dpad-button) * 3 + 4px)}
+  .gamepad .touch{background-color:#284361dc;pointer-events:auto;box-shadow:0 2px 8px #0008}
+  .gamepad .touch-label{font-size:7px}
+  .gamepad .attack .touch-label{font-size:9px}
+  .gamepad .attack .touch-u .touch-label{font-size:10px}
+  .fight-page .controls,.fight-page .rotate-hint{display:none}
+}
+/* Preserve a playable layout when the display is exceptionally narrow. */
+@media(max-width:350px) and (orientation:portrait){
+  .fight-layout .touch-pad{--dpad-button:37px;--attack-button:46px;padding:10px 2px;gap:2px}
+  .gamepad .touch-label{font-size:7px}
+  .gamepad .attack .touch-u{min-width:86px}
+}
