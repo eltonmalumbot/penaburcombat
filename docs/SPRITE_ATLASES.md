@@ -4,7 +4,9 @@ Ali and Elton use the project-owner-supplied HD atlases after the owner confirme
 
 Put an approved image and metadata in `public/assets/fighters/`. For example, `Ali.atlasUrl = '/assets/fighters/ali.json'`. Both metadata and image must have the same origin as the game. The loader caches assets, validates rectangles against the decoded image, and falls back to the original Canvas drawing if loading fails. Keep the fallback until the asset pipeline has been verified.
 
-Metadata version 1 uses untrimmed image rectangles in pixels and durations in seconds:
+Metadata version 1 uses untrimmed image rectangles in pixels and durations in seconds. The loader rejects non-integer crop coordinates/sizes, out-of-frame pivots, unknown clip names, and looping one-shot combat actions (`light1–3`, `heavy`, `skill`, `ultimate`, `hurt`, `ko`). Keep the sprite-pivot point inside the corresponding source-frame rectangle, including the bottom or side edge:
+
+
 
 ```json
 {
