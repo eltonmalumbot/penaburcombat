@@ -64,3 +64,10 @@ No changes to `src/game/moves.ts`, `src/game/geometry.ts`, AI, meter, HP, round/
 3. Acquire/review Elton frames, integrate and QA them identically.
 4. Validate side-by-side fighter continuity on desktop and mobile and merge only with passing tests, SonarCloud, Preview and visual approval.
 5. Advance to Phase 3B ultimates and Phase 3C polish only after core combat readability is adequate.
+
+## Implemented Phase 3A groundwork (code-only)
+
+- `parseAtlas` now rejects unknown/typo clip names, fractional crop rectangles, and pivots outside a source-frame rectangle. All authorized v1 pose names come from `ATLAS_POSES`.
+- Combat one-shot clips (`light1`, `light2`, `light3`, `heavy`, `skill`, `ultimate`, `hurt`, `ko`) must use `loop:false` to avoid accidental repeated attacks or a permanently looping knockout.
+- New Node tests cover invalid crops, pivots, clip names and one-shot timing boundaries. A synthetic Chromium test verifies that authored attack frames actually render while missing poses still fall back safely, in both facing directions, without moving the fighter's world coordinates.
+- All original assets and battle rules remain unchanged. This is a pipeline hardening step, **not** a claim that the finished HD combat frames exist.
