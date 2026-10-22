@@ -15,6 +15,10 @@ test('mobile split controls keep independent simultaneous touch pointers', async
 
   const walk = page.getByRole('button', { name: 'Control d', exact: true });
   const punch = page.getByRole('button', { name: 'Control j', exact: true });
+  // Chromium maps CDP touch ids to its own PointerEvent.pointerId values.
+  // Capture the actual browser ids before checking release isolation.
+  await walk.evaluate(node => node.addEventListener('pointerdown', e => { (node as HTMLElement).dataset.qaPointer = String(e.pointerId); }));
+  await punch.evaluate(node => node.addEventListener('pointerdown', e => { (node as HTMLElement).dataset.qaPointer = String(e.pointerId); }));
   const left = await walk.boundingBox();
   const right = await punch.boundingBox();
   expect(left && right).toBeTruthy();
@@ -32,10 +36,15 @@ test('mobile split controls keep independent simultaneous touch pointers', async
     // Releasing the punch must not release the still-held movement pointer.
     // CDP touchEnd represents changed contacts differently across Chromium versions.
     // Dispatch each captured pointer's release explicitly to verify isolation.
-    await punch.dispatchEvent('pointerup', { pointerId: 12 });
+    const walkId = Number(await walk.getAttribute('data-qa-pointer'));
+    const punchId = Number(await punch.getAttribute('data-qa-pointer'));
+    expect(walkId).toBeGreaterThan(0);
+    expect(punchId).toBeGreaterThan(0);
+    expect(punchId).not.toBe(walkId);
+    await punch.dispatchEvent('pointerup', { pointerId: punchId });
     await expect(punch).not.toHaveClass(/is-pressed/);
     await expect(walk).toHaveClass(/is-pressed/);
-    await walk.dispatchEvent('pointercancel', { pointerId: 11 });
+    await walk.dispatchEvent('pointercancel', { pointerId: walkId });
     await expect(walk).not.toHaveClass(/is-pressed/);
   } finally {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
