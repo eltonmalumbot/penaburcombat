@@ -25,6 +25,7 @@ export class Screens {
     logo.href = '#'; logo.addEventListener('click', event => { event.preventDefault(); this.actions.menu(); });
     header.append(logo, element('span', 'tag', '16.59 — Fight for Friday!'));
     const page = element('main', 'page');
+    this.root.classList.remove('in-fight');
     this.root.replaceChildren(header, page, element('footer', 'foot', 'PROYEK INDEPENDEN & FIKSI • BUKAN PRODUK RESMI BPK PENABUR • NO OFFICIAL AFFILIATION'));
     return page;
   }
@@ -78,22 +79,29 @@ export class Screens {
     bar.append(element('span', 'eyebrow', 'PENABUR Combat • LIVE MATCH • 16.59'), this.pauseButton, button('EXIT', this.actions.select, true));
     const wrap = element('div', 'game-wrap'), canvas = element('canvas');
     canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
-    wrap.append(canvas); page.append(bar, wrap);
+    wrap.append(canvas);
+    const layout = element('div', 'fight-layout');
+    layout.append(wrap);
+    page.classList.add('fight-page');
+    this.root.classList.add('in-fight');
+    page.append(bar, layout);
 
-    const pad = element('section', 'touch-pad');
+    // Keep the original InputController bindings; only their visual arrangement changes.
+    // All controls are real buttons, so keyboard and touch can coexist.
+    const pad = element('section', 'touch-pad gamepad');
     pad.setAttribute('aria-label', 'On-screen combat controls');
-    const groups: readonly { title: string; keys: readonly [string, string, string][] }[] = [
-      { title: 'MOVEMENT', keys: [
+    const groups: readonly { title: string; className: string; keys: readonly [string, string, string][] }[] = [
+      { title: 'MOVEMENT', className: 'move', keys: [
         ['a', '◀', 'LEFT'], ['d', '▶', 'RIGHT'], ['w', '↑', 'JUMP'],
-        ['s', '◈', 'GUARD'], ['shift', '»', 'DASH'],
+        ['s', '↓', 'GUARD'], ['shift', '»', 'DASH'],
       ] },
-      { title: 'ATTACK', keys: [
-        ['j', 'J', 'COMBO'], ['k', 'K', 'HEAVY'],
-        ['l', 'L', 'SKILL'], ['u', 'U', 'ULTIMATE'],
+      { title: 'ATTACK', className: 'attack', keys: [
+        ['j', '●', 'LIGHT'], ['k', '●', 'HEAVY'],
+        ['l', '●', 'SKILL'], ['u', '★', 'ULTIMATE'],
       ] },
     ];
     for (const group of groups) {
-      const section = element('div', 'touch-group');
+      const section = element('div', `touch-group ${group.className}`);
       section.append(element('span', 'touch-heading', group.title));
       const buttons = element('div', 'touch-buttons');
       for (const [key, glyph, label] of group.keys) {
@@ -101,15 +109,20 @@ export class Screens {
         control.type = 'button';
         control.setAttribute('aria-label', `Control ${key}`);
         control.dataset.key = key;
-        control.append(element('span', 'touch-glyph', glyph), element('span', 'touch-label', label));
+        const icon = element('span', 'touch-glyph', glyph);
+        icon.setAttribute('aria-hidden', 'true');
+        control.append(icon, element('span', 'touch-label', label));
         input.bind(control, key);
         buttons.append(control);
       }
       section.append(buttons); pad.append(section);
     }
+    layout.append(pad);
+    page.append(element('p', 'rotate-hint', 'Putar HP ke landscape untuk area bermain yang lebih luas.'));
     this.status = element('div', 'sr-only match-status'); this.status.setAttribute('role', 'group'); this.status.setAttribute('aria-label', 'Match status');
     this.announcement = element('div', 'sr-only'); this.announcement.setAttribute('role', 'status');
-    page.append(pad, element('div', 'controls', 'KEYBOARD: A/D MOVE • W JUMP • S GUARD • SHIFT DASH • J COMBO • K HEAVY • L SKILL • U ULTIMATE • P PAUSE'), this.status, this.announcement); canvas.focus({ preventScroll: true }); return canvas;
+    page.append(element('div', 'controls', 'KEYBOARD: A/D MOVE • W JUMP • S GUARD • SHIFT DASH • J LIGHT • K HEAVY • L SKILL • U ULTIMATE • P PAUSE'), this.status, this.announcement);
+    canvas.focus({ preventScroll: true }); return canvas;
   }
 
   update(match: Match, paused: boolean): void {
