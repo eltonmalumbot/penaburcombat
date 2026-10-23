@@ -209,3 +209,27 @@
   .fight-layout .gamepad-v2 .touch-heading{font-size:8px}
   .fight-page .pad-size-toggle{padding:5px 7px;font-size:8px}
 }
+
+
+/* V2 meter readiness: keep buttons pressable so the engine stays authoritative. */
+.gamepad-v2 .attack .touch-l[data-ready="false"],
+.gamepad-v2 .attack .touch-u[data-ready="false"]{
+  filter:saturate(.65) brightness(.80);
+}
+.gamepad-v2 .attack .touch-l[data-ready="true"]{
+  border-color:#e6bbff;
+  box-shadow:0 0 0 2px #b964ff44,0 0 14px #bb70fb88;
+}
+.gamepad-v2 .attack .touch-u[data-ready="true"]{
+  border-color:#ffed8e;
+  background:linear-gradient(145deg,#d89c2f,#986213);
+  box-shadow:0 0 0 2px #ffda734a,0 0 20px #ffdb7299;
+}
+.gamepad-v2 .attack .touch.is-held{
+  filter:brightness(1.24);
+}
+/* Non-disruptive focus and readable labels on all action sizes. */
+.gamepad-v2 .attack .touch-label{
+  text-shadow:0 1px 2px #0b193d;
+  overflow-wrap:normal;
+}
