@@ -16,7 +16,13 @@ export interface AtlasMetadata {
   version: 1; image: string; scale: number; frames: Record<string, AtlasFrame>; clips: Record<string, Clip>;
   sampling: 'smooth' | 'pixelated'; facing: 'right' | 'left';
 }
-export interface SpriteAtlas { metadata: AtlasMetadata; image: HTMLImageElement; idleBounds?: { left: number; right: number } }
+/** Optional browser-only candidate layer; never serialized or used by approved production assets. */
+export interface CombatPreviewLayer { image: HTMLImageElement; startY: number }
+export interface SpriteAtlas {
+  metadata: AtlasMetadata; image: HTMLImageElement;
+  idleBounds?: { left: number; right: number };
+  combatPreview?: CombatPreviewLayer;
+}
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 

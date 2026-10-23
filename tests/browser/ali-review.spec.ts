@@ -6,14 +6,14 @@ test('Ali candidate review is accessible but never auto-activates unapproved art
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/review/ali-combo-v2.html');
-  await expect(page.getByRole('heading', { name: 'Ali Light Combo V2/V3 — Visual Review' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ali Light Combo V2/V3/V4/V5 — Visual Review' })).toBeVisible();
   await expect(page.getByText('KANDIDAT BELUM DISETUJUI.')).toBeVisible();
   await expect(page.locator('#atlas')).toBeVisible();
   await expect(page.locator('#toggle')).toBeDisabled();
   await expect(page.locator('#step')).toBeDisabled();
   await expect(page.locator('#scene')).toBeVisible();
   expect(await request.get('/assets/fighters/ali.png').then(response => response.ok())).toBe(true);
-  await expect(page.locator('#status')).toContainText('Belum ada PNG kandidat V2/V3');
+  await expect(page.locator('#status')).toContainText('Belum ada PNG kandidat V2/V3/V4/V5');
   await expect(page.locator('#edition')).toHaveText('VERSI: belum dimuat');
   expect(errors).toEqual([]);
 });
