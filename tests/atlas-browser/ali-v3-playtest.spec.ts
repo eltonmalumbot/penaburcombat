@@ -144,3 +144,36 @@ test('review renderer uses original pixels for idle and candidate pixels for str
     contact: { source: 'candidate', cropY: 1080 },
   });
 });
+
+
+test('review-only slow motion and PNG capture work without changing the default game', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'FIGHT CPU' }).click();
+  await expect(page.locator('#ali-review-speed')).toHaveCount(0);
+  await expect(page.locator('#ali-review-capture')).toHaveCount(0);
+
+  await page.goto('/?aliArtReview=v4');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'FIGHT CPU' }).click();
+  const speed = page.getByRole('combobox', { name: 'Review combat speed' });
+  await expect(speed).toHaveValue('1');
+  await speed.selectOption('.25');
+  await expect(speed).toHaveValue('0.25');
+  await page.getByRole('button', { name: 'Control j', exact: true }).click();
+  const incoming = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Capture review game frame' }).click();
+  const artifact = await incoming;
+  expect(artifact.suggestedFilename()).toMatch(/^penabur-ali-original-(idle|light1|light2|light3|hurt|ko|guard|walk|jump|fall|heavy|skill|ultimate|victory)-round1\.png$/);
+  const stream = await artifact.createReadStream();
+  expect(stream).not.toBeNull();
+  const chunks: Buffer[] = [];
+  for await (const piece of stream!) chunks.push(Buffer.from(piece));
+  expect(Buffer.concat(chunks).subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+  await speed.selectOption('.5');
+  await expect(speed).toHaveValue('0.5');
+  await speed.selectOption('1');
+  await expect(speed).toHaveValue('1');
+});
