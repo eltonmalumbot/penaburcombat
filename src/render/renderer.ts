@@ -142,6 +142,7 @@ export class GameRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly stage = document.createElement('canvas');
   private readonly atlases = new Map<FighterId, SpriteAtlas>();
+  private aliReviewAtlas: SpriteAtlas | null = null;
   private preparation = 0;
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private sparks: Spark[] = [];
@@ -175,6 +176,9 @@ export class GameRenderer {
     }
   }
 
+  /** Only set by the explicit, checksum-verified local review UI on this feature branch. */
+  setAliReviewAtlas(candidate: SpriteAtlas | null): void { this.aliReviewAtlas = candidate; }
+
   resize(): void {
     const width = this.canvas.getBoundingClientRect().width || 1280;
     const scale = Math.max(.3, Math.min(2, width / 1280 * Math.min(2, window.devicePixelRatio || 1)));
@@ -204,8 +208,10 @@ export class GameRenderer {
     ctx.setTransform(this.canvas.width / 1280, 0, 0, this.canvas.height / 720, 0, 0);
     ctx.drawImage(this.stage, 0, 0);
     ctx.save(); ctx.translate(Math.sin(this.time * 85) * this.shake, Math.cos(this.time * 93) * this.shake);
-    drawFighter(ctx, match.player, 1, this.atlases.get(match.player.id));
-    drawFighter(ctx, match.cpu, 1, this.atlases.get(match.cpu.id));
+    drawFighter(ctx, match.player, 1,
+      match.player.id === 'Ali' && this.aliReviewAtlas ? this.aliReviewAtlas : this.atlases.get(match.player.id));
+    drawFighter(ctx, match.cpu, 1,
+      match.cpu.id === 'Ali' && this.aliReviewAtlas ? this.aliReviewAtlas : this.atlases.get(match.cpu.id));
     for (const spark of this.sparks) { ctx.globalAlpha = Math.max(0, Math.min(1, spark.life * 3)); rect(ctx, spark.x, spark.y, 7, 7, spark.color); }
     ctx.globalAlpha = 1;
     drawImpactCues(ctx, this.impactCues);
