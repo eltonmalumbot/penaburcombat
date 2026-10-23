@@ -344,3 +344,40 @@ test.describe('Control System V2 touch and layout', () => {
     await expect(page.getByRole('region', { name: 'On-screen combat controls' })).toHaveAttribute('data-size', 'compact');
   });
 });
+
+
+test('V2 attack buttons reveal meter readiness without disabling safe no-op inputs', async ({ page }) => {
+  await start(page);
+  const skill = page.getByRole('button', { name: 'Control l', exact: true });
+  const ultimate = page.getByRole('button', { name: 'Control u', exact: true });
+  await expect(skill).toHaveAttribute('data-ready', 'false');
+  await expect(ultimate).toHaveAttribute('data-ready', 'false');
+  await expect(skill).toHaveAttribute('aria-description', 'Requires 20 meter');
+  await expect(ultimate).toHaveAttribute('aria-description', 'Requires 65 meter');
+  await expect(skill).toBeEnabled();
+  await expect(ultimate).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Control j', exact: true })).toHaveAttribute('title', /three hits/);
+});
+
+test('V2 mobile presets keep essential controls inside real-size portrait and landscape viewports', async ({ page }) => {
+  await start(page);
+  const size = page.getByRole('button', { name: 'Control size' });
+  const gamepad = page.getByRole('region', { name: 'On-screen combat controls' });
+  await size.click(); // large: worst-case control footprint
+  await expect(gamepad).toHaveAttribute('data-size', 'large');
+  for (const viewport of [{ width: 320, height: 640 }, { width: 667, height: 375 },
+    { width: 844, height: 390 }, { width: 932, height: 430 }]) {
+    await page.setViewportSize(viewport);
+    for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
+      const target = page.getByRole('button', { name: \`Control \${key}\`, exact: true });
+      await expect(target).toBeVisible();
+      const b = await target.boundingBox();
+      expect(b).not.toBeNull();
+      expect(b!.x, \`\${viewport.width}px \${key} x\`).toBeGreaterThanOrEqual(-1);
+      expect(b!.y, \`\${viewport.width}px \${key} y\`).toBeGreaterThanOrEqual(-1);
+      expect(b!.x + b!.width, \`\${viewport.width}px \${key} right\`).toBeLessThanOrEqual(viewport.width + 1);
+      expect(b!.y + b!.height, \`\${viewport.width}px \${key} bottom\`).toBeLessThanOrEqual(viewport.height + 1);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  }
+});
