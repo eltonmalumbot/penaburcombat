@@ -107,7 +107,8 @@ test('authored synthetic heavy attack uses distinct frames and keeps fallback fo
     fighter.y = 400;
     const before = { x: fighter.x, y: fighter.y };
     for (const time of [.05, .13, 10]) {
-      fighter.pose = 'heavy'; fighter.animationTime = time;
+      // Give the sprite clock conflicting values: only the attack clock is authoritative.
+      fighter.pose = 'heavy'; fighter.animationTime = time === .05 ? 10 : time === .13 ? 0 : .01;
       fighter.attack = { move: 'heavy', elapsed: time, combo: 1, connected: false, queued: false };
       drawFighter(ctx, fighter, 1, atlas);
     }
