@@ -14,6 +14,8 @@ let paused = false, accumulator = 0, lastTime = 0, statusTime = 0;
 const aliReviewEnabled = ['v3', 'v4'].includes(new URLSearchParams(window.location.search).get('aliArtReview') ?? '');
 let reviewAliAtlas: SpriteAtlas | null = null;
 let reviewAliEdition: AliCandidateEdition | null = null;
+/** Review-only simulation rate, never applied without the explicit URL opt-in. */
+let reviewPlaybackSpeed = 1;
 const resize = new ResizeObserver(() => renderer?.resize());
 const input = new InputController(togglePause, showSelection, () => setPaused(true));
 const root = document.querySelector<HTMLDivElement>('#app')!;
@@ -66,7 +68,49 @@ function attachAliArtReview(): void {
       if (serial === selectionSerial) status.textContent = 'Ditolak: ' + (error instanceof Error ? error.message : String(error));
     } finally { file.disabled = false; }
   });
-  panel.append(heading, note, file, reset, status); parent.append(panel);
+  const speed = document.createElement('select');
+  speed.id = 'ali-review-speed'; speed.setAttribute('aria-label', 'Review combat speed');
+  for (const value of [1, .5, .25]) {
+    const option = document.createElement('option');
+    option.value = String(value); option.textContent = value + '×'; speed.append(option);
+  }
+  speed.value = String(reviewPlaybackSpeed);
+  speed.addEventListener('change', () => {
+    const next = Number(speed.value);
+    if (![1, .5, .25].includes(next)) return;
+    reviewPlaybackSpeed = next;
+    accumulator = 0;
+    input.clear();
+  });
+  const slowLabel = document.createElement('label');
+  slowLabel.htmlFor = speed.id; slowLabel.textContent = 'Kecepatan review: ';
+  slowLabel.append(speed);
+
+  const capture = document.createElement('button');
+  capture.type = 'button'; capture.id = 'ali-review-capture';
+  capture.textContent = 'Capture PNG';
+  capture.setAttribute('aria-label', 'Capture review game frame');
+  capture.addEventListener('click', () => {
+    const current = renderer, currentEngine = engine;
+    if (!current || !currentEngine) return;
+    const canvas = document.querySelector<HTMLCanvasElement>('#game');
+    if (!canvas) return;
+    capture.disabled = true;
+    canvas.toBlob(blob => {
+      capture.disabled = false;
+      if (!blob || renderer !== current || engine !== currentEngine) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const edition = reviewAliEdition ?? 'original';
+      const pose = currentEngine.state.player.id === 'Ali'
+        ? currentEngine.state.player.pose : currentEngine.state.cpu.pose;
+      link.download = `penabur-ali-${edition}-${pose}-round${currentEngine.state.round}.png`;
+      link.href = url; link.click();
+      // Revoke after browser has accepted the download.
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  });
+  panel.append(heading, note, file, reset, status, slowLabel, capture); parent.append(panel);
 }
 
 function startMatch(): void {
@@ -88,14 +132,14 @@ function tick(time: number): void {
   const dt = Math.max(0, Math.min(.1, (time - (lastTime || time)) / 1000)); lastTime = time;
   if (engine && renderer) {
     if (!paused) {
-      accumulator += dt;
+      accumulator += dt * (aliReviewEnabled ? reviewPlaybackSpeed : 1);
       while (accumulator + 1e-8 >= FIXED_STEP) {
         engine.update(FIXED_STEP, input.sample());
         accumulator = Math.max(0, accumulator - FIXED_STEP);
       }
       renderer.effects(engine.drainEvents());
     } else input.sample();
-    renderer.draw(engine.state, dt, paused); statusTime += dt;
+    renderer.draw(engine.state, dt * (aliReviewEnabled ? reviewPlaybackSpeed : 1), paused); statusTime += dt;
     if (statusTime >= .1) { screens.update(engine.state, paused); statusTime = 0; }
     if (engine.state.phase === 'done') {
       const result = engine.state; leaveMatch(); screens.result(result);
