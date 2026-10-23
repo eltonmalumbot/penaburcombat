@@ -160,7 +160,7 @@ test('review-only slow motion and PNG capture work without changing the default 
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
   const speed = page.getByRole('combobox', { name: 'Review combat speed' });
   await expect(speed).toHaveValue('1');
-  await speed.selectOption('.25');
+  await speed.selectOption('0.25');
   await expect(speed).toHaveValue('0.25');
   await page.getByRole('button', { name: 'Control j', exact: true }).click();
   const incoming = page.waitForEvent('download');
@@ -172,7 +172,7 @@ test('review-only slow motion and PNG capture work without changing the default 
   const chunks: Buffer[] = [];
   for await (const piece of stream!) chunks.push(Buffer.from(piece));
   expect(Buffer.concat(chunks).subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
-  await speed.selectOption('.5');
+  await speed.selectOption('0.5');
   await expect(speed).toHaveValue('0.5');
   await speed.selectOption('1');
   await expect(speed).toHaveValue('1');
