@@ -56,7 +56,7 @@ test('synthetic review atlas preserves original idle/walk and exposes 18 timed a
     f.attack.elapsed = .15;
     const next = spritePresentation(composed.metadata, f).frame.x;
     const totals = ['light1','light2','light3'].map(id =>
-      composed.metadata.clips[id].frames.reduce((sum, key) => sum + key.duration, 0));
+      composed.metadata.clips[id].frames.reduce((sum: number, key: { duration: number }) => sum + key.duration, 0));
     return {
       originalIdle: JSON.stringify(sampleFrame(base.metadata, 'idle', 0)) === JSON.stringify(sampleFrame(composed.metadata, 'idle', 0)),
       originalWalk: JSON.stringify(sampleFrame(base.metadata, 'walk', .18)) === JSON.stringify(sampleFrame(composed.metadata, 'walk', .18)),
