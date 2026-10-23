@@ -20,13 +20,12 @@ python scripts/ali_light3_rebuild.py \
   --source-v5 /path/to/extracted/PENABUR_Combat_Ali_FX_Polish_V5 \
   --frame4 /path/to/new/light3-03.png \
   --frame5 /path/to/new/light3-04.png \
-  --output /tmp/Ali_Light3_V6_Candidate \
   --artist-provenance "Artist name, asset rights and reference design"
 
-python scripts/ali_light3_validate.py --root /tmp/Ali_Light3_V6_Candidate
+python scripts/ali_light3_validate.py --root /tmp/ali-light3-review-PRINTED_DIRECTORY
 ```
 
-The first script refuses source/checksum drift, cloned source poses, incorrect dimensions/transparency, ungrounded feet and existing output folders. It writes all 18 PNGs with an exact pixel-assembled atlas and a **not-approved** manifest. The second script verifies exact pixels, every frame SHA and each attack duration. **Neither script replaces the PNGs in GitHub or grants art approval.**
+The first script refuses source/checksum drift, cloned source poses, incorrect dimensions/transparency and ungrounded feet, and writes only to a unique safe temporary directory it creates automatically (printed after completion; no output path is accepted from CLI). It writes all 18 PNGs with an exact pixel-assembled atlas and a **not-approved** manifest. The second script verifies exact pixels, every frame SHA and each attack duration. **Neither script replaces the PNGs in GitHub or grants art approval.**
 
 The companion user-downloadable `Ali_Light3_F4_F5_Redraw_Handoff.zip` from the project conversation contains references, visual ground-pivot guide, and locally verified rebuild/negative-test scripts. The ZIP is not uploaded to GitHub.
 
