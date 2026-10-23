@@ -107,3 +107,40 @@ test('review v4 query exposes guarded art loader and the expected verified diges
   await page.getByRole('button', { name: 'Kembalikan sprite Ali asli' }).click();
   await expect(page.locator('#ali-v3-review-status')).toContainText('Sprite Ali asli aktif kembali');
 });
+
+
+test('review renderer uses original pixels for idle and candidate pixels for strikes', async ({ page }) => {
+  await page.goto('/');
+  const hits = await page.evaluate(async () => {
+    const { loadAtlas } = await import('/src/animation/atlas.ts' as string);
+    const { assembleAliReviewAtlas } = await import('/src/animation/review-ali.ts' as string);
+    const { createFighter } = await import('/src/game/characters.ts' as string);
+    const { drawFighter } = await import('/src/render/renderer.ts' as string);
+    const original = await loadAtlas('/assets/fighters/ali.json');
+    const synthetic = document.createElement('canvas');
+    synthetic.width = 4320; synthetic.height = 1620;
+    const candidate = new Image();
+    candidate.src = synthetic.toDataURL('image/png'); await candidate.decode();
+    const atlas = assembleAliReviewAtlas(original, candidate);
+    const target = document.createElement('canvas').getContext('2d')!;
+    const sources: { source: string; cropY: number }[] = [];
+    (target as unknown as { drawImage: (...args: unknown[]) => void }).drawImage = (...args: unknown[]) => {
+      sources.push({ source: args[0] === candidate ? 'candidate' : args[0] === original.image ? 'original' : 'other', cropY: args[2] as number });
+    };
+    const fighter = createFighter('Ali', 250, 1);
+    fighter.pose = 'idle';
+    drawFighter(target, fighter, 1, atlas);
+    const idle = sources.at(-1);
+    sources.length = 0;
+    fighter.pose = 'light3'; fighter.attack = {
+      move: 'light', combo: 3, elapsed: .15, connected: false, queued: false,
+    };
+    drawFighter(target, fighter, 1, atlas);
+    const contact = sources.at(-1);
+    return { idle, contact };
+  });
+  expect(hits).toEqual({
+    idle: { source: 'original', cropY: 0 },
+    contact: { source: 'candidate', cropY: 1080 },
+  });
+});
