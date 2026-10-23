@@ -41,24 +41,27 @@ function attachAliArtReview(): void {
   const status = document.createElement('p'); status.id = 'ali-v3-review-status';
   status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
   status.textContent = reviewAliAtlas ? 'V3 terpasang sementara di sesi browser ini.' : 'Menampilkan sprite Ali asli. Belum ada file V3 dimuat.';
+  let selectionSerial = 0;
   const reset = document.createElement('button');
   reset.type = 'button'; reset.textContent = 'Kembalikan sprite Ali asli';
   reset.addEventListener('click', () => {
+    selectionSerial++;
     reviewAliAtlas = null; renderer?.setAliReviewAtlas(null); file.value = '';
     status.textContent = 'Sprite Ali asli aktif kembali.';
   });
   file.addEventListener('change', async () => {
     const selectedFile = file.files?.[0]; if (!selectedFile) return;
-    const requestedRenderer = renderer;
+    const requestedRenderer = renderer, serial = ++selectionSerial;
+    reviewAliAtlas = null; requestedRenderer?.setAliReviewAtlas(null);
     file.disabled = true; status.textContent = 'Memverifikasi checksum dan menyusun atlas sementara…';
     try {
       const atlas = await loadAliV3ForReview(selectedFile);
       // Ignore stale asynchronous imports if the player exited this match.
-      if (renderer !== requestedRenderer || !requestedRenderer) return;
+      if (serial !== selectionSerial || renderer !== requestedRenderer || !requestedRenderer) return;
       reviewAliAtlas = atlas; requestedRenderer.setAliReviewAtlas(atlas);
       status.textContent = 'V3 berhasil dimuat untuk review saja. Coba LIGHT tiga kali; perhatikan Light 3 F4–F5.';
     } catch (error) {
-      status.textContent = 'Ditolak: ' + (error instanceof Error ? error.message : String(error));
+      if (serial === selectionSerial) status.textContent = 'Ditolak: ' + (error instanceof Error ? error.message : String(error));
     } finally { file.disabled = false; }
   });
   panel.append(heading, note, file, reset, status); parent.append(panel);
