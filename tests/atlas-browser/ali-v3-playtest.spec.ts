@@ -72,5 +72,5 @@ test('synthetic review atlas preserves original idle/walk and exposes 18 timed a
   expect(result.totals[2]).toBeCloseTo(.39);
   expect(result.frameCount).toBe(26);
   expect(result.first).toBe(720);
-  expect(result.next).toBe(2880);
+  expect(result.next).toBe(2160);
 });
