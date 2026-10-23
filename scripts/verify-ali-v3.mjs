@@ -10,6 +10,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const ATLAS_SHA = '6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a';
 const APPROVED_ALI_SHA = '3d33a2327da2de6be3d1e4d3270f2c922df44aad11892c61135dac84b3408905';
@@ -35,12 +36,14 @@ function pngSize(bytes, name) {
 }
 const same = (values, expected) => Array.isArray(values) && values.length === expected.length
   && values.every((v, i) => typeof v === 'number' && eq(v, expected[i]));
-const requiredSha = hash => /^[0-9a-f]{64}$/.test(hash);
+const requiredSha = hash => typeof hash === 'string' && /^[0-9a-f]{64}$/.test(hash);
+const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 
 /** Inspect the tracked, code-reviewable intake contract (not actual art). */
 function spec(root) {
   const path = join(root, 'docs/assets/ALI_V3_INTAKE.json');
   const config = JSON.parse(read(path).toString('utf8'));
+  if (!object(config)) die('invalid tracked intake JSON');
   if (config.status !== 'REVIEW_ONLY' || config.isApprovedProductionArt !== false)
     die('tracked intake must explicitly remain unapproved');
   if (config.atlasSha256 !== ATLAS_SHA || config.approvedOriginalAliSha256 !== APPROVED_ALI_SHA)
@@ -55,6 +58,7 @@ function spec(root) {
 /** Inspect delivered bytes, NOT generated stand-ins or a pasted status label. */
 function validateArt(root, folder, repo) {
   const manifest = JSON.parse(read(join(folder, 'manifest.json')).toString('utf8'));
+  if (!object(manifest)) die('invalid candidate manifest JSON');
   if (manifest.fighter !== 'Ali' || manifest.version !== 3 || manifest.isApprovedProductionArt !== false)
     die('V3 manifest must be an unapproved Ali candidate');
   if (!String(manifest.status).includes('NOT_PRODUCTION_ART') ||
@@ -81,6 +85,8 @@ function validateArt(root, folder, repo) {
     const clip = manifest.clips?.[name];
     const entries = clip?.frames;
     if (clip?.loop !== false || !Array.isArray(entries) || entries.length !== 6 ||
+        !entries.every(entry => object(entry) && typeof entry.frame === 'string' &&
+           typeof entry.duration === 'number' && Number.isFinite(entry.duration)) ||
         !same(entries.map(e => e.duration), expected.timings) ||
         !same(manifest.clipTiming?.[name], expected.timings))
       die('incorrect nonlooping 6-frame timing: ' + name);
@@ -97,7 +103,7 @@ function validateArt(root, folder, repo) {
           rect?.y !== 1080 + row * 540 || rect?.w !== 720 || rect?.h !== 540 ||
           rect?.pivotX !== 320 || rect?.pivotY !== 525)
         die('bad atlas coordinates or pivots: ' + id);
-      const check = manifest.frameQA.find(item => item.frame === file);
+      const check = manifest.frameQA.find(item => object(item) && item.frame === file);
       if (!check || seen.has(file) || !requiredSha(check.sha256))
         die('missing/duplicated QA entry: ' + file);
       seen.add(file);
@@ -127,9 +133,9 @@ function validateArt(root, folder, repo) {
 
 try {
   const args = process.argv.slice(2);
-  const base = resolve(new URL('..', import.meta.url).pathname);
+  const base = resolve(fileURLToPath(new URL('..', import.meta.url)));
   const only = args.includes('--manifest-only');
-  const get = flag => { const i = args.indexOf(flag); return i < 0 ? null : args[i + 1]; };
+  const get = flag => { const i = args.indexOf(flag); return i < 0 ? null : (args[i + 1] ?? null); };
   const contract = spec(base);
   if (only) {
     if (args.length !== 1) die('manifest-only does not accept additional arguments');
