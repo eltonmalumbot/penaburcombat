@@ -18,8 +18,13 @@ export class Screens {
   private announcement: HTMLDivElement | null = null;
   private pauseButton: HTMLButtonElement | null = null;
   private fullscreenButton: HTMLButtonElement | null = null;
+  private controlSize: 'compact' | 'normal' | 'large' = 'normal';
   constructor(root: HTMLElement, actions: Actions) {
     this.root = root; this.actions = actions;
+    try {
+      const saved = localStorage.getItem('penabur-control-size');
+      if (saved === 'compact' || saved === 'normal' || saved === 'large') this.controlSize = saved;
+    } catch { /* Private browsing can disable storage; normal remains usable. */ }
     document.addEventListener('fullscreenchange', () => {
       this.fullscreenButton?.setAttribute('aria-pressed', String(Boolean(document.fullscreenElement)));
     });
@@ -124,7 +129,8 @@ export class Screens {
 
     // Keep the original InputController bindings; only their visual arrangement changes.
     // All controls are real buttons, so keyboard and touch can coexist.
-    const pad = element('section', 'touch-pad gamepad');
+    const pad = element('section', 'touch-pad gamepad gamepad-v2');
+    pad.dataset.size = this.controlSize;
     pad.setAttribute('aria-label', 'On-screen combat controls');
     const groups: readonly { title: string; className: string; keys: readonly [string, string, string][] }[] = [
       { title: 'MOVEMENT', className: 'move', keys: [
@@ -154,6 +160,17 @@ export class Screens {
       section.append(buttons); pad.append(section);
     }
     layout.append(pad);
+    const resizePad = button(`PAD: ${this.controlSize.toUpperCase()}`, () => {
+      const sizes = ['normal', 'large', 'compact'] as const;
+      this.controlSize = sizes[(sizes.indexOf(this.controlSize) + 1) % sizes.length];
+      pad.dataset.size = this.controlSize;
+      resizePad.textContent = `PAD: ${this.controlSize.toUpperCase()}`;
+      try { localStorage.setItem('penabur-control-size', this.controlSize); }
+      catch { /* This preference is optional, including in private browsing. */ }
+    }, true);
+    resizePad.classList.add('pad-size-toggle');
+    resizePad.setAttribute('aria-label', 'Control size');
+    bar.append(resizePad);
     page.append(element('p', 'rotate-hint', 'Putar HP ke landscape untuk area bermain yang lebih luas.'));
     this.status = element('div', 'sr-only match-status'); this.status.setAttribute('role', 'group'); this.status.setAttribute('aria-label', 'Match status');
     this.announcement = element('div', 'sr-only'); this.announcement.setAttribute('role', 'status');
