@@ -11,6 +11,7 @@ export class InputController {
   private readonly pointers = new Map<number, string>();
   private readonly pointerButtons = new Map<number, HTMLButtonElement>();
   private readonly pointerOrigins = new Map<number, HTMLButtonElement>();
+  private readonly touchStarts = new Map<number, { key: string; at: number; x: number; y: number; dash: boolean }>();
   private lastDirectionTap: { key: string; at: number } | null = null;
 
   constructor(onPause: () => void, onExit: () => void, onBlur: () => void) {
@@ -39,7 +40,7 @@ export class InputController {
     this.lastDirectionTap = null;
     const active = [...this.pointerOrigins];
     for (const button of new Set(this.pointerButtons.values())) button.classList.remove('is-held');
-    this.pointerButtons.clear(); this.pointerOrigins.clear();
+    this.pointerButtons.clear(); this.pointerOrigins.clear(); this.touchStarts.clear();
     for (const [pointerId, origin] of active) {
       try {
         if (origin.hasPointerCapture(pointerId)) origin.releasePointerCapture(pointerId);
@@ -55,6 +56,7 @@ export class InputController {
     this.pointerButtons.set(pointerId, button);
     this.pointers.set(pointerId, key);
     button.classList.add('is-held');
+    if (key !== oldKey) this.lastDirectionTap = null;
     if (previous && ![...this.pointerButtons.values()].includes(previous)) previous.classList.remove('is-held');
     // Sliding onto jump is a fresh jump press, but never fires a second attack.
     if (key !== oldKey) this.pressed.add(key);
@@ -67,20 +69,23 @@ export class InputController {
       event.preventDefault();
       try { button.setPointerCapture(event.pointerId); }
       catch { /* Active pointer capture isn't available on every platform. */ }
+      const now = performance.now();
+      const direction = key === 'a' || key === 'd';
+      // A Dash requires a *completed* first tap. Parallel thumbs and long
+      // movement holds must not accidentally count as double-taps.
+      const dash = event.pointerType === 'touch' && direction && this.pointerOrigins.size === 0
+        && this.lastDirectionTap?.key === key && now - this.lastDirectionTap.at <= 280;
       this.pointerOrigins.set(event.pointerId, button);
       this.pointerButtons.set(event.pointerId, button);
       this.pointers.set(event.pointerId, key);
+      if (event.pointerType === 'touch') this.touchStarts.set(event.pointerId, {
+        key, at: now, x: event.clientX, y: event.clientY, dash: Boolean(dash),
+      });
       button.classList.add('is-held');
       this.pressed.add(key);
-
-      // Touch-only double-tap on the same direction activates existing Dash.
-      // Keyboard Shift and the visible Dash button are retained as alternatives.
-      if (event.pointerType === 'touch' && (key === 'a' || key === 'd')) {
-        const now = performance.now();
-        if (this.lastDirectionTap?.key === key && now - this.lastDirectionTap.at <= 260) {
-          this.pressed.add('shift'); this.lastDirectionTap = null;
-        } else this.lastDirectionTap = { key, at: now };
-      } else if (key === 'a' || key === 'd' || key === 's' || key === 'w') this.lastDirectionTap = null;
+      if (dash) this.pressed.add('shift');
+      // The previous tap is consumed, including on a valid second tap.
+      if (direction || key === 's' || key === 'w') this.lastDirectionTap = null;
     });
     if (key === 'a' || key === 'd' || key === 's' || key === 'w') {
       button.addEventListener('pointermove', event => {
@@ -96,9 +101,21 @@ export class InputController {
     const release = (event: PointerEvent) => {
       if (this.pointerOrigins.get(event.pointerId) !== button) return;
       const pressed = this.pointerButtons.get(event.pointerId);
+      const actualKey = this.pointers.get(event.pointerId);
+      const start = this.touchStarts.get(event.pointerId);
+      const duration = start ? performance.now() - start.at : Infinity;
+      const drift = start ? Math.hypot(event.clientX - start.x, event.clientY - start.y) : Infinity;
       this.pointerOrigins.delete(event.pointerId);
       this.pointerButtons.delete(event.pointerId);
       this.pointers.delete(event.pointerId);
+      this.touchStarts.delete(event.pointerId);
+      // Only quick, stationary, fully released first taps may set up a Dash.
+      // Cancel and lost capture must never arm a gesture.
+      if (event.type === 'pointerup' && start && (start.key === 'a' || start.key === 'd')
+        && actualKey === start.key && !start.dash
+        && duration < 230 && drift < 26 && this.pointerOrigins.size === 0) {
+        this.lastDirectionTap = { key: start.key, at: performance.now() };
+      } else if (start && (start.key === 'a' || start.key === 'd')) this.lastDirectionTap = null;
       if (pressed && ![...this.pointerButtons.values()].includes(pressed)) pressed.classList.remove('is-held');
     };
     button.addEventListener('pointerup', release);
