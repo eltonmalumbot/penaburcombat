@@ -19,8 +19,9 @@ const sha256 = async (bytes: ArrayBuffer) =>
   Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), byte =>
     byte.toString(16).padStart(2, '0')).join('');
 
-async function decodeFile(bytes: ArrayBuffer): Promise<HTMLImageElement> {
-  const url = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+async function decodeFile(file: File): Promise<HTMLImageElement> {
+  // Reuse the checked File blob directly; avoid duplicating its PNG bytes.
+  const url = URL.createObjectURL(file);
   const image = new Image();
   try {
     image.src = url;
@@ -33,12 +34,11 @@ async function decodeFile(bytes: ArrayBuffer): Promise<HTMLImageElement> {
 export async function loadAliForReview(file: File): Promise<{ atlas: SpriteAtlas; edition: AliCandidateEdition }> {
   if (file.size > 20 * 1024 * 1024 || file.size < 100)
     throw new Error('Ukuran PNG kandidat tidak sesuai (maksimal 20 MB).');
-  const bytes = await file.arrayBuffer();
-  const checksum = await sha256(bytes);
+  const checksum = await sha256(await file.arrayBuffer());
   const edition: AliCandidateEdition | null = checksum === ALI_V3_SHA256 ? 'V3' :
     checksum === ALI_V4_SHA256 ? 'V4' : null;
   if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3 atau Repair V4 asli.');
-  const image = await decodeFile(bytes);
+  const image = await decodeFile(file);
   validateCandidateImage(image);
   const original = await loadAtlas('/assets/fighters/ali.json');
   return { atlas: await assembleAliReviewAtlas(original, image), edition };
