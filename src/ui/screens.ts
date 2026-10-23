@@ -17,6 +17,7 @@ export class Screens {
   private status: HTMLDivElement | null = null;
   private announcement: HTMLDivElement | null = null;
   private pauseButton: HTMLButtonElement | null = null;
+  private touchPad: HTMLElement | null = null;
   private fullscreenButton: HTMLButtonElement | null = null;
   private controlSize: 'compact' | 'normal' | 'large' = 'normal';
   constructor(root: HTMLElement, actions: Actions) {
@@ -52,7 +53,7 @@ export class Screens {
   }
 
   private page(): HTMLElement {
-    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null;
+    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null; this.touchPad = null;
     // Leaving a match always returns to the regular browser layout.
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     const header = element('header', 'top'), logo = element('a', 'logo', 'PENABUR Combat');
@@ -132,6 +133,7 @@ export class Screens {
     const pad = element('section', 'touch-pad gamepad gamepad-v2');
     pad.dataset.size = this.controlSize;
     pad.setAttribute('aria-label', 'On-screen combat controls');
+    this.touchPad = pad;
     const groups: readonly { title: string; className: string; keys: readonly [string, string, string][] }[] = [
       { title: 'MOVEMENT', className: 'move', keys: [
         ['a', '◀', 'LEFT'], ['d', '▶', 'RIGHT'], ['w', '↑', 'JUMP'],
@@ -151,6 +153,9 @@ export class Screens {
         control.type = 'button';
         control.setAttribute('aria-label', `Control ${key}`);
         control.dataset.key = key;
+        if (key === 'j') control.title = 'Tap LIGHT repeatedly to chain three hits';
+        if (key === 'a' || key === 'd') control.title = 'Hold to move; double-tap on touch to Dash';
+        if (key === 'shift') control.title = 'Dash (also double-tap left or right on touch)';
         const icon = element('span', 'touch-glyph', glyph);
         icon.setAttribute('aria-hidden', 'true');
         control.append(icon, element('span', 'touch-label', label));
@@ -187,6 +192,13 @@ export class Screens {
     this.status.dataset.timer = String(Math.ceil(match.timer)); this.status.dataset.paused = String(paused);
     if (this.announcement && this.announcement.textContent !== match.notice) this.announcement.textContent = match.notice;
     this.pauseButton?.setAttribute('aria-pressed', String(paused));
+    for (const [selector, cost] of [['.touch-l', 20], ['.touch-u', 65]] as const) {
+      const control = this.touchPad?.querySelector<HTMLButtonElement>(selector);
+      if (!control) continue;
+      const ready = match.player.meter >= cost;
+      control.dataset.ready = String(ready);
+      control.setAttribute('aria-description', ready ? 'Ready to use' : `Requires ${cost} meter`);
+    }
   }
 
   result(match: Match): void {
