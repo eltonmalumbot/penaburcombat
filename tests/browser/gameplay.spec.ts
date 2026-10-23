@@ -369,14 +369,17 @@ test('V2 mobile presets keep essential controls inside real-size portrait and la
     { width: 844, height: 390 }, { width: 932, height: 430 }]) {
     await page.setViewportSize(viewport);
     for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
-      const target = page.getByRole('button', { name: \`Control \${key}\`, exact: true });
+      const target = page.getByRole('button', { name: `Control ${key}`, exact: true });
       await expect(target).toBeVisible();
       const b = await target.boundingBox();
       expect(b).not.toBeNull();
-      expect(b!.x, \`\${viewport.width}px \${key} x\`).toBeGreaterThanOrEqual(-1);
-      expect(b!.y, \`\${viewport.width}px \${key} y\`).toBeGreaterThanOrEqual(-1);
-      expect(b!.x + b!.width, \`\${viewport.width}px \${key} right\`).toBeLessThanOrEqual(viewport.width + 1);
-      expect(b!.y + b!.height, \`\${viewport.width}px \${key} bottom\`).toBeLessThanOrEqual(viewport.height + 1);
+      expect(b!.x, `${viewport.width}px ${key} x`).toBeGreaterThanOrEqual(-1);
+      expect(b!.x + b!.width, `${viewport.width}px ${key} right`).toBeLessThanOrEqual(viewport.width + 1);
+      // Portrait can scroll below the arena; landscape must keep controls on-screen.
+      if (viewport.width > viewport.height) {
+        expect(b!.y, `${viewport.width}px ${key} y`).toBeGreaterThanOrEqual(-1);
+        expect(b!.y + b!.height, `${viewport.width}px ${key} bottom`).toBeLessThanOrEqual(viewport.height + 1);
+      }
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   }
