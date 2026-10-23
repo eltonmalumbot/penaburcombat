@@ -17,7 +17,7 @@ test('review opt-in rejects forged PNG without activating new fighter artwork', 
   await page.getByRole('button', { name: 'START FIGHT' }).click();
   await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
-  await expect(page.getByText('REVIEW ONLY — Ali Combo V3 belum disetujui')).toBeVisible();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4 belum disetujui')).toBeVisible();
   await expect(page.locator('#ali-v3-review-status')).toContainText('sprite Ali asli');
   await page.locator('#ali-v3-local-file').setInputFiles({
     name: 'ali-combat-frames.png', mimeType: 'image/png',
