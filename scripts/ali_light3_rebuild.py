@@ -9,6 +9,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+from tempfile import mkdtemp
 from PIL import Image
 
 SOURCE_SHA = "43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521"
@@ -68,9 +69,7 @@ def validate_source(source):
     return manifest, frames
 
 
-def write_review_candidate(source, art4, art5, target, provenance):
-    if target.exists():
-        raise ValueError("Output already exists; no overwrite permitted")
+def write_review_candidate(source, art4, art5, provenance):
     if not provenance.strip():
         raise ValueError("Artist/rights provenance is required")
     manifest, frames = validate_source(source)
@@ -81,7 +80,9 @@ def write_review_candidate(source, art4, art5, target, provenance):
             raise ValueError("Cloned V5 pose supplied instead of independently authored " + name)
         replacement.append((name, art, list(bbox), path.name))
         frames[name] = art
-    target.mkdir(parents=True)
+    # Security: output path is never read from CLI arguments. mkdtemp creates
+    # a fresh user-owned directory with nonpredictable name, no traversal.
+    target = Path(mkdtemp(prefix="ali-light3-review-"))
     (target / "frames").mkdir()
     atlas = Image.new("RGBA", (4320, 1620))
     qa = []
@@ -123,8 +124,7 @@ if __name__ == "__main__":
     parser.add_argument("--source-v5", type=Path, required=True)
     parser.add_argument("--frame4", type=Path, required=True)
     parser.add_argument("--frame5", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--artist-provenance", required=True)
     args = parser.parse_args()
     write_review_candidate(
-        args.source_v5, args.frame4, args.frame5, args.output, args.artist_provenance)
+        args.source_v5, args.frame4, args.frame5, args.artist_provenance)
