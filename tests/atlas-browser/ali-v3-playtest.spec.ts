@@ -47,8 +47,13 @@ test('synthetic review atlas preserves original idle/walk and exposes 18 timed a
     const img = new Image(); img.src = canvas.toDataURL('image/png'); await img.decode();
     // This is a synthetic fixture passed to the pure assembler, NOT a bypass
     // in the external file importer (which verifies the real V3 SHA-256).
-    const composed = await assembleAliReviewAtlas(base, img);
-    validateAtlasImage(composed.metadata, composed.image.naturalWidth, composed.image.naturalHeight);
+    // Fail if the assembler recreates a giant PNG Canvas via toBlob().
+    const previousToBlob = HTMLCanvasElement.prototype.toBlob;
+    HTMLCanvasElement.prototype.toBlob = () => { throw new Error('PNG re-encode forbidden in art preview'); };
+    let composed;
+    try { composed = await assembleAliReviewAtlas(base, img); }
+    finally { HTMLCanvasElement.prototype.toBlob = previousToBlob; }
+    validateAtlasImage(composed.metadata, 4320, 2700);
     const f = createFighter('Ali', 250, 1);
     f.pose = 'light3'; f.animationTime = 10;
     f.attack = { move: 'light', combo: 3, elapsed: .06, connected: false, queued: false };
@@ -62,6 +67,9 @@ test('synthetic review atlas preserves original idle/walk and exposes 18 timed a
       originalWalk: JSON.stringify(sampleFrame(base.metadata, 'walk', .18)) === JSON.stringify(sampleFrame(composed.metadata, 'walk', .18)),
       oneShots: ['light1','light2','light3'].every(id => !composed.metadata.clips[id].loop && composed.metadata.clips[id].frames.length === 6),
       totals, first, next, frameCount: Object.keys(composed.metadata.frames).length,
+      originalImageReused: composed.image === base.image,
+      combatLayerReused: composed.combatPreview?.image === img,
+      combatYOffset: composed.combatPreview?.startY,
     };
   });
   expect(result.originalIdle).toBe(true);
@@ -71,6 +79,9 @@ test('synthetic review atlas preserves original idle/walk and exposes 18 timed a
   expect(result.totals[1]).toBeCloseTo(.35);
   expect(result.totals[2]).toBeCloseTo(.39);
   expect(result.frameCount).toBe(26);
+  expect(result.originalImageReused).toBe(true);
+  expect(result.combatLayerReused).toBe(true);
+  expect(result.combatYOffset).toBe(1080);
   expect(result.first).toBe(720);
   expect(result.next).toBe(2160);
 });
