@@ -17,7 +17,7 @@ test('review opt-in rejects forged PNG without activating new fighter artwork', 
   await page.getByRole('button', { name: 'START FIGHT' }).click();
   await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
-  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5 belum disetujui')).toBeVisible();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5/V5.1 belum disetujui')).toBeVisible();
   await expect(page.locator('#ali-v3-review-status')).toContainText('sprite Ali asli');
   await page.locator('#ali-v3-local-file').setInputFiles({
     name: 'ali-combat-frames.png', mimeType: 'image/png',
@@ -92,7 +92,7 @@ test('review v4 query exposes guarded art loader and the expected verified diges
   await page.getByRole('button', { name: 'START FIGHT' }).click();
   await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
-  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5 belum disetujui')).toBeVisible();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5/V5.1 belum disetujui')).toBeVisible();
   await expect(page.locator('#ali-v3-review-status')).toContainText('sprite Ali asli');
   const pinned = await page.evaluate(async () => {
     const mod = await import('/src/animation/review-ali.ts' as string);
@@ -184,7 +184,7 @@ test('V5 FX cleanup is checksum-pinned and remains review-only', async ({ page }
   await page.getByRole('button', { name: 'START FIGHT' }).click();
   await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
-  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5 belum disetujui')).toBeVisible();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5/V5.1 belum disetujui')).toBeVisible();
   const pinned = await page.evaluate(async () => {
     const mod = await import('/src/animation/review-ali.ts' as string);
     return mod.ALI_V5_SHA256;
@@ -193,6 +193,25 @@ test('V5 FX cleanup is checksum-pinned and remains review-only', async ({ page }
   await page.locator('#ali-v3-local-file').setInputFiles({
     name: 'ali-combat-frames.png', mimeType: 'image/png',
     buffer: Buffer.alloc(256, 0x9e),
+  });
+  await expect(page.locator('#ali-v3-review-status')).toContainText('Checksum salah');
+  await page.getByRole('button', { name: 'Kembalikan sprite Ali asli' }).click();
+  await expect(page.locator('#ali-v3-review-status')).toContainText('Sprite Ali asli aktif kembali');
+});
+
+test('V5.1 FX-edge review only accepts its exact SHA; forged PNG cannot reach renderer', async ({ page }) => {
+  await page.goto('/?aliArtReview=v51');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'FIGHT CPU' }).click();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5/V5.1 belum disetujui')).toBeVisible();
+  const digest = await page.evaluate(async () => {
+    const module = await import('/src/animation/review-ali.ts' as string);
+    return module.ALI_V5_1_SHA256;
+  });
+  expect(digest).toBe('0efa47867d718c0a5b8374fecb19f449037e22da755ebe11a1f0aedbc2457674');
+  await page.locator('#ali-v3-local-file').setInputFiles({
+    name: 'ali-combat-frames.png', mimeType: 'image/png', buffer: Buffer.alloc(256, 0xcd),
   });
   await expect(page.locator('#ali-v3-review-status')).toContainText('Checksum salah');
   await page.getByRole('button', { name: 'Kembalikan sprite Ali asli' }).click();
