@@ -150,8 +150,8 @@
 .fight-layout .gamepad-v2 .attack .touch-j{
   grid-column:1;
   grid-row:1 / span 2;
-  width:calc(var(--attack-button) * 1.24);
-  height:calc(var(--attack-button) * 1.24);
+  width:calc(var(--attack-button) * 1.10);
+  height:calc(var(--attack-button) * 1.10);
   background:linear-gradient(145deg,#28a7c8,#126785);
   border-color:#92eafa;
   box-shadow:0 3px 14px #0008,0 0 16px #0ce0ff2c;
