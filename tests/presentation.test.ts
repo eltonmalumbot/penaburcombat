@@ -31,3 +31,48 @@ test('sideways KO ignores transparent padding for either native orientation', ()
   metadata.facing = 'left';
   assert.equal(spritePresentation(metadata, f, bounds).y, -(200 - 60) * metadata.scale);
 });
+
+test('authored attack playback uses the combat clock, not drifting sprite animation time', () => {
+  const metadata = parseAtlas({
+    version: 1, image: 'synthetic.png', frames: {
+      stance: { x: 0, y: 0, w: 100, h: 100 },
+      startup: { x: 100, y: 0, w: 100, h: 100 },
+      impact: { x: 200, y: 0, w: 100, h: 100 },
+      recovery: { x: 300, y: 0, w: 100, h: 100 },
+    }, clips: {
+      idle: { loop: true, frames: [{ frame: 'stance', duration: .2 }] },
+      light1: { loop: false, frames: [
+        { frame: 'startup', duration: .08 },
+        { frame: 'impact', duration: .09 },
+        { frame: 'recovery', duration: .18 },
+      ] },
+      heavy: { loop: false, frames: [
+        { frame: 'startup', duration: .2 },
+        { frame: 'impact', duration: .12 },
+        { frame: 'recovery', duration: .3 },
+      ] },
+    },
+  });
+  const fighter = createFighter('Ali', 350, 1);
+  fighter.pose = 'light1';
+  fighter.animationTime = 999; // deliberately wrong: would stick on recovery
+  fighter.attack = { move: 'light', combo: 1, elapsed: .03, connected: false, queued: false };
+  const first = structuredClone(fighter);
+  assert.equal(spritePresentation(metadata, fighter).frame, metadata.frames.startup);
+  fighter.attack.elapsed = .10;
+  assert.equal(spritePresentation(metadata, fighter).frame, metadata.frames.impact);
+  fighter.attack.elapsed = .23;
+  assert.equal(spritePresentation(metadata, fighter).frame, metadata.frames.recovery);
+  fighter.pose = 'heavy';
+  fighter.attack = { move: 'heavy', combo: 0, elapsed: .205, connected: false, queued: false };
+  fighter.animationTime = 0; // opposing error: would show startup without fix
+  assert.equal(spritePresentation(metadata, fighter).frame, metadata.frames.impact);
+  fighter.attack = null;
+  // Without a live attack, fallback to pose animation clock, don't freeze.
+  assert.equal(spritePresentation(metadata, fighter).frame, metadata.frames.startup);
+  fighter.pose = 'idle';
+  fighter.animationTime = 200;
+  assert.equal(spritePresentation(metadata, fighter).frame, metadata.frames.stance);
+  assert.equal(first.attack?.elapsed, .03);
+  assert.equal(first.animationTime, 999);
+});

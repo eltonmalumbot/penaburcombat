@@ -283,3 +283,104 @@ test('player combos earn meter for skill and ultimate before a complete victory'
   await expect(status).toHaveAttribute('data-player-meter', '0');
   expect(errors).toEqual([]);
 });
+
+
+test.describe('Control System V2 touch and layout', () => {
+  test.use({ isMobile: true, hasTouch: true, deviceScaleFactor: 2, viewport: { width: 844, height: 390 } });
+
+  test('reliable thumb glide between D-pad directions while attack controls stay independent', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await start(page);
+    const left = page.getByRole('button', { name: 'Control a', exact: true });
+    const right = page.getByRole('button', { name: 'Control d', exact: true });
+    const light = page.getByRole('button', { name: 'Control j', exact: true });
+    const origin = await left.boundingBox(), destination = await right.boundingBox(), attack = await light.boundingBox();
+    expect(origin && destination && attack).toBeTruthy();
+    const center = (b: NonNullable<typeof origin>) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
+    const session = await page.context().newCDPSession(page);
+    const startPoint = { ...center(origin!), id: 1 };
+    const movePoint = { ...center(destination!), id: 1 };
+    const attackPoint = { ...center(attack!), id: 2 };
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [startPoint] });
+    await expect(left).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [movePoint] });
+    await expect(left).not.toHaveClass(/is-held/);
+    await expect(right).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [movePoint, attackPoint] });
+    await expect(light).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(right).not.toHaveClass(/is-held/);
+    await expect(light).not.toHaveClass(/is-held/);
+    expect(errors).toEqual([]);
+  });
+
+  test('size preference persists and large phone layout keeps action targets separated', async ({ page }) => {
+    await start(page);
+    const control = page.getByRole('button', { name: 'Control size' });
+    const pad = page.getByRole('region', { name: 'On-screen combat controls' });
+    await expect(control).toHaveText('PAD: NORMAL');
+    await control.click();
+    await expect(pad).toHaveAttribute('data-size', 'large');
+    const names = ['j', 'k', 'l', 'u'];
+    const boxes = await Promise.all(names.map(name => page.getByRole('button', { name: 'Control ' + name, exact: true }).boundingBox()));
+    for (const box of boxes) {
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(-1);
+      expect(box!.y).toBeGreaterThanOrEqual(-1);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(845);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(391);
+    }
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i]!, b = boxes[j]!;
+      const intersection = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
+        * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+      expect(intersection, names[i] + '/' + names[j] + ' overlap').toBeLessThan(25);
+    }
+    await page.reload();
+    await start(page);
+    await expect(page.getByRole('region', { name: 'On-screen combat controls' })).toHaveAttribute('data-size', 'large');
+    await page.getByRole('button', { name: 'Control size' }).click();
+    await expect(page.getByRole('region', { name: 'On-screen combat controls' })).toHaveAttribute('data-size', 'compact');
+  });
+});
+
+
+test('V2 attack buttons reveal meter readiness without disabling safe no-op inputs', async ({ page }) => {
+  await start(page);
+  const skill = page.getByRole('button', { name: 'Control l', exact: true });
+  const ultimate = page.getByRole('button', { name: 'Control u', exact: true });
+  await expect(skill).toHaveAttribute('data-ready', 'false');
+  await expect(ultimate).toHaveAttribute('data-ready', 'false');
+  await expect(skill).toHaveAttribute('aria-description', 'Requires 20 meter');
+  await expect(ultimate).toHaveAttribute('aria-description', 'Requires 65 meter');
+  await expect(skill).toBeEnabled();
+  await expect(ultimate).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Control j', exact: true })).toHaveAttribute('title', /three hits/);
+});
+
+test('V2 mobile presets keep essential controls inside real-size portrait and landscape viewports', async ({ page }) => {
+  await start(page);
+  const size = page.getByRole('button', { name: 'Control size' });
+  const gamepad = page.getByRole('region', { name: 'On-screen combat controls' });
+  await size.click(); // large: worst-case control footprint
+  await expect(gamepad).toHaveAttribute('data-size', 'large');
+  for (const viewport of [{ width: 320, height: 640 }, { width: 667, height: 375 },
+    { width: 844, height: 390 }, { width: 932, height: 430 }]) {
+    await page.setViewportSize(viewport);
+    for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
+      const target = page.getByRole('button', { name: `Control ${key}`, exact: true });
+      await expect(target).toBeVisible();
+      const b = await target.boundingBox();
+      expect(b).not.toBeNull();
+      expect(b!.x, `${viewport.width}px ${key} x`).toBeGreaterThanOrEqual(-1);
+      expect(b!.x + b!.width, `${viewport.width}px ${key} right`).toBeLessThanOrEqual(viewport.width + 1);
+      // Portrait can scroll below the arena; landscape must keep controls on-screen.
+      if (viewport.width > viewport.height) {
+        expect(b!.y, `${viewport.width}px ${key} y`).toBeGreaterThanOrEqual(-1);
+        expect(b!.y + b!.height, `${viewport.width}px ${key} bottom`).toBeLessThanOrEqual(viewport.height + 1);
+      }
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  }
+});

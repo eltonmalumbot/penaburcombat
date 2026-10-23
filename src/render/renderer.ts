@@ -4,6 +4,8 @@ import { moveData } from '../game/moves.ts';
 import type { CombatEvent, Fighter, FighterId, Match } from '../game/types.ts';
 import { loadAtlas } from '../animation/atlas.ts';
 import { spritePresentation } from '../animation/presentation.ts';
+import { addImpactCue, advanceImpactCues, drawImpactCues } from './impact.ts';
+import type { ImpactCue } from './impact.ts';
 import type { SpriteAtlas } from '../animation/atlas.ts';
 
 function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
@@ -143,6 +145,7 @@ export class GameRenderer {
   private preparation = 0;
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private sparks: Spark[] = [];
+  private impactCues: ImpactCue[] = [];
   private shake = 0;
   private time = 0;
 
@@ -181,6 +184,7 @@ export class GameRenderer {
   effects(events: CombatEvent[]): void {
     for (const event of events) {
       if (event.type !== 'hit' || this.reducedMotion) continue;
+      this.impactCues = addImpactCue(this.impactCues, event);
       this.shake = event.blocked ? 2 : 6;
       for (let i = 0; i < 12 && this.sparks.length < 144; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -193,6 +197,7 @@ export class GameRenderer {
     const ctx = this.ctx;
     if (!paused) {
       this.time += dt; this.shake = Math.max(0, this.shake - dt * 24);
+      this.impactCues = advanceImpactCues(this.impactCues, dt);
       this.sparks = this.sparks.filter(spark => spark.life > 0);
       for (const spark of this.sparks) { spark.x += spark.vx * dt; spark.y += spark.vy * dt; spark.vy += 600 * dt; spark.life -= dt; }
     }
@@ -202,6 +207,8 @@ export class GameRenderer {
     drawFighter(ctx, match.player, 1, this.atlases.get(match.player.id));
     drawFighter(ctx, match.cpu, 1, this.atlases.get(match.cpu.id));
     for (const spark of this.sparks) { ctx.globalAlpha = Math.max(0, Math.min(1, spark.life * 3)); rect(ctx, spark.x, spark.y, 7, 7, spark.color); }
+    ctx.globalAlpha = 1;
+    drawImpactCues(ctx, this.impactCues);
     ctx.restore(); this.hud(match);
     if (paused) {
       rect(ctx, 0, 0, 1280, 720, '#081020bb'); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '900 70px system-ui';
