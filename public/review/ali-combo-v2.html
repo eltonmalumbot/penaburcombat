@@ -114,10 +114,14 @@ pose(candidate,fi*720,row*540,720,540,320,525,780,y,facing);
 $('frame').textContent=clip.toUpperCase()+' · Frame '+(fi+1)+'/6 · '+frameTimes()[fi].toFixed(3)+' dtk · '+($('reverse').checked?'hadapan kiri':'hadapan kanan');
 }else{ctx.fillStyle='#f3d89a';ctx.font='700 21px system-ui';ctx.fillText('Pilih PNG V2 lokal',780,250);$('frame').textContent='Frame — / 6 · Kandidat belum dimuat'}
 }
-function tick(now){if(playing&&candidate){const delta=last?Math.min(.1,(now-last)/1000):0;elapsed+=delta*Number($('speed').value);
-if(!$('loop').checked&&elapsed>=total()){elapsed=total();frameIndex=5;stop()}}
-last=now;render();requestAnimationFrame(tick)}
-requestAnimationFrame(tick);
+function tick(now){
+  if(!playing||!candidate)return;
+  const delta=last?Math.min(.1,(now-last)/1000):0;elapsed+=delta*Number($('speed').value);
+  if(!$('loop').checked&&elapsed>=total()){elapsed=total();frameIndex=5;stop()}
+  last=now;render();
+  if(playing)requestAnimationFrame(tick);
+}
+render();
 $('atlas').addEventListener('change',async()=>{
 stop();candidate=null;frameIndex=0;elapsed=0;$('border-warning').textContent='';const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
 if(!file){label('Tidak ada file dipilih');return}
@@ -138,7 +142,7 @@ label('SHA-256 dan dimensi VALID. Ini tetap kandidat untuk review visual, BUKAN 
 }catch(err){label('Gagal memuat: '+(err instanceof Error?err.message:String(err)),true)}
 render();
 });
-$('toggle').addEventListener('click',()=>{if(!candidate)return;playing=!playing;$('toggle').textContent=playing?'Jeda':'Mainkan';last=0;if(playing&&elapsed>=total())elapsed=0});
+$('toggle').addEventListener('click',()=>{if(!candidate)return;playing=!playing;$('toggle').textContent=playing?'Jeda':'Mainkan';last=0;if(playing&&elapsed>=total())elapsed=0;if(playing)requestAnimationFrame(tick)});
 $('step').addEventListener('click',()=>{if(!candidate)return;stop();frameIndex=(currentFrame()+1)%6;elapsed=frameTimes().slice(0,frameIndex).reduce((a,b)=>a+b,0);render()});
 $('clip').addEventListener('change',()=>{stop();frameIndex=0;elapsed=0;render()});
 for(const id of ['reverse','guide','loop'])$(id).addEventListener('change',render);
