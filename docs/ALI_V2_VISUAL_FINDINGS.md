@@ -42,3 +42,16 @@ This detects a previously missed limitation of the original strict outermost-alp
 - [ ] Explicit art/UX approval before merge. Elton remains a separate animation workstream.
 
 No merge/deploy of the unfinished Ali combat art is authorized by this review PR. The approved idle/walk art and combat engine are untouched.
+
+## V3 alpha-cleanup candidate (2026-10-23) — STILL BLOCKED
+
+A new local ZIP, `PENABUR_Combat_Ali_Light_Combo_Cleanup_V3.zip`, was built from the V2 source. The preview inspector now accepts **both** atlas digests and labels the chosen edition. V3's SHA-256 is `6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a`, also 4320 × 1620 RGBA.
+
+- All 18 frames and the combined atlas were rebuilt and validated; character RGB pixels were unchanged. Cleanup consists solely of localized alpha edits.
+- Light1 F4 and Light2 F4: remove disconnected neighboring shoe at the right and feather truncated blue hit effects.
+- Light3 F2–F5: remove confirmed neighbor shoe/body remnants and smooth obvious edge truncations where possible.
+- The package validator passes PNG hashes, dimensions, frame insets, clip durations, source pivot metadata and quarantined neighbor regions.
+
+**Critical blocker:** Light3 F4/F5 still have missing portions of Ali's lower body and large pre-trimmed blue effects from the original generated source. Alpha masking cannot recreate limbs or reconstruct original character identity. Therefore V3 is an improved *candidate* only, not a production-ready 18-frame HD animation.
+
+Do not alter `public/assets/fighters/ali.json` or merge the candidate until new fully authored keyframes pass both-direction visual QA and the binary atlas is installed in a suitable review branch. Preserve existing working Ali idle/walk and game rules.
