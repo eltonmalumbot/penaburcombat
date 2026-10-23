@@ -6,6 +6,8 @@ import type { SpriteAtlas, AtlasMetadata } from './atlas.ts';
  * public/assets/fighters/ali.png. The SHA pin is for the existing imperfect V3.
  */
 export const ALI_V3_SHA256 = '6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a';
+export const ALI_V4_SHA256 = 'b998f44db137f601617852e9fb7083a17c507839e60d562015fce8df4e660325';
+export type AliCandidateEdition = 'V3' | 'V4';
 const frameDurations = {
   light1: [.04, .04, .035, .055, .09, .09],
   light2: [.04, .04, .035, .055, .09, .09],
@@ -28,17 +30,18 @@ async function decodeFile(bytes: ArrayBuffer): Promise<HTMLImageElement> {
 }
 
 /** Strict checks happen before any selected candidate reaches the drawing loop. */
-export async function loadAliV3ForReview(file: File): Promise<SpriteAtlas> {
+export async function loadAliForReview(file: File): Promise<{ atlas: SpriteAtlas; edition: AliCandidateEdition }> {
   if (file.size > 20 * 1024 * 1024 || file.size < 100)
     throw new Error('Ukuran PNG kandidat tidak sesuai (maksimal 20 MB).');
   const bytes = await file.arrayBuffer();
   const checksum = await sha256(bytes);
-  if (checksum !== ALI_V3_SHA256)
-    throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP Cleanup V3 asli.');
+  const edition: AliCandidateEdition | null = checksum === ALI_V3_SHA256 ? 'V3' :
+    checksum === ALI_V4_SHA256 ? 'V4' : null;
+  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3 atau Repair V4 asli.');
   const image = await decodeFile(bytes);
   validateCandidateImage(image);
   const original = await loadAtlas('/assets/fighters/ali.json');
-  return assembleAliReviewAtlas(original, image);
+  return { atlas: await assembleAliReviewAtlas(original, image), edition };
 }
 
 function validateCandidateImage(image: HTMLImageElement): void {
