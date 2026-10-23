@@ -29,6 +29,7 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 <p>Ekstrak <code>PENABUR_Combat_Ali_Light_Combo_Art_Pack_V2.zip</code>, lalu pilih <code>ali-combat-frames.png</code>. Gambar diverifikasi SHA-256 sebelum dapat diputar. Referensi kiri dibaca langsung dari aset Ali yang disetujui di repository.</p>
 <label for="atlas"><span>Atlas PNG lokal:</span><input id="atlas" type="file" accept=".png,image/png" aria-describedby="status"></label>
 <p id="status" role="status" aria-live="polite">Belum ada PNG kandidat. Sprite asli Ali tersedia sebagai pembanding.</p>
+<p id="border-warning" style="color:#f7c483" role="note"></p>
 <div class="meta"><span>18 frame • 6 per combo</span><span>4320 × 1620 RGBA</span><span>Light 1/2: 0,35 dtk • Light 3: 0,39 dtk</span></div>
 </section>
 <section><h2>2. Bandingkan pose dan gerakan</h2>
@@ -72,6 +73,24 @@ function label(text,error=false,ok=false){$('status').textContent=text;$('status
 const orig=new Image();orig.src='/assets/fighters/ali.png';
 orig.addEventListener('load',()=>{original=orig;render()});orig.addEventListener('error',()=>label('ERROR: aset asli Ali tidak bisa dimuat',true));
 function stop(){playing=false;$('toggle').textContent='Mainkan';}
+/** Detect near-border cyan remnants that a strict zero-alpha border test misses. */
+function inspectEdgeMargins(image){
+  const tile=document.createElement('canvas');tile.width=720;tile.height=540;
+  const t=tile.getContext('2d',{willReadFrequently:true});
+  const findings=[];
+  for(let row=0;row<3;row++)for(let col=0;col<6;col++){
+    t.clearRect(0,0,720,540);
+    t.drawImage(image,col*720,row*540,720,540,0,0,720,540);
+    const rgba=t.getImageData(0,0,720,540).data;
+    let left=0,right=0;
+    for(let y=0;y<540;y++)for(let x=0;x<12;x++){
+      if(rgba[(y*720+x)*4+3]>4)left++;
+      if(rgba[(y*720+708+x)*4+3]>4)right++;
+    }
+    if(left>=100||right>=100)findings.push('Light '+(row+1)+' F'+(col+1)+' ('+(left>=100?'kiri':'')+(left>=100&&right>=100?' & ':'')+(right>=100?'kanan':'')+')');
+  }
+  return findings;
+}
 function currentFrame(){if(!candidate)return 0;if(!playing)return frameIndex;let t=$('loop').checked?elapsed%total():Math.min(elapsed,total());
 for(let i=0;i<6;i++){if(t<frameTimes()[i])return i;t-=frameTimes()[i]}return 5}
 function pose(image,cropX,cropY,w,h,pivotX,pivotY,x,y,face){
@@ -100,7 +119,7 @@ if(!$('loop').checked&&elapsed>=total()){elapsed=total();frameIndex=5;stop()}}
 last=now;render();requestAnimationFrame(tick)}
 requestAnimationFrame(tick);
 $('atlas').addEventListener('change',async()=>{
-stop();candidate=null;frameIndex=0;elapsed=0;const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
+stop();candidate=null;frameIndex=0;elapsed=0;$('border-warning').textContent='';const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
 if(!file){label('Tidak ada file dipilih');return}
 try{
 const bytes=await file.arrayBuffer();
@@ -111,6 +130,10 @@ const img=new Image();
 try{img.src=url;await img.decode();if(img.naturalWidth!==4320||img.naturalHeight!==1620)throw Error('Dimensi atlas bukan 4320×1620');}
 finally{URL.revokeObjectURL(url)}
 candidate=img;$('toggle').disabled=false;$('step').disabled=false;
+const warnings=inspectEdgeMargins(img);
+$('border-warning').textContent=warnings.length
+  ? 'PERLU DITINJAU — tepi frame mendekati potongan atlas: '+warnings.join(', ')+'. Ini indikasi artefak, bukan bukti pasti.'
+  : 'Tidak ditemukan alpha signifikan di margin tepi 12px; pemeriksaan artistik tetap wajib.';
 label('SHA-256 dan dimensi VALID. Ini tetap kandidat untuk review visual, BUKAN aset production.',false,true);
 }catch(err){label('Gagal memuat: '+(err instanceof Error?err.message:String(err)),true)}
 render();
