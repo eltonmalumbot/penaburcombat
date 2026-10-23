@@ -46,7 +46,14 @@ export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, scale = 1
     if (atlas.metadata.facing === 'left') ctx.scale(-1, 1);
     ctx.imageSmoothingEnabled = atlas.metadata.sampling === 'smooth';
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(atlas.image, frame.x, frame.y, frame.w, frame.h, -frame.pivotX * size, -frame.pivotY * size, frame.w * size, frame.h * size);
+    // In review mode only, the attack bitmap lives in its original 4320x1620
+    // PNG. Avoid allocating/re-encoding an extra 4320x2700 Canvas on phones.
+    const preview = atlas.combatPreview;
+    const fromCandidate = preview !== undefined && frame.y >= preview.startY;
+    const source = fromCandidate ? preview.image : atlas.image;
+    const cropY = fromCandidate ? frame.y - preview.startY : frame.y;
+    ctx.drawImage(source, frame.x, cropY, frame.w, frame.h,
+      -frame.pivotX * size, -frame.pivotY * size, frame.w * size, frame.h * size);
     ctx.restore();
     if (presentation.temporary) drawTemporaryEffects(ctx, f, theme.color);
     ctx.restore(); return;
