@@ -15,7 +15,7 @@ Use the actual V3 candidate ZIP to play-test its 18 attack frames **locally in t
 - V3 SHA-256 is pinned to `6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a`.
 - The candidate image must be decoded as **4320 × 1620**, under 20 MiB, and match the pinned digest.
 - Original HD idle/walk frames are used unchanged from `/assets/fighters/ali.json` and `/assets/fighters/ali.png`.
-- In-memory Canvas combines 1600×1080 approved source at the top and 4320×1620 V3 combat sheet below, resulting in 4320×2700. No persistent files or writes.
+- Mobile-optimized **virtual 4320×2700 atlas**: the approved 1600×1080 image and 4320×1620 candidate remain as **separate decoded bitmap sources**. The drawing loop selects the source by the clip's virtual frame-y offset. No additional 4320×2700 Canvas allocation, PNG encode/decode, persistent file or write is required.
 - Attack frame metadata follows startup/active/recovery combat clock rather than idle-animation time, preserving 0.35 / 0.35 / 0.39 second clips without changes to the underlying combat engine.
 - Alt player/CPU Ali is supported; user keeps the rest of game mechanics, control pads, and impact VFX.
 - `?aliArtReview=v3` explicitly gates the importer on this branch. By default no file picker is rendered and original art remains visible.
