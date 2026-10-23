@@ -283,3 +283,64 @@ test('player combos earn meter for skill and ultimate before a complete victory'
   await expect(status).toHaveAttribute('data-player-meter', '0');
   expect(errors).toEqual([]);
 });
+
+
+test.describe('Control System V2 touch and layout', () => {
+  test.use({ isMobile: true, hasTouch: true, deviceScaleFactor: 2, viewport: { width: 844, height: 390 } });
+
+  test('reliable thumb glide between D-pad directions while attack controls stay independent', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await start(page);
+    const left = page.getByRole('button', { name: 'Control a', exact: true });
+    const right = page.getByRole('button', { name: 'Control d', exact: true });
+    const light = page.getByRole('button', { name: 'Control j', exact: true });
+    const origin = await left.boundingBox(), destination = await right.boundingBox(), attack = await light.boundingBox();
+    expect(origin && destination && attack).toBeTruthy();
+    const center = (b: NonNullable<typeof origin>) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
+    const session = await page.context().newCDPSession(page);
+    const startPoint = { ...center(origin!), id: 1 };
+    const movePoint = { ...center(destination!), id: 1 };
+    const attackPoint = { ...center(attack!), id: 2 };
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [startPoint] });
+    await expect(left).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [movePoint] });
+    await expect(left).not.toHaveClass(/is-held/);
+    await expect(right).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [movePoint, attackPoint] });
+    await expect(light).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(right).not.toHaveClass(/is-held/);
+    await expect(light).not.toHaveClass(/is-held/);
+    expect(errors).toEqual([]);
+  });
+
+  test('size preference persists and large phone layout keeps action targets separated', async ({ page }) => {
+    await start(page);
+    const control = page.getByRole('button', { name: 'Control size' });
+    const pad = page.getByRole('region', { name: 'On-screen combat controls' });
+    await expect(control).toHaveText('PAD: NORMAL');
+    await control.click();
+    await expect(pad).toHaveAttribute('data-size', 'large');
+    const names = ['j', 'k', 'l', 'u'];
+    const boxes = await Promise.all(names.map(name => page.getByRole('button', { name: 'Control ' + name, exact: true }).boundingBox()));
+    for (const box of boxes) {
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(-1);
+      expect(box!.y).toBeGreaterThanOrEqual(-1);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(845);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(391);
+    }
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i]!, b = boxes[j]!;
+      const intersection = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
+        * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+      expect(intersection, names[i] + '/' + names[j] + ' overlap').toBeLessThan(25);
+    }
+    await page.reload();
+    await start(page);
+    await expect(page.getByRole('region', { name: 'On-screen combat controls' })).toHaveAttribute('data-size', 'large');
+    await page.getByRole('button', { name: 'Control size' }).click();
+    await expect(page.getByRole('region', { name: 'On-screen combat controls' })).toHaveAttribute('data-size', 'compact');
+  });
+});
