@@ -2,12 +2,16 @@ import './style.css';
 import { CombatEngine, FIXED_STEP } from './game/engine.ts';
 import type { FighterId } from './game/types.ts';
 import { GameRenderer } from './render/renderer.ts';
+import { loadAliV3ForReview } from './animation/review-ali.ts';
+import type { SpriteAtlas } from './animation/atlas.ts';
 import { InputController } from './ui/input.ts';
 import { Screens } from './ui/screens.ts';
 
 let selected: FighterId = 'Ali';
 let engine: CombatEngine | null = null, renderer: GameRenderer | null = null;
 let paused = false, accumulator = 0, lastTime = 0, statusTime = 0;
+const aliReviewEnabled = new URLSearchParams(window.location.search).get('aliArtReview') === 'v3';
+let reviewAliAtlas: SpriteAtlas | null = null;
 const resize = new ResizeObserver(() => renderer?.resize());
 const input = new InputController(togglePause, showSelection, () => setPaused(true));
 const root = document.querySelector<HTMLDivElement>('#app')!;
@@ -19,11 +23,55 @@ function leaveMatch(): void {
 }
 function showMenu(): void { leaveMatch(); screens.menu(); }
 function showSelection(): void { leaveMatch(); screens.select(selected); }
+function attachAliArtReview(): void {
+  if (!aliReviewEnabled) return;
+  const parent = document.querySelector<HTMLElement>('main.fight-page');
+  if (!parent) return;
+  const panel = document.createElement('section');
+  panel.className = 'art-playtest';
+  panel.setAttribute('aria-label', 'Ali V3 candidate local playtest');
+  const heading = document.createElement('strong');
+  heading.textContent = 'REVIEW ONLY — Ali Combo V3 belum disetujui';
+  const note = document.createElement('p');
+  note.textContent = 'Pilih ali-combat-frames.png dari ZIP Cleanup V3. File hanya diproses di browser, tidak diunggah. Light 3 F4–F5 masih mengandung artwork terpotong.';
+  const file = document.createElement('input');
+  file.type = 'file'; file.accept = '.png,image/png';
+  file.id = 'ali-v3-local-file';
+  file.setAttribute('aria-label', 'Choose local Ali V3 atlas');
+  const status = document.createElement('p'); status.id = 'ali-v3-review-status';
+  status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+  status.textContent = reviewAliAtlas ? 'V3 terpasang sementara di sesi browser ini.' : 'Menampilkan sprite Ali asli. Belum ada file V3 dimuat.';
+  const reset = document.createElement('button');
+  reset.type = 'button'; reset.textContent = 'Kembalikan sprite Ali asli';
+  reset.addEventListener('click', () => {
+    reviewAliAtlas = null; renderer?.setAliReviewAtlas(null); file.value = '';
+    status.textContent = 'Sprite Ali asli aktif kembali.';
+  });
+  file.addEventListener('change', async () => {
+    const selectedFile = file.files?.[0]; if (!selectedFile) return;
+    const requestedRenderer = renderer;
+    file.disabled = true; status.textContent = 'Memverifikasi checksum dan menyusun atlas sementara…';
+    try {
+      const atlas = await loadAliV3ForReview(selectedFile);
+      // Ignore stale asynchronous imports if the player exited this match.
+      if (renderer !== requestedRenderer || !requestedRenderer) return;
+      reviewAliAtlas = atlas; requestedRenderer.setAliReviewAtlas(atlas);
+      status.textContent = 'V3 berhasil dimuat untuk review saja. Coba LIGHT tiga kali; perhatikan Light 3 F4–F5.';
+    } catch (error) {
+      status.textContent = 'Ditolak: ' + (error instanceof Error ? error.message : String(error));
+    } finally { file.disabled = false; }
+  });
+  panel.append(heading, note, file, reset, status); parent.append(panel);
+}
+
 function startMatch(): void {
   leaveMatch(); engine = new CombatEngine(selected);
-  const canvas = screens.fight(input); renderer = new GameRenderer(canvas);
-  void renderer.prepare([engine.state.player.id, engine.state.cpu.id]);
+  const canvas = screens.fight(input); const gameRenderer = new GameRenderer(canvas);
+  renderer = gameRenderer;
+  void gameRenderer.prepare([engine.state.player.id, engine.state.cpu.id]);
+  if (aliReviewEnabled && reviewAliAtlas) gameRenderer.setAliReviewAtlas(reviewAliAtlas);
   resize.observe(canvas); input.setEnabled(true); screens.update(engine.state, paused); statusTime = 0;
+  attachAliArtReview();
 }
 function setPaused(value: boolean): void {
   if (!engine) return;
