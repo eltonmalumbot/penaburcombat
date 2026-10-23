@@ -2,7 +2,7 @@ import './style.css';
 import { CombatEngine, FIXED_STEP } from './game/engine.ts';
 import type { FighterId } from './game/types.ts';
 import { GameRenderer } from './render/renderer.ts';
-import { loadAliV3ForReview } from './animation/review-ali.ts';
+import { loadAliForReview } from './animation/review-ali.ts';
 import type { SpriteAtlas } from './animation/atlas.ts';
 import { InputController } from './ui/input.ts';
 import { Screens } from './ui/screens.ts';
@@ -10,7 +10,7 @@ import { Screens } from './ui/screens.ts';
 let selected: FighterId = 'Ali';
 let engine: CombatEngine | null = null, renderer: GameRenderer | null = null;
 let paused = false, accumulator = 0, lastTime = 0, statusTime = 0;
-const aliReviewEnabled = new URLSearchParams(window.location.search).get('aliArtReview') === 'v3';
+const aliReviewEnabled = ['v3', 'v4'].includes(new URLSearchParams(window.location.search).get('aliArtReview') ?? '');
 let reviewAliAtlas: SpriteAtlas | null = null;
 const resize = new ResizeObserver(() => renderer?.resize());
 const input = new InputController(togglePause, showSelection, () => setPaused(true));
@@ -31,9 +31,9 @@ function attachAliArtReview(): void {
   panel.className = 'art-playtest';
   panel.setAttribute('aria-label', 'Ali V3 candidate local playtest');
   const heading = document.createElement('strong');
-  heading.textContent = 'REVIEW ONLY — Ali Combo V3 belum disetujui';
+  heading.textContent = 'REVIEW ONLY — Ali Combo V3/V4 belum disetujui';
   const note = document.createElement('p');
-  note.textContent = 'Pilih ali-combat-frames.png dari ZIP Cleanup V3. File hanya diproses di browser, tidak diunggah. Light 3 F4–F5 masih mengandung artwork terpotong.';
+  note.textContent = 'Pilih ali-combat-frames.png dari ZIP V3 atau Repair V4. File hanya diproses di browser. V4 adalah komposit sementara, bukan keyframe final.';
   const file = document.createElement('input');
   file.type = 'file'; file.accept = '.png,image/png';
   file.id = 'ali-v3-local-file';
@@ -55,11 +55,11 @@ function attachAliArtReview(): void {
     reviewAliAtlas = null; requestedRenderer?.setAliReviewAtlas(null);
     file.disabled = true; status.textContent = 'Memverifikasi checksum dan menyusun atlas sementara…';
     try {
-      const atlas = await loadAliV3ForReview(selectedFile);
+      const { atlas, edition } = await loadAliForReview(selectedFile);
       // Ignore stale asynchronous imports if the player exited this match.
       if (serial !== selectionSerial || renderer !== requestedRenderer || !requestedRenderer) return;
       reviewAliAtlas = atlas; requestedRenderer.setAliReviewAtlas(atlas);
-      status.textContent = 'V3 berhasil dimuat untuk review saja. Coba LIGHT tiga kali; perhatikan Light 3 F4–F5.';
+      status.textContent = edition + ' berhasil dimuat untuk review saja. Coba LIGHT tiga kali; perhatikan Light 3 F4–F5.';
     } catch (error) {
       if (serial === selectionSerial) status.textContent = 'Ditolak: ' + (error instanceof Error ? error.message : String(error));
     } finally { file.disabled = false; }
