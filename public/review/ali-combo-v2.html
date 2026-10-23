@@ -30,6 +30,7 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 <label for="atlas"><span>Atlas PNG lokal:</span><input id="atlas" type="file" accept=".png,image/png" aria-describedby="status"></label>
 <p id="status" role="status" aria-live="polite">Belum ada PNG kandidat V2/V3/V4. Sprite asli Ali tersedia sebagai pembanding.</p>
 <p id="border-warning" style="color:#f7c483" role="note"></p>
+<details id="hardcut-panel" hidden><summary id="hardcut-summary">Periksa potongan internal yang mencurigakan</summary><p><small>Deteksi otomatis menemukan perubahan alpha yang sangat mendadak dalam sebuah frame, bukan hanya di tepi atlas. Ini adalah indikator untuk pemeriksaan manual—bukan bukti kesalahan atau persetujuan artwork.</small></p><div id="hardcut-list" class="controls"></div></details>
 <div class="meta"><span>18 frame • 6 per combo</span><span>4320 × 1620 RGBA</span><span id="edition">VERSI: belum dimuat</span><span>Light 1/2: 0,35 dtk • Light 3: 0,39 dtk</span></div>
 </section>
 <section><h2>2. Bandingkan pose dan gerakan</h2>
@@ -38,6 +39,7 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 <button id="toggle" disabled>Mainkan</button><button id="step" disabled>Frame berikutnya</button>
 <label><input type="checkbox" id="reverse"> Hadap kiri</label>
 <label><input type="checkbox" id="guide" checked> Garis kaki</label>
+<label><input type="checkbox" id="hardcut-guide" checked> Garis potongan</label>
 <label><input type="checkbox" id="loop" checked> Loop</label>
 <label for="speed"><span>Kecepatan</span><select id="speed"><option value=".5">0,5×</option><option value="1" selected>1×</option><option value="1.5">1,5×</option></select></label>
 </div>
@@ -64,6 +66,7 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 <a href="/">← Kembali ke game preview</a>
 </main>
 <script type="module">
+import { detectHardCuts } from './alpha-seam-qa.js';
 const $=id=>document.getElementById(id);
 const knownHashes={
   V2:'1e206d68e0a20ee55ba99af18e09ab5ef856ad0d0ea10cb766588d2351fcf7e6',
@@ -73,7 +76,7 @@ const knownHashes={
 let acceptedEdition=null;
 const durations={light1:[.04,.04,.035,.055,.09,.09],light2:[.04,.04,.035,.055,.09,.09],light3:[.05,.04,.03,.045,.045,.18]};
 const ordered=['light1','light2','light3'];const ctx=$('scene').getContext('2d');
-let original=null, candidate=null, playing=false, elapsed=0, last=0, frameIndex=0, lastObjectUrl=null;
+let original=null, candidate=null, playing=false, elapsed=0, last=0, frameIndex=0, hardcutData=[];
 const frameTimes=()=>durations[$('clip').value],total=()=>frameTimes().reduce((a,b)=>a+b,0);
 function label(text,error=false,ok=false){$('status').textContent=text;$('status').dataset.error=String(error);$('status').dataset.ok=String(ok)}
 const orig=new Image();orig.src='/assets/fighters/ali.png';
@@ -97,6 +100,25 @@ function inspectEdgeMargins(image){
   }
   return findings;
 }
+function showHardCutFindings(results){
+  const hits=results.filter(item=>item.needsReview);
+  const panel=$('hardcut-panel'), list=$('hardcut-list');
+  panel.hidden=false;list.replaceChildren();
+  $('hardcut-summary').textContent=hits.length
+    ? hits.length+' dari 18 frame punya potongan vertikal mencurigakan — tinjau satu per satu'
+    : 'Tidak ditemukan potongan vertikal tajam di atas ambang deteksi';
+  for(const item of hits){
+    const entry=document.createElement('button');entry.type='button';
+    entry.textContent=item.clip.toUpperCase()+' • F'+item.frame+' ('+item.seams.map(s=>'x'+s.x).join(', ')+')';
+    entry.title='Lihat frame dan garis potongan terdeteksi';
+    entry.addEventListener('click',()=>{
+      stop();$('clip').value=item.clip;frameIndex=item.frame-1;
+      elapsed=frameTimes().slice(0,frameIndex).reduce((a,b)=>a+b,0);render();
+      document.getElementById('scene').scrollIntoView({block:'nearest',behavior:'smooth'});
+    });
+    list.append(entry);
+  }
+}
 function currentFrame(){if(!candidate)return 0;if(!playing)return frameIndex;let t=$('loop').checked?elapsed%total():Math.min(elapsed,total());
 for(let i=0;i<6;i++){if(t<frameTimes()[i])return i;t-=frameTimes()[i]}return 5}
 function pose(image,cropX,cropY,w,h,pivotX,pivotY,x,y,face){
@@ -117,7 +139,21 @@ if(original)pose(original,0,0,400,540,200,525,255,y,facing);
 else {ctx.fillStyle='#afc8dd';ctx.fillText('Memuat referensi Ali…',260,255)}
 if(candidate){const clip=$('clip').value,fi=currentFrame(),row=ordered.indexOf(clip);
 pose(candidate,fi*720,row*540,720,540,320,525,780,y,facing);
-$('frame').textContent=clip.toUpperCase()+' · Frame '+(fi+1)+'/6 · '+frameTimes()[fi].toFixed(3)+' dtk · '+($('reverse').checked?'hadapan kiri':'hadapan kanan');
+const qa=hardcutData[row*6+fi];
+if(qa?.seams.length && $('hardcut-guide').checked){
+  ctx.save();ctx.strokeStyle='#ff8a7d';ctx.fillStyle='#fff3b0';
+  ctx.textAlign='center';ctx.font='700 12px system-ui';ctx.lineWidth=1.3;
+  for(const seam of qa.seams){
+    const x=780+facing*.6420824295*(seam.x-320);
+    ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(x,75);ctx.lineTo(x,450);ctx.stroke();
+    ctx.setLineDash([]);ctx.fillText('x='+seam.x,x,68);
+  }
+  ctx.restore();
+}
+$('frame').textContent=clip.toUpperCase()+' · Frame '+(fi+1)+'/6 · '+frameTimes()[fi].toFixed(3)+' dtk · '+
+ ($('reverse').checked?'hadapan kiri':'hadapan kanan')+
+ (qa?.seams.length?' · ⚠ '+qa.seams.length+' garis potongan (butuh review)':'')+
+ (qa?' · titik alpha terbawah y='+qa.bottomAlphaY:'');
 }else{ctx.fillStyle='#f3d89a';ctx.font='700 21px system-ui';ctx.fillText('Pilih PNG V2 lokal',780,250);$('frame').textContent='Frame — / 6 · Kandidat belum dimuat'}
 }
 function tick(now){
@@ -129,7 +165,7 @@ function tick(now){
 }
 render();
 $('atlas').addEventListener('change',async()=>{
-stop();candidate=null;acceptedEdition=null;$('edition').textContent='VERSI: belum dimuat';frameIndex=0;elapsed=0;$('border-warning').textContent='';const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
+stop();candidate=null;hardcutData=[];$('hardcut-panel').hidden=true;acceptedEdition=null;$('edition').textContent='VERSI: belum dimuat';frameIndex=0;elapsed=0;$('border-warning').textContent='';const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
 if(!file){label('Tidak ada file dipilih');return}
 try{
 const bytes=await file.arrayBuffer();
@@ -142,7 +178,7 @@ const url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
 const img=new Image();
 try{img.src=url;await img.decode();if(img.naturalWidth!==4320||img.naturalHeight!==1620)throw Error('Dimensi atlas bukan 4320×1620');}
 finally{URL.revokeObjectURL(url)}
-candidate=img;$('toggle').disabled=false;$('step').disabled=false;
+candidate=img;hardcutData=detectHardCuts(img);showHardCutFindings(hardcutData);$('toggle').disabled=false;$('step').disabled=false;
 const warnings=inspectEdgeMargins(img);
 $('border-warning').textContent=warnings.length
   ? 'PERLU DITINJAU — tepi frame mendekati potongan atlas: '+warnings.join(', ')+'. Ini indikasi artefak, bukan bukti pasti.'
@@ -154,9 +190,9 @@ render();
 $('toggle').addEventListener('click',()=>{if(!candidate)return;playing=!playing;$('toggle').textContent=playing?'Jeda':'Mainkan';last=0;if(playing&&elapsed>=total())elapsed=0;if(playing)requestAnimationFrame(tick)});
 $('step').addEventListener('click',()=>{if(!candidate)return;stop();frameIndex=(currentFrame()+1)%6;elapsed=frameTimes().slice(0,frameIndex).reduce((a,b)=>a+b,0);render()});
 $('clip').addEventListener('change',()=>{stop();frameIndex=0;elapsed=0;render()});
-for(const id of ['reverse','guide','loop'])$(id).addEventListener('change',render);
+for(const id of ['reverse','guide','hardcut-guide','loop'])$(id).addEventListener('change',render);
 $('export').addEventListener('click',()=>{
-const report={project:'PENABUR Combat',fighter:'Ali',candidate:'Light Combo '+(acceptedEdition||'unknown'),approved:false,expected_sha256:acceptedEdition?knownHashes[acceptedEdition]:null,atlas_verified:Boolean(candidate),clip:$('clip').value,reviewed_direction:$('reverse').checked?'left':'right',checks:Object.fromEntries([...document.querySelectorAll('.qa-check')].map(x=>[x.value,x.checked])),notes:$('notes').value,exported_at:new Date().toISOString()};
+const report={project:'PENABUR Combat',fighter:'Ali',candidate:'Light Combo '+(acceptedEdition||'unknown'),approved:false,expected_sha256:acceptedEdition?knownHashes[acceptedEdition]:null,atlas_verified:Boolean(candidate),art_approved:false,alpha_hardcut_warnings:hardcutData.filter(x=>x.needsReview).map(x=>({clip:x.clip,frame:x.frame,seams:x.seams})),clip:$('clip').value,reviewed_direction:$('reverse').checked?'left':'right',checks:Object.fromEntries([...document.querySelectorAll('.qa-check')].map(x=>[x.value,x.checked])),notes:$('notes').value,exported_at:new Date().toISOString()};
 const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
 const a=document.createElement('a');a.href=url;a.download='ali-light-combo-v2-review.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
