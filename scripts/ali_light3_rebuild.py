@@ -44,6 +44,21 @@ def load_frame(path):
     return frame, rect
 
 
+def validate_clip_timing(manifest, name):
+    """Protect contact timing and ordered poses, not only total attack length."""
+    clip = manifest.get("clips", {}).get(name, {})
+    entries = clip.get("frames", [])
+    if (clip.get("loop") is not False or not isinstance(entries, list)
+        or len(entries) != 6 or not all(isinstance(entry, dict) for entry in entries)):
+        raise ValueError("Expected 6 nonlooping frames for " + name)
+    durations = [entry.get("duration") for entry in entries]
+    if (durations != TIMING[name]
+        or manifest.get("clipTiming", {}).get(name) != TIMING[name]):
+        raise ValueError("Attack timing drift for " + name)
+    if [entry.get("frame") for entry in entries] != [f"{name}-{i}" for i in range(6)]:
+        raise ValueError("Unexpected frame order for " + name)
+
+
 def validate_source(source):
     manifest = json.loads((source / "manifest.json").read_text(encoding="utf-8"))
     if (manifest.get("version") != 5 or manifest.get("fighter") != "Ali"
@@ -56,10 +71,7 @@ def validate_source(source):
         raise ValueError("Expected exactly 18 original V5 frame hashes")
     frames = {}
     for name in MOVES:
-        if (manifest["clipTiming"][name] != TIMING[name]
-            or manifest["clips"][name]["loop"] is not False
-            or abs(sum(TIMING[name]) - TIMES[name]) > 1e-8):
-            raise ValueError("Unexpected combat timing: " + name)
+        validate_clip_timing(manifest, name)
         for i in range(6):
             filename = f"{name}-{i:02}.png"
             path = source / "frames" / filename

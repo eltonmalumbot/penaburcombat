@@ -5,9 +5,9 @@ import hashlib
 import json
 from pathlib import Path
 from PIL import Image
+from ali_light3_rebuild import MOVES, validate_clip_timing
 
 SOURCE_SHA = "43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521"
-TIMINGS = {"light1": .35, "light2": .35, "light3": .39}
 
 
 def sha(path):
@@ -41,13 +41,8 @@ def check_frame(directory, atlas, expected_hashes, move, row, col):
             raise ValueError("Atlas/source pixels differ: " + name)
 
 
-def check_clip(directory, atlas, doc, expected_hashes, row, move, seconds):
-    clip = doc["clips"][move]
-    clips = clip["frames"]
-    if clip["loop"] is not False or len(clips) != 6:
-        raise ValueError("Expected 6 nonlooping frames for " + move)
-    if abs(sum(frame["duration"] for frame in clips) - seconds) > 1e-8:
-        raise ValueError("Attack timing drift for " + move)
+def check_clip(directory, atlas, doc, expected_hashes, row, move):
+    validate_clip_timing(doc, move)
     for col in range(6):
         check_frame(directory, atlas, expected_hashes, move, row, col)
 
@@ -64,8 +59,8 @@ def verify(directory):
     with Image.open(sheet) as atlas:
         if atlas.size != (4320, 1620) or atlas.mode != "RGBA":
             raise ValueError("Expected 4320x1620 RGBA atlas")
-        for row, (move, seconds) in enumerate(TIMINGS.items()):
-            check_clip(directory, atlas, doc, expected, row, move, seconds)
+        for row, move in enumerate(MOVES):
+            check_clip(directory, atlas, doc, expected, row, move)
     print("PASS: 18 frame hashes, exact RGBA atlas and combat timing; ART NOT APPROVED")
 
 

@@ -5,6 +5,7 @@ They exercise the REAL rebuild+validator modules with a temporary fixture whose
 locally generated SHA is patched into the test-only source guard.
 """
 import json
+import copy
 import shutil
 import sys
 import tempfile
@@ -153,6 +154,39 @@ class AliLight3PipelineTests(unittest.TestCase):
         docpath.write_text(json.dumps(doc), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "timing drift"):
             val.verify(candidate)
+
+    @staticmethod
+    def invalid_timing_variants(manifest):
+        for label in ("same-total", "nonfinite", "frame-order", "timing-metadata"):
+            doc = copy.deepcopy(manifest)
+            frames = doc["clips"]["light3"]["frames"]
+            if label == "same-total":
+                frames[0]["duration"] = .06
+                frames[1]["duration"] = .03
+            elif label == "nonfinite":
+                frames[0]["duration"] = float("nan")
+            elif label == "frame-order":
+                frames[3]["frame"], frames[4]["frame"] = frames[4]["frame"], frames[3]["frame"]
+            else:
+                doc["clipTiming"]["light3"] = [.06, .03, .03, .045, .045, .18]
+            yield label, doc
+
+    def test_source_rejects_contact_timing_drift_and_reordered_frames(self):
+        for label, doc in self.invalid_timing_variants(self.source_manifest):
+            with self.subTest(label=label):
+                (self.source / "manifest.json").write_text(json.dumps(doc), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "timing drift|frame order"):
+                    reb.validate_source(self.source)
+
+    def test_candidate_rejects_contact_timing_drift_and_reordered_frames(self):
+        candidate = self.create_candidate()
+        path = candidate / "manifest.json"
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        for label, doc in self.invalid_timing_variants(manifest):
+            with self.subTest(label=label):
+                path.write_text(json.dumps(doc), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "timing drift|frame order"):
+                    val.verify(candidate)
 
 
 if __name__ == "__main__":
