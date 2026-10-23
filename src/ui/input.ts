@@ -11,7 +11,7 @@ export class InputController {
   private readonly pointers = new Map<number, string>();
   private readonly pointerButtons = new Map<number, HTMLButtonElement>();
   private readonly pointerOrigins = new Map<number, HTMLButtonElement>();
-  private readonly touchStarts = new Map<number, { key: string; at: number; x: number; y: number; dash: boolean }>();
+  private readonly touchStarts = new Map<number, { key: string; at: number; x: number; y: number; dash: boolean; multitouch: boolean }>();
   private lastDirectionTap: { key: string; at: number } | null = null;
 
   constructor(onPause: () => void, onExit: () => void, onBlur: () => void) {
@@ -73,13 +73,15 @@ export class InputController {
       const direction = key === 'a' || key === 'd';
       // A Dash requires a *completed* first tap. Parallel thumbs and long
       // movement holds must not accidentally count as double-taps.
-      const dash = event.pointerType === 'touch' && direction && this.pointerOrigins.size === 0
+      const alreadyTouching = this.pointerOrigins.size > 0;
+      if (alreadyTouching) for (const start of this.touchStarts.values()) start.multitouch = true;
+      const dash = event.pointerType === 'touch' && direction && !alreadyTouching
         && this.lastDirectionTap?.key === key && now - this.lastDirectionTap.at <= 280;
       this.pointerOrigins.set(event.pointerId, button);
       this.pointerButtons.set(event.pointerId, button);
       this.pointers.set(event.pointerId, key);
       if (event.pointerType === 'touch') this.touchStarts.set(event.pointerId, {
-        key, at: now, x: event.clientX, y: event.clientY, dash: Boolean(dash),
+        key, at: now, x: event.clientX, y: event.clientY, dash: Boolean(dash), multitouch: alreadyTouching,
       });
       button.classList.add('is-held');
       this.pressed.add(key);
@@ -112,7 +114,7 @@ export class InputController {
       // Only quick, stationary, fully released first taps may set up a Dash.
       // Cancel and lost capture must never arm a gesture.
       if (event.type === 'pointerup' && start && (start.key === 'a' || start.key === 'd')
-        && actualKey === start.key && !start.dash
+        && actualKey === start.key && !start.dash && !start.multitouch
         && duration < 230 && drift < 26 && this.pointerOrigins.size === 0) {
         this.lastDirectionTap = { key: start.key, at: performance.now() };
       } else if (start && (start.key === 'a' || start.key === 'd')) this.lastDirectionTap = null;
