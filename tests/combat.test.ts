@@ -154,3 +154,15 @@ test('seeded CPU completes an untouched match through two KOs without invalid st
 test('invalid frame durations are rejected instead of tunneling through collisions', () => {
   const e = active(); for (const dt of [0, -1, NaN, Infinity, .2]) assert.throws(() => e.update(dt), /fixed steps/);
 });
+
+test('rapid second light tap during startup is buffered without changing combat timing', () => {
+  const e = active();
+  e.update(FIXED_STEP, input({ attack: 'light' }));
+  // A quick thumb tap used to be discarded during the first 0.05s.
+  e.update(FIXED_STEP, input({ attack: 'light' }));
+  assert.equal(e.state.player.attack?.combo, 1);
+  assert.equal(e.state.player.attack?.queued, true);
+  frames(e, 19);
+  assert.equal(e.state.player.attack?.combo, 2);
+  assert.equal(e.state.player.attack?.queued, false);
+});
