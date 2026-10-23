@@ -11,7 +11,8 @@
     "test:atlas": "playwright test --config playwright.atlas.config.ts",
     "check": "npm test && npm run build",
     "build": "npm run typecheck && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "art:verify:v3": "node scripts/verify-ali-v3.mjs --manifest-only"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
