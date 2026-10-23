@@ -21,7 +21,7 @@ test('review opt-in rejects forged PNG without activating new fighter artwork', 
   await expect(page.locator('#ali-v3-review-status')).toContainText('sprite Ali asli');
   await page.locator('#ali-v3-local-file').setInputFiles({
     name: 'ali-combat-frames.png', mimeType: 'image/png',
-    buffer: Buffer.from('not the approved V3 PNG bytes'),
+    buffer: Buffer.alloc(256, 0xa5),
   });
   await expect(page.locator('#ali-v3-review-status')).toContainText('Checksum salah');
   await page.getByRole('button', { name: 'Control j', exact: true }).click();
