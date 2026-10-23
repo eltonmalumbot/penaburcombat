@@ -17,7 +17,7 @@ test('review opt-in rejects forged PNG without activating new fighter artwork', 
   await page.getByRole('button', { name: 'START FIGHT' }).click();
   await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
-  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4 belum disetujui')).toBeVisible();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5 belum disetujui')).toBeVisible();
   await expect(page.locator('#ali-v3-review-status')).toContainText('sprite Ali asli');
   await page.locator('#ali-v3-local-file').setInputFiles({
     name: 'ali-combat-frames.png', mimeType: 'image/png',
@@ -92,7 +92,7 @@ test('review v4 query exposes guarded art loader and the expected verified diges
   await page.getByRole('button', { name: 'START FIGHT' }).click();
   await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
   await page.getByRole('button', { name: 'FIGHT CPU' }).click();
-  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4 belum disetujui')).toBeVisible();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5 belum disetujui')).toBeVisible();
   await expect(page.locator('#ali-v3-review-status')).toContainText('sprite Ali asli');
   const pinned = await page.evaluate(async () => {
     const mod = await import('/src/animation/review-ali.ts' as string);
@@ -176,4 +176,25 @@ test('review-only slow motion and PNG capture work without changing the default 
   await expect(speed).toHaveValue('0.5');
   await speed.selectOption('1');
   await expect(speed).toHaveValue('1');
+});
+
+
+test('V5 FX cleanup is checksum-pinned and remains review-only', async ({ page }) => {
+  await page.goto('/?aliArtReview=v5');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'FIGHT CPU' }).click();
+  await expect(page.getByText('REVIEW ONLY — Ali Combo V3/V4/V5 belum disetujui')).toBeVisible();
+  const pinned = await page.evaluate(async () => {
+    const mod = await import('/src/animation/review-ali.ts' as string);
+    return mod.ALI_V5_SHA256;
+  });
+  expect(pinned).toBe('43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521');
+  await page.locator('#ali-v3-local-file').setInputFiles({
+    name: 'ali-combat-frames.png', mimeType: 'image/png',
+    buffer: Buffer.alloc(256, 0x9e),
+  });
+  await expect(page.locator('#ali-v3-review-status')).toContainText('Checksum salah');
+  await page.getByRole('button', { name: 'Kembalikan sprite Ali asli' }).click();
+  await expect(page.locator('#ali-v3-review-status')).toContainText('Sprite Ali asli aktif kembali');
 });
