@@ -10,6 +10,7 @@ V4 is derived from the already reviewed V3 Cleanup ZIP. It repairs obvious Light
 - Atlas: 4320×1620, 18 RGBA frames (720×540 each).
 - Light 1 and Light 2 retain 0.35 s each, Light 3 0.39 s; all clips non-looping.
 - The original GitHub-approved Ali idle/walk PNG is untouched. **No V4 image bytes are committed in this PR.**
+- The mobile art reviewer renders a two-layer virtual atlas: original Ali image for idle/walk, candidate image for Light1–3. This avoids a separate 4320×2700 bitmap allocation and heavy Canvas-to-PNG round-trip.
 
 ## How to inspect in browser
 1. Open the branch Vercel preview with `/?aliArtReview=v4`, start a match and pick the local `ali-combat-frames.png` extracted from V4 ZIP.
