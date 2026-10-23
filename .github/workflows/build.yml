@@ -20,6 +20,21 @@ jobs:
         run: npm test
       - name: Typecheck and bundle
         run: npm run build
+      - name: Diagnose Sonar issues for asset-tooling PR
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          url="https://sonarcloud.io/api/issues/search?componentKeys=eltonmalumbot_penaburcombat&pullRequest=19&ps=100"
+          try:
+              with urllib.request.urlopen(url,timeout=12) as response:
+                  content=json.load(response)
+              for issue in content.get('issues',[]):
+                  print("SONAR-ISSUE",issue.get('rule'),issue.get('severity'),issue.get('component'),issue.get('line'),issue.get('message'))
+              print("SONAR-TOTAL",content.get('total'))
+          except Exception as exc:
+              print('Sonar issue details unavailable',type(exc).__name__,str(exc))
+          PY
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Browser gameplay tests
