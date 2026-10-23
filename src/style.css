@@ -117,3 +117,95 @@
 @media(orientation:landscape) and (max-height:600px) and (max-width:1200px){
   .fight-page .battle-bar .fullscreen-toggle{font-size:9px}
 }
+
+
+/* Mobile Gamepad V2 — ergonomic arcades, no gameplay/hitbox changes.
+   Keep keyboard and existing touch control names for accessibility + regression coverage. */
+.fight-layout .gamepad-v2{
+  --touch-gap:clamp(5px, .8vw, 9px);
+  gap:clamp(8px,2vw,22px);
+}
+.gamepad-v2 .touch-heading{color:#bfeaff}
+.fight-layout .gamepad-v2 .touch-group.attack .touch-buttons{
+  display:grid;
+  position:relative;
+  width:max-content;
+  max-width:100%;
+  height:auto;
+  grid-template-columns:repeat(3,var(--attack-button));
+  grid-template-rows:repeat(2,var(--attack-button));
+  gap:var(--touch-gap);
+  place-content:center;
+  align-items:center;
+  justify-items:center;
+}
+.fight-layout .gamepad-v2 .attack .touch{
+  position:static;
+  min-width:0;
+  width:var(--attack-button);
+  height:var(--attack-button);
+  border-radius:50%;
+  transform-origin:center;
+}
+.fight-layout .gamepad-v2 .attack .touch-j{
+  grid-column:1;
+  grid-row:1 / span 2;
+  width:calc(var(--attack-button) * 1.24);
+  height:calc(var(--attack-button) * 1.24);
+  background:linear-gradient(145deg,#28a7c8,#126785);
+  border-color:#92eafa;
+  box-shadow:0 3px 14px #0008,0 0 16px #0ce0ff2c;
+}
+.fight-layout .gamepad-v2 .attack .touch-k{grid-column:2;grid-row:1}
+.fight-layout .gamepad-v2 .attack .touch-l{grid-column:3;grid-row:1}
+.fight-layout .gamepad-v2 .attack .touch-u{
+  grid-column:2 / span 2;
+  grid-row:2;
+  top:auto;left:auto;right:auto;bottom:auto;
+  width:calc(var(--attack-button) * 1.75);
+  min-width:0;
+  height:calc(var(--attack-button) * .86);
+  border-radius:100px;
+}
+.fight-layout .gamepad-v2 .touch-group.move .touch-buttons{gap:var(--touch-gap)}
+.gamepad-v2[data-size="compact"]{--pad-control-size:compact}
+.fight-layout .gamepad-v2[data-size="compact"]{
+  --dpad-button:clamp(35px,4.4vw,54px);
+  --attack-button:clamp(42px,5.2vw,60px);
+}
+.fight-layout .gamepad-v2[data-size="large"]{
+  --dpad-button:clamp(46px,6.5vw,72px);
+  --attack-button:clamp(56px,7.5vw,84px);
+}
+.fight-page .pad-size-toggle{
+  margin-left:0;
+  white-space:nowrap;
+  border-color:#367b92;
+}
+@media(max-width:700px){
+  .fight-layout .gamepad-v2[data-size="compact"]{--dpad-button:clamp(34px,9vw,44px);--attack-button:clamp(40px,11vw,51px)}
+  .fight-layout .gamepad-v2[data-size="large"]{--dpad-button:clamp(42px,12.4vw,58px);--attack-button:clamp(50px,14.5vw,67px)}
+  .fight-page .pad-size-toggle{font-size:9px;padding:8px 10px}
+}
+@media(max-width:380px) and (orientation:portrait){
+  /* Two side-by-side pads would clip touch targets on 320–360px phones. */
+  .fight-layout .gamepad-v2{
+    grid-template-columns:1fr;
+    justify-items:center;
+    gap:9px;
+  }
+  .gamepad-v2 .touch-group{width:100%}
+}
+@media(orientation:landscape) and (max-height:600px) and (max-width:1200px){
+  /* Bound custom sizes to the safe landscape height; all buttons stay on canvas. */
+  .fight-layout .gamepad-v2[data-size="compact"]{
+    --dpad-button:clamp(33px,min(6.2vw,11dvh),47px);
+    --attack-button:clamp(39px,min(7.7vw,13dvh),58px);
+  }
+  .fight-layout .gamepad-v2[data-size="large"]{
+    --dpad-button:clamp(39px,min(8vw,14dvh),59px);
+    --attack-button:clamp(47px,min(9.5vw,17.5dvh),73px);
+  }
+  .fight-layout .gamepad-v2 .touch-heading{font-size:8px}
+  .fight-page .pad-size-toggle{padding:5px 7px;font-size:8px}
+}
