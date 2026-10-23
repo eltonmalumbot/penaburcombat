@@ -7,7 +7,8 @@ import type { SpriteAtlas, AtlasMetadata } from './atlas.ts';
  */
 export const ALI_V3_SHA256 = '6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a';
 export const ALI_V4_SHA256 = 'b998f44db137f601617852e9fb7083a17c507839e60d562015fce8df4e660325';
-export type AliCandidateEdition = 'V3' | 'V4';
+export const ALI_V5_SHA256 = '43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521';
+export type AliCandidateEdition = 'V3' | 'V4' | 'V5';
 const frameDurations = {
   light1: [.04, .04, .035, .055, .09, .09],
   light2: [.04, .04, .035, .055, .09, .09],
@@ -36,8 +37,8 @@ export async function loadAliForReview(file: File): Promise<{ atlas: SpriteAtlas
     throw new Error('Ukuran PNG kandidat tidak sesuai (maksimal 20 MB).');
   const checksum = await sha256(await file.arrayBuffer());
   const edition: AliCandidateEdition | null = checksum === ALI_V3_SHA256 ? 'V3' :
-    checksum === ALI_V4_SHA256 ? 'V4' : null;
-  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3 atau Repair V4 asli.');
+    checksum === ALI_V4_SHA256 ? 'V4' : checksum === ALI_V5_SHA256 ? 'V5' : null;
+  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3, Repair V4, atau FX Polish V5 asli.');
   const image = await decodeFile(file);
   validateCandidateImage(image);
   const original = await loadAtlas('/assets/fighters/ali.json');
