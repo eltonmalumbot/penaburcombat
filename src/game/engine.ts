@@ -110,7 +110,9 @@ export class CombatEngine {
 
   private beginAttack(f: Fighter, move: Move): boolean {
     if (f.attack) {
-      if (move === 'light' && f.attack.move === 'light' && f.attack.combo < 3 && f.attack.elapsed >= .05) f.attack.queued = true;
+      // A second tap during startup is buffered instead of being lost on touchscreens.
+      // This changes input forgiveness only, not attack timing, damage or hitboxes.
+      if (move === 'light' && f.attack.move === 'light' && f.attack.combo < 3) f.attack.queued = true;
       return false;
     }
     if (f.guard || f.stun > 0 || f.dashTime > 0) return false;
