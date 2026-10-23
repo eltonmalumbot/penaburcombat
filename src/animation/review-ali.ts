@@ -5,7 +5,9 @@ import type { SpriteAtlas, AtlasMetadata } from './atlas.ts';
 export const ALI_V3_SHA256 = '6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a';
 export const ALI_V4_SHA256 = 'b998f44db137f601617852e9fb7083a17c507839e60d562015fce8df4e660325';
 export const ALI_V5_SHA256 = '43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521';
-export type AliCandidateEdition = 'V3' | 'V4' | 'V5';
+/** Visual-only V5.1: FX alpha edges cleaned, F5 body still V4-derived. */
+export const ALI_V5_1_SHA256 = '0efa47867d718c0a5b8374fecb19f449037e22da755ebe11a1f0aedbc2457674';
+export type AliCandidateEdition = 'V3' | 'V4' | 'V5' | 'V5.1';
 const frameDurations = {
   light1: [.04, .04, .035, .055, .09, .09],
   light2: [.04, .04, .035, .055, .09, .09],
@@ -35,8 +37,9 @@ export async function loadAliForReview(file: File): Promise<{ atlas: SpriteAtlas
   const checksum = await sha256(await file.arrayBuffer());
   const edition: AliCandidateEdition | null = checksum === ALI_V3_SHA256 ? 'V3' :
     checksum === ALI_V4_SHA256 ? 'V4' :
-    checksum === ALI_V5_SHA256 ? 'V5' : null;
-  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3, Repair V4, atau FX Polish V5 asli.');
+    checksum === ALI_V5_SHA256 ? 'V5' :
+    checksum === ALI_V5_1_SHA256 ? 'V5.1' : null;
+  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3, Repair V4, FX Polish V5, atau V5.1 FX Edge Review asli.');
   const image = await decodeFile(file);
   validateCandidateImage(image);
   const original = await loadAtlas('/assets/fighters/ali.json');
