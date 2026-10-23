@@ -55,9 +55,8 @@ function spec(root) {
   return config;
 }
 
-/** Inspect delivered bytes, NOT generated stand-ins or a pasted status label. */
-function validateArt(root, folder, repo) {
-  const manifest = JSON.parse(read(join(folder, 'manifest.json')).toString('utf8'));
+/** Reject mutated or unapproved provenance before inspecting potentially large images. */
+function validateCandidateHeader(manifest) {
   if (!object(manifest)) die('invalid candidate manifest JSON');
   if (manifest.fighter !== 'Ali' || manifest.version !== 3 || manifest.isApprovedProductionArt !== false)
     die('V3 manifest must be an unapproved Ali candidate');
@@ -70,59 +69,73 @@ function validateArt(root, folder, repo) {
       !same(manifest.combatOnlySize, [4320, 1620]) ||
       !same(manifest.combinedAtlasSize, [4320, 2700]) ||
       manifest.pivots?.pivotX !== 320 || manifest.pivots?.pivotY !== 525 ||
-      manifest.scale !== .6420824295 || manifest.facing !== 'right')
+      !eq(manifest.scale, .6420824295) || manifest.facing !== 'right')
     die('unexpected candidate geometry, original scale or pivots');
+}
 
+function validateCandidateAtlas(folder, manifest) {
   const atlas = read(join(folder, 'ali-combat-frames.png'));
   if (sha(atlas) !== ATLAS_SHA || !same(pngSize(atlas, 'atlas'), [4320, 1620]))
     die('atlas bytes, dimensions or transparency format changed');
   if (!Array.isArray(manifest.frameQA) || manifest.frameQA.length !== 18 ||
-      Object.keys(manifest.combatFrameRects ?? {}).length !== 18)
+      !object(manifest.combatFrameRects) ||
+      Object.keys(manifest.combatFrameRects).length !== 18)
     die('must contain exactly 18 validated and indexed frames');
+}
 
+/** Independently validate one attack to keep the contact/recovery contract readable. */
+function validateCombatClip(manifest, folder, row, name, expected, seen) {
+  const clip = manifest.clips?.[name];
+  const entries = clip?.frames;
+  if (clip?.loop !== false || !Array.isArray(entries) || entries.length !== 6 ||
+      !entries.every(entry => object(entry) && typeof entry.frame === 'string' &&
+         typeof entry.duration === 'number' && Number.isFinite(entry.duration)) ||
+      !same(entries.map(e => e.duration), expected.timings) ||
+      !same(manifest.clipTiming?.[name], expected.timings))
+    die('incorrect nonlooping 6-frame timing: ' + name);
+  const phase = row === 2
+    ? [entries.slice(0, 3), entries.slice(3, 5), entries.slice(5)]
+    : [entries.slice(0, 2), entries.slice(2, 4), entries.slice(4)];
+  if (!same(phase.map(part => part.reduce((a, f) => a + f.duration, 0)), expected.phases) ||
+      !eq(entries.reduce((a, f) => a + f.duration, 0), expected.total))
+    die('startup/active/recovery drift: ' + name);
+
+  for (let col = 0; col < 6; col++) {
+    const id = name + '-' + col, file = name + '-' + String(col).padStart(2, '0') + '.png';
+    const rect = manifest.combatFrameRects[id];
+    if (entries[col].frame !== id || rect?.x !== col * 720 ||
+        rect?.y !== 1080 + row * 540 || rect?.w !== 720 || rect?.h !== 540 ||
+        rect?.pivotX !== 320 || rect?.pivotY !== 525)
+      die('bad atlas coordinates or pivots: ' + id);
+    const check = manifest.frameQA.find(item => object(item) && item.frame === file);
+    if (!check || seen.has(file) || !requiredSha(check.sha256))
+      die('missing/duplicated QA entry: ' + file);
+    seen.add(file);
+    const bytes = read(join(folder, 'frames', file));
+    if (!same(pngSize(bytes, file), [720, 540]) || sha(bytes) !== check.sha256)
+      die('invalid frame PNG bytes: ' + file);
+  }
+}
+
+function validateApprovedOriginal(repo) {
+  const original = read(join(repo, 'public/assets/fighters/ali.png'));
+  if (sha(original) !== APPROVED_ALI_SHA) die('original GitHub Ali PNG is not the approved source');
+  const metadata = JSON.parse(read(join(repo, 'public/assets/fighters/ali.json')).toString('utf8'));
+  if (!object(metadata) || metadata.image !== 'ali.png' || !object(metadata.clips) ||
+      Object.keys(metadata.clips).sort((a, b) => a.localeCompare(b)).join(',') !== 'idle,walk')
+    die('production Ali metadata was already changed to candidate art');
+}
+
+/** Inspect delivered bytes, NOT generated stand-ins or a pasted status label. */
+function validateArt(root, folder, repo) {
+  const manifest = JSON.parse(read(join(folder, 'manifest.json')).toString('utf8'));
+  validateCandidateHeader(manifest);
+  validateCandidateAtlas(folder, manifest);
   const seen = new Set();
-  for (const [row, [name, expected]] of Object.entries(combos).entries()) {
-    const clip = manifest.clips?.[name];
-    const entries = clip?.frames;
-    if (clip?.loop !== false || !Array.isArray(entries) || entries.length !== 6 ||
-        !entries.every(entry => object(entry) && typeof entry.frame === 'string' &&
-           typeof entry.duration === 'number' && Number.isFinite(entry.duration)) ||
-        !same(entries.map(e => e.duration), expected.timings) ||
-        !same(manifest.clipTiming?.[name], expected.timings))
-      die('incorrect nonlooping 6-frame timing: ' + name);
-    const phase = row === 2
-      ? [entries.slice(0, 3), entries.slice(3, 5), entries.slice(5)]
-      : [entries.slice(0, 2), entries.slice(2, 4), entries.slice(4)];
-    if (!same(phase.map(part => part.reduce((a, f) => a + f.duration, 0)), expected.phases) ||
-        !eq(entries.reduce((a, f) => a + f.duration, 0), expected.total))
-      die('startup/active/recovery drift: ' + name);
-    for (let col = 0; col < 6; col++) {
-      const id = name + '-' + col, file = name + '-' + String(col).padStart(2, '0') + '.png';
-      const rect = manifest.combatFrameRects[id];
-      if (entries[col].frame !== id || rect?.x !== col * 720 ||
-          rect?.y !== 1080 + row * 540 || rect?.w !== 720 || rect?.h !== 540 ||
-          rect?.pivotX !== 320 || rect?.pivotY !== 525)
-        die('bad atlas coordinates or pivots: ' + id);
-      const check = manifest.frameQA.find(item => object(item) && item.frame === file);
-      if (!check || seen.has(file) || !requiredSha(check.sha256))
-        die('missing/duplicated QA entry: ' + file);
-      seen.add(file);
-      const bytes = read(join(folder, 'frames', file));
-      if (!same(pngSize(bytes, file), [720, 540]) || sha(bytes) !== check.sha256)
-        die('invalid frame PNG bytes: ' + file);
-    }
-  }
+  for (const [row, [name, expected]] of Object.entries(combos).entries())
+    validateCombatClip(manifest, folder, row, name, expected, seen);
   if (seen.size !== 18) die('unexpected frame set');
-
-  // The game MUST still reference the originally approved art on this feature branch.
-  if (repo) {
-    const original = read(join(repo, 'public/assets/fighters/ali.png'));
-    if (sha(original) !== APPROVED_ALI_SHA) die('original GitHub Ali PNG is not the approved source');
-    const metadata = JSON.parse(read(join(repo, 'public/assets/fighters/ali.json')).toString('utf8'));
-    if (metadata.image !== 'ali.png' ||
-        Object.keys(metadata.clips).sort().join(',') !== 'idle,walk')
-      die('production Ali metadata was already changed to candidate art');
-  }
+  if (repo) validateApprovedOriginal(repo);
   return { candidate: 'Ali Light Combo V3', sha256: ATLAS_SHA, validatedFrames: seen.size,
     clipSeconds: [combos.light1.total, combos.light2.total, combos.light3.total],
     artApproved: false, outstanding: [
@@ -136,7 +149,7 @@ try {
   const base = resolve(fileURLToPath(new URL('..', import.meta.url)));
   const only = args.includes('--manifest-only');
   const get = flag => { const i = args.indexOf(flag); return i < 0 ? null : (args[i + 1] ?? null); };
-  const contract = spec(base);
+  spec(base);
   if (only) {
     if (args.length !== 1) die('manifest-only does not accept additional arguments');
     console.log('PASS: pinned V3 provenance and timing contract; NO artwork bytes checked or approved.');
