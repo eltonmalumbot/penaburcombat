@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow"><title>Ali Combo V2 — Review Only | PENABUR Combat</title>
+<meta name="robots" content="noindex,nofollow"><title>Ali Combo V2/V3 — Review Only | PENABUR Combat</title>
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#edf6ff;background:#071625}
 *{box-sizing:border-box}body{margin:0}main{max-width:1200px;margin:0 auto;padding:clamp(12px,3vw,28px)}
@@ -23,14 +23,14 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 </style>
 </head>
 <body><main>
-<header><small>PENABUR COMBAT / PHASE 3A / ASSET QA</small><h1>Ali Light Combo V2 — Visual Review</h1>
+<header><small>PENABUR COMBAT / PHASE 3A / ASSET QA</small><h1>Ali Light Combo V2/V3 — Visual Review</h1>
 <p class="warning" role="note"><strong>KANDIDAT BELUM DISETUJUI.</strong> Halaman ini hanya untuk review lokal. Tidak mengubah aset di game, tidak mengirim gambar ke server, dan tidak membuktikan sprite sudah siap production.</p></header>
-<section><h2>1. Muat kandidat dari ZIP V2</h2>
-<p>Ekstrak <code>PENABUR_Combat_Ali_Light_Combo_Art_Pack_V2.zip</code>, lalu pilih <code>ali-combat-frames.png</code>. Gambar diverifikasi SHA-256 sebelum dapat diputar. Referensi kiri dibaca langsung dari aset Ali yang disetujui di repository.</p>
+<section><h2>1. Muat kandidat dari ZIP V2 atau Cleanup V3</h2>
+<p>Ekstrak <code>PENABUR_Combat_Ali_Light_Combo_Art_Pack_V2.zip</code> atau <code>PENABUR_Combat_Ali_Light_Combo_Cleanup_V3.zip</code>, lalu pilih <code>ali-combat-frames.png</code>. Gambar diverifikasi SHA-256 sebelum dapat diputar. Referensi kiri dibaca langsung dari aset Ali yang disetujui di repository.</p>
 <label for="atlas"><span>Atlas PNG lokal:</span><input id="atlas" type="file" accept=".png,image/png" aria-describedby="status"></label>
-<p id="status" role="status" aria-live="polite">Belum ada PNG kandidat. Sprite asli Ali tersedia sebagai pembanding.</p>
+<p id="status" role="status" aria-live="polite">Belum ada PNG kandidat V2/V3. Sprite asli Ali tersedia sebagai pembanding.</p>
 <p id="border-warning" style="color:#f7c483" role="note"></p>
-<div class="meta"><span>18 frame • 6 per combo</span><span>4320 × 1620 RGBA</span><span>Light 1/2: 0,35 dtk • Light 3: 0,39 dtk</span></div>
+<div class="meta"><span>18 frame • 6 per combo</span><span>4320 × 1620 RGBA</span><span id="edition">VERSI: belum dimuat</span><span>Light 1/2: 0,35 dtk • Light 3: 0,39 dtk</span></div>
 </section>
 <section><h2>2. Bandingkan pose dan gerakan</h2>
 <div class="controls">
@@ -64,7 +64,11 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 </main>
 <script type="module">
 const $=id=>document.getElementById(id);
-const expectedHash='1e206d68e0a20ee55ba99af18e09ab5ef856ad0d0ea10cb766588d2351fcf7e6';
+const knownHashes={
+  V2:'1e206d68e0a20ee55ba99af18e09ab5ef856ad0d0ea10cb766588d2351fcf7e6',
+  'V3 Cleanup':'6b73f725013558b0b08f7cd1c91efdbd7bb1d8df2c3ddf588251ac9bf37f878a'
+};
+let acceptedEdition=null;
 const durations={light1:[.04,.04,.035,.055,.09,.09],light2:[.04,.04,.035,.055,.09,.09],light3:[.05,.04,.03,.045,.045,.18]};
 const ordered=['light1','light2','light3'];const ctx=$('scene').getContext('2d');
 let original=null, candidate=null, playing=false, elapsed=0, last=0, frameIndex=0, lastObjectUrl=null;
@@ -104,7 +108,7 @@ const canvas=$('scene');ctx.clearRect(0,0,canvas.width,canvas.height);
 const bg=ctx.createLinearGradient(0,0,0,520);bg.addColorStop(0,'#193654');bg.addColorStop(1,'#111d32');ctx.fillStyle=bg;ctx.fillRect(0,0,1040,520);
 ctx.strokeStyle='#50718d';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(512,32);ctx.lineTo(512,500);ctx.stroke();
 ctx.textAlign='center';ctx.font='700 19px system-ui';ctx.fillStyle='#cde9f9';
-ctx.fillText('ALI ORIGINAL (APPROVED)',255,38);ctx.fillText('LIGHT COMBO V2 (UNAPPROVED)',782,38);
+ctx.fillText('ALI ORIGINAL (APPROVED)',255,38);ctx.fillText('LIGHT COMBO V2/V3 (UNAPPROVED)',782,38);
 const y=450;const facing=$('reverse').checked?-1:1;
 if($('guide').checked){ctx.strokeStyle='#91e9ff';ctx.lineWidth=1;ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(12,y);ctx.lineTo(1028,y);ctx.stroke();ctx.setLineDash([]);}
 if(original)pose(original,0,0,400,540,200,525,255,y,facing);
@@ -123,12 +127,15 @@ function tick(now){
 }
 render();
 $('atlas').addEventListener('change',async()=>{
-stop();candidate=null;frameIndex=0;elapsed=0;$('border-warning').textContent='';const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
+stop();candidate=null;acceptedEdition=null;$('edition').textContent='VERSI: belum dimuat';frameIndex=0;elapsed=0;$('border-warning').textContent='';const file=$('atlas').files?.[0];$('toggle').disabled=true;$('step').disabled=true;
 if(!file){label('Tidak ada file dipilih');return}
 try{
 const bytes=await file.arrayBuffer();
 const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
-if(digest!==expectedHash)throw Error('SHA-256 tidak cocok dengan kandidat V2 yang diaudit. Jangan gunakan file ini.');
+const edition=Object.keys(knownHashes).find(name=>knownHashes[name]===digest);
+if(!edition)throw Error('SHA-256 tidak cocok dengan kandidat V2/V3 yang diaudit. Jangan gunakan file ini.');
+acceptedEdition=edition;
+$('edition').textContent='VERSI: '+edition;
 const url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
 const img=new Image();
 try{img.src=url;await img.decode();if(img.naturalWidth!==4320||img.naturalHeight!==1620)throw Error('Dimensi atlas bukan 4320×1620');}
@@ -138,7 +145,7 @@ const warnings=inspectEdgeMargins(img);
 $('border-warning').textContent=warnings.length
   ? 'PERLU DITINJAU — tepi frame mendekati potongan atlas: '+warnings.join(', ')+'. Ini indikasi artefak, bukan bukti pasti.'
   : 'Tidak ditemukan alpha signifikan di margin tepi 12px; pemeriksaan artistik tetap wajib.';
-label('SHA-256 dan dimensi VALID. Ini tetap kandidat untuk review visual, BUKAN aset production.',false,true);
+label(acceptedEdition+': SHA-256 dan dimensi VALID. Ini tetap kandidat untuk review visual, BUKAN aset production.',false,true);
 }catch(err){label('Gagal memuat: '+(err instanceof Error?err.message:String(err)),true)}
 render();
 });
@@ -147,7 +154,7 @@ $('step').addEventListener('click',()=>{if(!candidate)return;stop();frameIndex=(
 $('clip').addEventListener('change',()=>{stop();frameIndex=0;elapsed=0;render()});
 for(const id of ['reverse','guide','loop'])$(id).addEventListener('change',render);
 $('export').addEventListener('click',()=>{
-const report={project:'PENABUR Combat',fighter:'Ali',candidate:'Light Combo V2',approved:false,expected_sha256:expectedHash,atlas_verified:Boolean(candidate),clip:$('clip').value,reviewed_direction:$('reverse').checked?'left':'right',checks:Object.fromEntries([...document.querySelectorAll('.qa-check')].map(x=>[x.value,x.checked])),notes:$('notes').value,exported_at:new Date().toISOString()};
+const report={project:'PENABUR Combat',fighter:'Ali',candidate:'Light Combo '+(acceptedEdition||'unknown'),approved:false,expected_sha256:acceptedEdition?knownHashes[acceptedEdition]:null,atlas_verified:Boolean(candidate),clip:$('clip').value,reviewed_direction:$('reverse').checked?'left':'right',checks:Object.fromEntries([...document.querySelectorAll('.qa-check')].map(x=>[x.value,x.checked])),notes:$('notes').value,exported_at:new Date().toISOString()};
 const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
 const a=document.createElement('a');a.href=url;a.download='ali-light-combo-v2-review.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
