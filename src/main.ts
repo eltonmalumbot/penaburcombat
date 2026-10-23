@@ -3,6 +3,7 @@ import { CombatEngine, FIXED_STEP } from './game/engine.ts';
 import type { FighterId } from './game/types.ts';
 import { GameRenderer } from './render/renderer.ts';
 import { loadAliForReview } from './animation/review-ali.ts';
+import type { AliCandidateEdition } from './animation/review-ali.ts';
 import type { SpriteAtlas } from './animation/atlas.ts';
 import { InputController } from './ui/input.ts';
 import { Screens } from './ui/screens.ts';
@@ -12,6 +13,7 @@ let engine: CombatEngine | null = null, renderer: GameRenderer | null = null;
 let paused = false, accumulator = 0, lastTime = 0, statusTime = 0;
 const aliReviewEnabled = ['v3', 'v4'].includes(new URLSearchParams(window.location.search).get('aliArtReview') ?? '');
 let reviewAliAtlas: SpriteAtlas | null = null;
+let reviewAliEdition: AliCandidateEdition | null = null;
 const resize = new ResizeObserver(() => renderer?.resize());
 const input = new InputController(togglePause, showSelection, () => setPaused(true));
 const root = document.querySelector<HTMLDivElement>('#app')!;
@@ -40,25 +42,25 @@ function attachAliArtReview(): void {
   file.setAttribute('aria-label', 'Choose local Ali V3 atlas');
   const status = document.createElement('p'); status.id = 'ali-v3-review-status';
   status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-  status.textContent = reviewAliAtlas ? 'V3 terpasang sementara di sesi browser ini.' : 'Menampilkan sprite Ali asli. Belum ada file V3 dimuat.';
+  status.textContent = reviewAliAtlas ? reviewAliEdition + ' terpasang sementara di sesi browser ini.' : 'Menampilkan sprite Ali asli. Belum ada file V3/V4 dimuat.';
   let selectionSerial = 0;
   const reset = document.createElement('button');
   reset.type = 'button'; reset.textContent = 'Kembalikan sprite Ali asli';
   reset.addEventListener('click', () => {
     selectionSerial++;
-    reviewAliAtlas = null; renderer?.setAliReviewAtlas(null); file.value = '';
+    reviewAliAtlas = null; reviewAliEdition = null; renderer?.setAliReviewAtlas(null); file.value = '';
     status.textContent = 'Sprite Ali asli aktif kembali.';
   });
   file.addEventListener('change', async () => {
     const selectedFile = file.files?.[0]; if (!selectedFile) return;
     const requestedRenderer = renderer, serial = ++selectionSerial;
-    reviewAliAtlas = null; requestedRenderer?.setAliReviewAtlas(null);
+    reviewAliAtlas = null; reviewAliEdition = null; requestedRenderer?.setAliReviewAtlas(null);
     file.disabled = true; status.textContent = 'Memverifikasi checksum dan menyusun atlas sementara…';
     try {
       const { atlas, edition } = await loadAliForReview(selectedFile);
       // Ignore stale asynchronous imports if the player exited this match.
       if (serial !== selectionSerial || renderer !== requestedRenderer || !requestedRenderer) return;
-      reviewAliAtlas = atlas; requestedRenderer.setAliReviewAtlas(atlas);
+      reviewAliAtlas = atlas; reviewAliEdition = edition; requestedRenderer.setAliReviewAtlas(atlas);
       status.textContent = edition + ' berhasil dimuat untuk review saja. Coba LIGHT tiga kali; perhatikan Light 3 F4–F5.';
     } catch (error) {
       if (serial === selectionSerial) status.textContent = 'Ditolak: ' + (error instanceof Error ? error.message : String(error));
