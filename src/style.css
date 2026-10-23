@@ -233,3 +233,18 @@
   text-shadow:0 1px 2px #0b193d;
   overflow-wrap:normal;
 }
+
+/* Feature-branch-only preview, shown only when ?aliArtReview=v3 is explicitly set. */
+.art-playtest {
+  margin:14px 0;
+  padding:16px;
+  border:2px solid #b99338;
+  border-radius:12px;
+  background:#172d40;
+  color:#fff2cf;
+}
+.art-playtest strong { display:block; font-size:14px; letter-spacing:.02em }
+.art-playtest p { margin:8px 0; color:#c7d9e8; line-height:1.4 }
+.art-playtest input { display:inline-block; max-width:100%; margin:8px 10px 8px 0 }
+.art-playtest button { padding:10px 13px; border:1px solid #729ec7; border-radius:8px; background:#294b67; color:#fff; cursor:pointer }
+.art-playtest [role=status] { font-size:13px; color:#ffe2a6; }
