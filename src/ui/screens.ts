@@ -17,9 +17,15 @@ export class Screens {
   private status: HTMLDivElement | null = null;
   private announcement: HTMLDivElement | null = null;
   private pauseButton: HTMLButtonElement | null = null;
+  private touchPad: HTMLElement | null = null;
   private fullscreenButton: HTMLButtonElement | null = null;
+  private controlSize: 'compact' | 'normal' | 'large' = 'normal';
   constructor(root: HTMLElement, actions: Actions) {
     this.root = root; this.actions = actions;
+    try {
+      const saved = localStorage.getItem('penabur-control-size');
+      if (saved === 'compact' || saved === 'normal' || saved === 'large') this.controlSize = saved;
+    } catch { /* Private browsing can disable storage; normal remains usable. */ }
     document.addEventListener('fullscreenchange', () => {
       this.fullscreenButton?.setAttribute('aria-pressed', String(Boolean(document.fullscreenElement)));
     });
@@ -47,7 +53,7 @@ export class Screens {
   }
 
   private page(): HTMLElement {
-    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null;
+    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null; this.touchPad = null;
     // Leaving a match always returns to the regular browser layout.
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     const header = element('header', 'top'), logo = element('a', 'logo', 'PENABUR Combat');
@@ -124,8 +130,10 @@ export class Screens {
 
     // Keep the original InputController bindings; only their visual arrangement changes.
     // All controls are real buttons, so keyboard and touch can coexist.
-    const pad = element('section', 'touch-pad gamepad');
+    const pad = element('section', 'touch-pad gamepad gamepad-v2');
+    pad.dataset.size = this.controlSize;
     pad.setAttribute('aria-label', 'On-screen combat controls');
+    this.touchPad = pad;
     const groups: readonly { title: string; className: string; keys: readonly [string, string, string][] }[] = [
       { title: 'MOVEMENT', className: 'move', keys: [
         ['a', '◀', 'LEFT'], ['d', '▶', 'RIGHT'], ['w', '↑', 'JUMP'],
@@ -145,6 +153,9 @@ export class Screens {
         control.type = 'button';
         control.setAttribute('aria-label', `Control ${key}`);
         control.dataset.key = key;
+        if (key === 'j') control.title = 'Tap LIGHT repeatedly to chain three hits';
+        if (key === 'a' || key === 'd') control.title = 'Hold to move; double-tap on touch to Dash';
+        if (key === 'shift') control.title = 'Dash (also double-tap left or right on touch)';
         const icon = element('span', 'touch-glyph', glyph);
         icon.setAttribute('aria-hidden', 'true');
         control.append(icon, element('span', 'touch-label', label));
@@ -154,6 +165,17 @@ export class Screens {
       section.append(buttons); pad.append(section);
     }
     layout.append(pad);
+    const resizePad = button(`PAD: ${this.controlSize.toUpperCase()}`, () => {
+      const sizes = ['normal', 'large', 'compact'] as const;
+      this.controlSize = sizes[(sizes.indexOf(this.controlSize) + 1) % sizes.length];
+      pad.dataset.size = this.controlSize;
+      resizePad.textContent = `PAD: ${this.controlSize.toUpperCase()}`;
+      try { localStorage.setItem('penabur-control-size', this.controlSize); }
+      catch { /* This preference is optional, including in private browsing. */ }
+    }, true);
+    resizePad.classList.add('pad-size-toggle');
+    resizePad.setAttribute('aria-label', 'Control size');
+    bar.append(resizePad);
     page.append(element('p', 'rotate-hint', 'Putar HP ke landscape untuk area bermain yang lebih luas.'));
     this.status = element('div', 'sr-only match-status'); this.status.setAttribute('role', 'group'); this.status.setAttribute('aria-label', 'Match status');
     this.announcement = element('div', 'sr-only'); this.announcement.setAttribute('role', 'status');
@@ -170,6 +192,13 @@ export class Screens {
     this.status.dataset.timer = String(Math.ceil(match.timer)); this.status.dataset.paused = String(paused);
     if (this.announcement && this.announcement.textContent !== match.notice) this.announcement.textContent = match.notice;
     this.pauseButton?.setAttribute('aria-pressed', String(paused));
+    for (const [selector, cost] of [['.touch-l', 20], ['.touch-u', 65]] as const) {
+      const control = this.touchPad?.querySelector<HTMLButtonElement>(selector);
+      if (!control) continue;
+      const ready = match.player.meter >= cost;
+      control.dataset.ready = String(ready);
+      control.setAttribute('aria-description', ready ? 'Ready to use' : `Requires ${cost} meter`);
+    }
   }
 
   result(match: Match): void {
