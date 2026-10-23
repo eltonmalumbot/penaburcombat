@@ -50,21 +50,16 @@ function validateCandidateImage(image: HTMLImageElement): void {
 }
 
 /**
- * Pure assembly helper for synthetic browser tests. Not an art approval or
- * external-file loader: callers MUST verify the candidate hash before use.
+ * No giant 4320x2700 Canvas copy or PNG re-encoding. A drawing-time virtual
+ * atlas maps y>=1080 to a separate candidate bitmap; original idle/walk stays
+ * in its existing decoded image. External files MUST pass SHA verification.
  */
-export async function assembleAliReviewAtlas(original: SpriteAtlas, candidate: HTMLImageElement): Promise<SpriteAtlas> {
+export function assembleAliReviewAtlas(original: SpriteAtlas, candidate: HTMLImageElement): SpriteAtlas {
   validateCandidateImage(candidate);
   if (original.image.naturalWidth !== 1600 || original.image.naturalHeight !== 1080
       || original.metadata.image !== 'ali.png' || original.metadata.facing !== 'right')
     throw new Error('Atlas Ali asli tidak sesuai kontrak yang sudah disetujui.');
 
-  const width = 4320, height = 2700;
-  const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas tidak tersedia.');
-  ctx.drawImage(original.image, 0, 0);
-  ctx.drawImage(candidate, 0, 1080);
   const frames: AtlasMetadata['frames'] = { ...original.metadata.frames };
   const clips: AtlasMetadata['clips'] = { ...original.metadata.clips };
   for (const [row, [name, durations]] of Object.entries(frameDurations).entries()) {
@@ -81,16 +76,9 @@ export async function assembleAliReviewAtlas(original: SpriteAtlas, candidate: H
   const metadata = parseAtlas({ version: 1, image: 'ali-v3-review-only-in-memory.png',
     scale: original.metadata.scale, facing: original.metadata.facing,
     sampling: original.metadata.sampling, frames, clips });
-  validateAtlasImage(metadata, width, height);
-  const art = await new Promise<HTMLImageElement>((resolve, reject) => {
-    canvas.toBlob(blob => {
-      if (!blob) { reject(new Error('Tidak bisa membuat atlas lokal.')); return; }
-      const url = URL.createObjectURL(blob);
-      const image = new Image();
-      image.onload = () => { URL.revokeObjectURL(url); resolve(image); };
-      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Gagal mendekode atlas lokal.')); };
-      image.src = url;
-    }, 'image/png');
-  });
-  return { metadata, image: art, idleBounds: original.idleBounds };
+  // Validate all frame rectangles against the VIRTUAL 4320x2700 layout.
+  // Two existing images are drawn separately by GameRenderer.drawFighter.
+  validateAtlasImage(metadata, 4320, 2700);
+  return { metadata, image: original.image, idleBounds: original.idleBounds,
+    combatPreview: { image: candidate, startY: 1080 } };
 }
