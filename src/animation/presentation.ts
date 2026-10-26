@@ -12,8 +12,10 @@ function fallbackStrike(fighter: Fighter): { x: number; rotation: number } {
   const attack = fighter.attack;
   if (!attack) return { x: 0, rotation: 0 };
   const data = moveData(attack);
-  const strength = attack.move === 'ultimate' ? 28 : attack.move === 'heavy' ? 21
-    : attack.move === 'skill' ? 17 : attack.combo === 3 ? 17 : 13;
+  let strength = 13;
+  if (attack.move === 'ultimate') strength = 28;
+  else if (attack.move === 'heavy') strength = 21;
+  else if (attack.move === 'skill' || attack.combo === 3) strength = 17;
   const ease = (v: number): number => {
     const t = Math.max(0, Math.min(1, v));
     return t * t * (3 - 2 * t);
@@ -51,8 +53,7 @@ export function spritePresentation(metadata: AtlasMetadata, fighter: Fighter, id
     // Missing art animates around the existing boot/ground pivot, not a new
     // sprite or hitbox. When authored art exists, its original pose wins.
     rotation: down ? Math.PI / 2 : fallbackMotion.rotation,
-    x: down ? -frame.pivotY * metadata.scale / 2
-      : temporary && fighter.pose === 'hurt' ? -5 : fallbackMotion.x,
+    x: down ? -frame.pivotY * metadata.scale / 2 : fallbackMotion.x + (temporary && fighter.pose === 'hurt' ? -5 : 0),
     y: down ? -(metadata.facing === 'left' ? frame.pivotX - (idleBounds?.left ?? 0) : (idleBounds?.right ?? frame.w) - frame.pivotX) * metadata.scale : 0,
   };
 }
