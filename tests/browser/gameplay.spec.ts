@@ -384,3 +384,34 @@ test('V2 mobile presets keep essential controls inside real-size portrait and la
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   }
 });
+
+test('practice combos mode is playable and does not leak into VS CPU', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'PRACTICE COMBOS' })).toBeVisible();
+  await page.getByRole('button', { name: 'PRACTICE COMBOS' }).click();
+  const status = page.locator('.match-status');
+  await expect(status).toHaveAttribute('data-mode', 'practice');
+  await expect(page.getByRole('button', { name: 'RESET DUMMY' })).toBeVisible();
+  await page.clock.runFor(2150);
+  await expect(status).toHaveAttribute('data-phase', 'active');
+  await page.keyboard.press('j');
+  await page.clock.runFor(420);
+  expect(Number(await status.getAttribute('data-practice-hits'))).toBeGreaterThanOrEqual(1);
+  expect(Number(await status.getAttribute('data-practice-damage'))).toBeGreaterThanOrEqual(7);
+  await page.getByRole('button', { name: 'RESET DUMMY' }).click();
+  await expect(status).toHaveAttribute('data-practice-hits', '0');
+  await expect(status).toHaveAttribute('data-practice-damage', '0');
+  await expect(status).toHaveAttribute('data-player-health', '100');
+  await page.getByRole('button', { name: 'EXIT', exact: true }).click();
+  await page.getByRole('button', { name: 'FIGHT CPU' }).click();
+  await expect(status).toHaveAttribute('data-mode', 'vs');
+  await expect(page.getByRole('button', { name: 'RESET DUMMY' })).toHaveCount(0);
+  await page.clock.runFor(2100);
+  await expect(status).toHaveAttribute('data-phase', 'active');
+  expect(errors).toEqual([]);
+});
