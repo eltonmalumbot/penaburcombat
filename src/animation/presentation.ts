@@ -49,12 +49,15 @@ export function spritePresentation(metadata: AtlasMetadata, fighter: Fighter, id
   const down = temporary && fighter.pose === 'ko';
   const fallbackMotion = temporary && combatPose && fighter.attack
     ? fallbackStrike(fighter) : { x: 0, rotation: 0 };
+  let offsetX = fallbackMotion.x;
+  if (down) offsetX = -frame.pivotY * metadata.scale / 2;
+  else if (temporary && fighter.pose === 'hurt') offsetX = -5;
   return {
     frame, temporary,
     // Missing art animates around the existing boot/ground pivot, not a new
     // sprite or hitbox. When authored art exists, its original pose wins.
     rotation: down ? Math.PI / 2 : fallbackMotion.rotation,
-    x: down ? -frame.pivotY * metadata.scale / 2 : fallbackMotion.x + (temporary && fighter.pose === 'hurt' ? -5 : 0),
+    x: offsetX,
     y: down ? -(metadata.facing === 'left' ? frame.pivotX - (idleBounds?.left ?? 0) : (idleBounds?.right ?? frame.w) - frame.pivotX) * metadata.scale : 0,
   };
 }
