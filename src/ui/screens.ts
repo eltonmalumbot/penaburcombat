@@ -218,6 +218,28 @@ export class Screens {
     canvas.focus({ preventScroll: true }); return canvas;
   }
 
+  private updatePracticeButtons(match: Match): void {
+    const dummyGuard = match.mode === 'practice' && Boolean(match.practiceOptions?.dummyGuard);
+    const infiniteMeter = match.mode === 'practice' && Boolean(match.practiceOptions?.infiniteMeter);
+    if (this.dummyGuardButton) {
+      this.dummyGuardButton.textContent = dummyGuard ? 'DUMMY: GUARD' : 'DUMMY: FREE';
+      this.dummyGuardButton.setAttribute('aria-pressed', String(dummyGuard));
+    }
+    if (this.infiniteMeterButton) {
+      this.infiniteMeterButton.textContent = infiniteMeter ? 'METER: ∞' : 'METER: NORMAL';
+      this.infiniteMeterButton.setAttribute('aria-pressed', String(infiniteMeter));
+    }
+  }
+
+  private updateAttackReadiness(match: Match): void {
+    for (const [selector, cost] of [['.touch-l', 20], ['.touch-u', 65]] as const) {
+      const control = this.touchPad?.querySelector<HTMLButtonElement>(selector);
+      if (!control) continue;
+      const ready = match.player.meter >= cost;
+      control.dataset.ready = String(ready);
+      control.setAttribute('aria-description', ready ? 'Ready to use' : `Requires ${cost} meter`);
+    }  }
+
   update(match: Match, paused: boolean): void {
     if (!this.status) return;
     const matchSummary = match.mode === 'practice'
@@ -235,23 +257,8 @@ export class Screens {
     this.status.dataset.timer = String(Math.ceil(match.timer)); this.status.dataset.paused = String(paused);
     if (this.announcement && this.announcement.textContent !== match.notice) this.announcement.textContent = match.notice;
     this.pauseButton?.setAttribute('aria-pressed', String(paused));
-    const dummyGuard = match.mode === 'practice' && Boolean(match.practiceOptions?.dummyGuard);
-    const infiniteMeter = match.mode === 'practice' && Boolean(match.practiceOptions?.infiniteMeter);
-    if (this.dummyGuardButton) {
-      this.dummyGuardButton.textContent = dummyGuard ? 'DUMMY: GUARD' : 'DUMMY: FREE';
-      this.dummyGuardButton.setAttribute('aria-pressed', String(dummyGuard));
-    }
-    if (this.infiniteMeterButton) {
-      this.infiniteMeterButton.textContent = infiniteMeter ? 'METER: ∞' : 'METER: NORMAL';
-      this.infiniteMeterButton.setAttribute('aria-pressed', String(infiniteMeter));
-    }
-    for (const [selector, cost] of [['.touch-l', 20], ['.touch-u', 65]] as const) {
-      const control = this.touchPad?.querySelector<HTMLButtonElement>(selector);
-      if (!control) continue;
-      const ready = match.player.meter >= cost;
-      control.dataset.ready = String(ready);
-      control.setAttribute('aria-description', ready ? 'Ready to use' : `Requires ${cost} meter`);
-    }
+    this.updatePracticeButtons(match);
+    this.updateAttackReadiness(match);
   }
 
   result(match: Match): void {
