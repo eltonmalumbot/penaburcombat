@@ -220,16 +220,16 @@ test('blocking training dummy applies real guard chip damage and can return to f
   e.setPracticeDummyGuard(true);
   assert.equal(e.state.practiceOptions?.dummyGuard, true);
   e.update(FIXED_STEP, input({ attack: 'heavy' }));
-  frames(e, 24);
+  for (let i = 0; i < 24; i++) e.update(FIXED_STEP, input());
   assert.equal(e.state.cpu.hp, 97); // normal 16 damage heavy -> 3 blocked
   assert.equal(e.state.practiceStats?.hits, 1);
   assert.equal(e.state.practiceStats?.damage, 3);
   e.setPracticeDummyGuard(false);
   assert.equal(e.state.practiceOptions?.dummyGuard, false);
-  frames(e, 32); // finish heavy recovery
+  for (let i = 0; i < 32; i++) e.update(FIXED_STEP, input()); // no explicit CPU override
   e.resetPractice();
   e.update(FIXED_STEP, input({ attack: 'heavy' }));
-  frames(e, 24);
+  for (let i = 0; i < 24; i++) e.update(FIXED_STEP, input());
   assert.equal(e.state.cpu.hp, 84); // unblocked 16 damage
   assert.equal(e.state.practiceStats?.damage, 16);
 });
