@@ -468,3 +468,28 @@ test('practice guard and meter toggles stay inside narrow mobile width', async (
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });
+
+test('landscape practice options preserve space for combat controls on phone screens', async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'PRACTICE COMBOS' }).click();
+  for (const label of ['DUMMY: FREE', 'METER: NORMAL']) {
+    const b = await page.getByRole('button', { name: label }).boundingBox();
+    expect(b).not.toBeNull();
+    expect(b!.x).toBeGreaterThanOrEqual(-1);
+    expect(b!.x + b!.width).toBeLessThanOrEqual(668);
+    expect(b!.y).toBeGreaterThanOrEqual(-1);
+    expect(b!.y + b!.height).toBeLessThanOrEqual(376);
+  }
+  for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
+    const b = await page.getByRole('button', { name: `Control ${key}`, exact: true }).boundingBox();
+    expect(b, key).not.toBeNull();
+    expect(b!.x, key).toBeGreaterThanOrEqual(-1);
+    expect(b!.x + b!.width, key).toBeLessThanOrEqual(668);
+    expect(b!.y, key).toBeGreaterThanOrEqual(-1);
+    expect(b!.y + b!.height, key).toBeLessThanOrEqual(376);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+});
