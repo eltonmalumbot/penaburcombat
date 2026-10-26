@@ -79,9 +79,7 @@ export class CombatEngine {
       }
       return;
     }
-    const cpuInput = cpuOverride ?? (this.practice && g.practiceOptions?.dummyGuard
-      ? { ...emptyInput(), guard: true }
-      : this.ai ? decideAI(g.cpu, g.player, this.brain, dt, this.random) : emptyInput());
+    const cpuInput = this.resolveCpuInput(g, dt, cpuOverride);
     if (this.practice && g.practiceOptions?.infiniteMeter) g.player.meter = 100;
     const order = Math.sign(g.player.x - g.cpu.x) || -g.player.face;
     this.updateFighter(g.player, playerInput, dt, 1);
@@ -108,6 +106,13 @@ export class CombatEngine {
       if (g.player.hp <= 0 || g.cpu.hp <= 0 || g.timer <= 1e-8) this.finishRound();
     }
     this.animate(g.player, dt); this.animate(g.cpu, dt);
+  }
+
+  private resolveCpuInput(match: Match, dt: number, override?: CombatInput): CombatInput {
+    if (override) return override;
+    if (this.practice && match.practiceOptions?.dummyGuard) return { ...emptyInput(), guard: true };
+    if (this.ai) return decideAI(match.cpu, match.player, this.brain, dt, this.random);
+    return emptyInput();
   }
 
   private notice(text: string, time: number): void { this.state.notice = text; this.state.noticeTime = time; }
