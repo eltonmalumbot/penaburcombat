@@ -22,7 +22,7 @@ export class CombatEngine {
     this.ai = !this.practice && (options.ai ?? true);
     this.random = options.random ?? Math.random;
     this.state = { player: createFighter(selected, this.practice ? 490 : 360, 1),
-      cpu: createFighter(selected === 'Ali' ? 'Elton' : 'Ali', this.practice ? 610 : 920, -1),
+      cpu: createFighter(selected === 'Ali' ? 'Elton' : 'Ali', this.practice ? 590 : 920, -1),
       phase: 'ready', round: 1, score: [0, 0], timer: 90, phaseTime: 1.7, result: null,
       notice: this.practice ? 'PRACTICE' : 'ROUND 1', noticeTime: 1.7,
       mode: this.practice ? 'practice' : 'vs',
@@ -36,7 +36,7 @@ export class CombatEngine {
     if (!this.practice) return;
     const g = this.state;
     g.player = createFighter(g.player.id, 490, 1);
-    g.cpu = createFighter(g.cpu.id, 610, -1);
+    g.cpu = createFighter(g.cpu.id, 590, -1);
     g.phase = 'active'; g.round = 1; g.score = [0, 0]; g.timer = 90;
     g.phaseTime = 0; g.result = null;
     g.practiceStats = { hits: 0, damage: 0 };
