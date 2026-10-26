@@ -262,3 +262,20 @@
   .practice-options-heading{width:100%}
   .practice-options .button{flex:1 1 120px;padding:9px 7px;font-size:10px}
 }
+
+/* Landscape practice: reserve only one compact row and shrink the canvas by the
+   same vertical budget. The gamepad remains inside the visible game canvas. */
+@media(orientation:landscape) and (max-height:600px) and (max-width:1200px){
+  .fight-page .practice-options{
+    flex:none;width:min(100%,150dvh);height:29px;min-height:29px;
+    flex-wrap:nowrap;justify-content:center;gap:7px;
+    padding:1px 5px;margin:0 0 2px;border-radius:6px;
+  }
+  .fight-page .practice-options-heading{display:none}
+  .fight-page .practice-options .button{
+    flex:0 1 auto;min-height:25px;font-size:9px;padding:3px 8px;white-space:nowrap;
+  }
+  .fight-page .practice-options + .fight-layout{
+    width:min(100%,150dvh,calc((100dvh - 72px) * 16 / 9));
+  }
+}
