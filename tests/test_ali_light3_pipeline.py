@@ -145,7 +145,7 @@ class AliLight3PipelineTests(unittest.TestCase):
             self.assertEqual(result.size, (4 * 720, 2 * (540 + 36)))
             self.assertEqual(result.mode, "RGB")
             rgba = Image.open(candidate / "frames" / "light3-02.png").convert("RGBA")
-            x, y = 80, 140
+            x, y = 100, 140
             pixel = rgba.getpixel((x, y))
             bg = (236, 241, 246) if (x // 32 + y // 32) % 2 == 0 else (212, 221, 231)
             alpha = pixel[3] / 255
