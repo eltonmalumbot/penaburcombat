@@ -415,3 +415,81 @@ test('practice combos mode is playable and does not leak into VS CPU', async ({ 
   await expect(status).toHaveAttribute('data-phase', 'active');
   expect(errors).toEqual([]);
 });
+
+test('practice options let players train blocked hits and ultimate with full meter', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'PRACTICE COMBOS' }).click();
+  const status = page.locator('.match-status');
+  const guard = page.getByRole('button', { name: 'DUMMY: FREE' });
+  const meter = page.getByRole('button', { name: 'METER: NORMAL' });
+  await expect(guard).toHaveAttribute('aria-pressed', 'false');
+  await expect(meter).toHaveAttribute('aria-pressed', 'false');
+  await guard.click();
+  await expect(page.getByRole('button', { name: 'DUMMY: GUARD' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(status).toHaveAttribute('data-dummy-guard', 'true');
+  await meter.click();
+  await expect(page.getByRole('button', { name: 'METER: ∞' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(status).toHaveAttribute('data-infinite-meter', 'true');
+  await expect(status).toHaveAttribute('data-player-meter', '100');
+  await page.clock.runFor(2050);
+  await expect(status).toHaveAttribute('data-phase', 'active');
+  await page.keyboard.press('k');
+  await page.clock.runFor(600);
+  await expect(status).toHaveAttribute('data-practice-damage', '3');
+  await page.getByRole('button', { name: 'DUMMY: GUARD' }).click();
+  await page.getByRole('button', { name: 'RESET DUMMY' }).click();
+  await page.keyboard.press('u');
+  await page.clock.runFor(550);
+  await expect(status).toHaveAttribute('data-player-meter', '100');
+  await expect(status).toHaveAttribute('data-practice-damage', '35');
+  await page.getByRole('button', { name: 'EXIT', exact: true }).click();
+  await page.getByRole('button', { name: 'FIGHT CPU' }).click();
+  await expect(status).toHaveAttribute('data-mode', 'vs');
+  await expect(page.getByRole('button', { name: 'DUMMY: GUARD' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'METER: ∞' })).toHaveCount(0);
+});
+
+test('practice guard and meter toggles stay inside narrow mobile width', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 720 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'PRACTICE COMBOS' }).click();
+  for (const label of ['DUMMY: FREE', 'METER: NORMAL']) {
+    const control = page.getByRole('button', { name: label });
+    await expect(control).toBeVisible();
+    const rect = await control.boundingBox();
+    expect(rect).not.toBeNull();
+    expect(rect!.x).toBeGreaterThanOrEqual(-1);
+    expect(rect!.x + rect!.width).toBeLessThanOrEqual(361);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+});
+
+test('landscape practice options preserve space for combat controls on phone screens', async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'START FIGHT' }).click();
+  await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
+  await page.getByRole('button', { name: 'PRACTICE COMBOS' }).click();
+  for (const label of ['DUMMY: FREE', 'METER: NORMAL']) {
+    const b = await page.getByRole('button', { name: label }).boundingBox();
+    expect(b).not.toBeNull();
+    expect(b!.x).toBeGreaterThanOrEqual(-1);
+    expect(b!.x + b!.width).toBeLessThanOrEqual(668);
+    expect(b!.y).toBeGreaterThanOrEqual(-1);
+    expect(b!.y + b!.height).toBeLessThanOrEqual(376);
+  }
+  for (const key of ['a', 'd', 'w', 's', 'shift', 'j', 'k', 'l', 'u']) {
+    const b = await page.getByRole('button', { name: `Control ${key}`, exact: true }).boundingBox();
+    expect(b, key).not.toBeNull();
+    expect(b!.x, key).toBeGreaterThanOrEqual(-1);
+    expect(b!.x + b!.width, key).toBeLessThanOrEqual(668);
+    expect(b!.y, key).toBeGreaterThanOrEqual(-1);
+    expect(b!.y + b!.height, key).toBeLessThanOrEqual(376);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+});

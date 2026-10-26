@@ -248,3 +248,34 @@
 .art-playtest input { display:inline-block; max-width:100%; margin:8px 10px 8px 0 }
 .art-playtest button { padding:10px 13px; border:1px solid #729ec7; border-radius:8px; background:#294b67; color:#fff; cursor:pointer }
 .art-playtest [role=status] { font-size:13px; color:#ffe2a6; }
+
+/* Practice controls are compact and separate from the fighting-game touch pad.
+   No overlay intercepts the mobile D-pad or attack buttons. */
+.practice-options{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-3px 0 12px;
+  padding:8px 10px;border:1px solid #385a73;border-radius:9px;background:#0b2134}
+.practice-options-heading{font-size:10px;font-weight:800;letter-spacing:.09em;color:#a4cce4;
+  margin-right:auto;white-space:nowrap}
+.practice-options .button{margin:0;padding:9px 12px;min-height:38px;font-size:11px}
+.practice-options [aria-pressed="true"]{border-color:#6ce4e8;background:#155269;color:#ecfdff}
+@media(max-width:560px){
+  .practice-options{gap:6px;padding:7px}
+  .practice-options-heading{width:100%}
+  .practice-options .button{flex:1 1 120px;padding:9px 7px;font-size:10px}
+}
+
+/* Landscape practice: reserve only one compact row and shrink the canvas by the
+   same vertical budget. The gamepad remains inside the visible game canvas. */
+@media(orientation:landscape) and (max-height:600px) and (max-width:1200px){
+  .fight-page .practice-options{
+    flex:none;width:min(100%,150dvh);height:29px;min-height:29px;
+    flex-wrap:nowrap;justify-content:center;gap:7px;
+    padding:1px 5px;margin:0 0 2px;border-radius:6px;
+  }
+  .fight-page .practice-options-heading{display:none}
+  .fight-page .practice-options .button{
+    flex:0 1 auto;min-height:25px;font-size:9px;padding:3px 8px;white-space:nowrap;
+  }
+  .fight-page .practice-options + .fight-layout{
+    width:min(100%,150dvh,calc((100dvh - 72px) * 16 / 9));
+  }
+}

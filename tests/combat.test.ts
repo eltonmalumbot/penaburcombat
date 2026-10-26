@@ -213,3 +213,52 @@ test('practice reset clears dummy positions and statistics without changing VS r
   frames(versus, 1);
   assert.equal(versus.state.phase, 'between');
 });
+
+test('blocking training dummy applies real guard chip damage and can return to free mode', () => {
+  const e = new CombatEngine('Ali', { practice: true });
+  e.state.phase = 'active';
+  e.setPracticeDummyGuard(true);
+  assert.equal(e.state.practiceOptions?.dummyGuard, true);
+  e.update(FIXED_STEP, input({ attack: 'heavy' }));
+  for (let i = 0; i < 24; i++) e.update(FIXED_STEP, input());
+  assert.equal(e.state.cpu.hp, 97); // normal 16 damage heavy -> 3 blocked
+  assert.equal(e.state.practiceStats?.hits, 1);
+  assert.equal(e.state.practiceStats?.damage, 3);
+  e.setPracticeDummyGuard(false);
+  assert.equal(e.state.practiceOptions?.dummyGuard, false);
+  for (let i = 0; i < 32; i++) e.update(FIXED_STEP, input()); // no explicit CPU override
+  e.resetPractice();
+  e.update(FIXED_STEP, input({ attack: 'heavy' }));
+  for (let i = 0; i < 24; i++) e.update(FIXED_STEP, input());
+  assert.equal(e.state.cpu.hp, 84); // unblocked 16 damage
+  assert.equal(e.state.practiceStats?.damage, 16);
+});
+
+test('infinite-meter practice can repeat skills without changing their real cost or VS', () => {
+  const e = new CombatEngine('Ali', { practice: true });
+  e.state.phase = 'active';
+  e.setPracticeInfiniteMeter(true);
+  assert.equal(e.state.practiceOptions?.infiniteMeter, true);
+  assert.equal(e.state.player.meter, 100);
+  e.update(FIXED_STEP, input({ attack: 'ultimate' }));
+  assert.equal(e.state.player.attack?.move, 'ultimate');
+  assert.equal(e.state.player.meter, 100); // replenished after charged ultimate
+  frames(e, 90);
+  e.update(FIXED_STEP, input({ attack: 'ultimate' }));
+  assert.equal(e.state.player.attack?.move, 'ultimate');
+  e.resetPractice();
+  assert.equal(e.state.practiceOptions?.infiniteMeter, true);
+  assert.equal(e.state.player.meter, 100);
+  e.setPracticeInfiniteMeter(false);
+  e.state.player.meter = 65;
+  e.update(FIXED_STEP, input({ attack: 'ultimate' }));
+  assert.equal(e.state.player.meter, 0); // ordinary cost restored
+  const versus = new CombatEngine('Ali', { ai: false });
+  const original = structuredClone(versus.state);
+  versus.setPracticeInfiniteMeter(true);
+  versus.setPracticeDummyGuard(true);
+  assert.deepEqual(versus.state, original); // guarded setters cannot touch VS
+  versus.state.phase = 'active';
+  versus.update(FIXED_STEP, input({ attack: 'ultimate' }));
+  assert.equal(versus.state.player.attack, null);
+});

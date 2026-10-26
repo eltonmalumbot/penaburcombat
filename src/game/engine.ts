@@ -26,10 +26,25 @@ export class CombatEngine {
       phase: 'ready', round: 1, score: [0, 0], timer: 90, phaseTime: 1.7, result: null,
       notice: this.practice ? 'PRACTICE' : 'ROUND 1', noticeTime: 1.7,
       mode: this.practice ? 'practice' : 'vs',
-      practiceStats: this.practice ? { hits: 0, damage: 0 } : undefined };
+      practiceStats: this.practice ? { hits: 0, damage: 0 } : undefined,
+      practiceOptions: this.practice ? { dummyGuard: false, infiniteMeter: false } : undefined };
   }
 
   drainEvents(): CombatEvent[] { const events = this.events; this.events = []; return events; }
+
+  /** Toggle a blocking dummy only in practice; normal VS remains untouched. */
+  setPracticeDummyGuard(enabled: boolean): void {
+    if (!this.practice || !this.state.practiceOptions) return;
+    this.state.practiceOptions.dummyGuard = enabled;
+    if (!enabled) this.state.cpu.guard = false;
+  }
+
+  /** Restores a full meter each training step; move costs remain unmodified. */
+  setPracticeInfiniteMeter(enabled: boolean): void {
+    if (!this.practice || !this.state.practiceOptions) return;
+    this.state.practiceOptions.infiniteMeter = enabled;
+    if (enabled) this.state.player.meter = 100;
+  }
 
   /** Training-only reset: preserve the normal duel rules and never mutate its state. */
   resetPractice(): void {
@@ -40,6 +55,8 @@ export class CombatEngine {
     g.phase = 'active'; g.round = 1; g.score = [0, 0]; g.timer = 90;
     g.phaseTime = 0; g.result = null;
     g.practiceStats = { hits: 0, damage: 0 };
+    if (g.practiceOptions?.infiniteMeter) g.player.meter = 100;
+    if (g.practiceOptions?.dummyGuard) g.cpu.guard = true;
     this.events = []; this.notice('PRACTICE RESET', .8);
   }
 
@@ -62,7 +79,8 @@ export class CombatEngine {
       }
       return;
     }
-    const cpuInput = cpuOverride ?? (this.ai ? decideAI(g.cpu, g.player, this.brain, dt, this.random) : emptyInput());
+    const cpuInput = this.resolveCpuInput(g, dt, cpuOverride);
+    if (this.practice && g.practiceOptions?.infiniteMeter) g.player.meter = 100;
     const order = Math.sign(g.player.x - g.cpu.x) || -g.player.face;
     this.updateFighter(g.player, playerInput, dt, 1);
     this.updateFighter(g.cpu, cpuInput, dt, .85);
@@ -78,6 +96,7 @@ export class CombatEngine {
       this.hit(contact.attacker, contact.defender, contact.attack);
     }
     if (this.practice) {
+      if (g.practiceOptions?.infiniteMeter) g.player.meter = 100;
       // The passive dummy regenerates after a KO; the simulation still uses
       // exactly the same attack damage, startup, hitboxes and 60Hz rules.
       if (g.cpu.hp <= 0) { g.cpu.hp = 100; g.cpu.stun = 0; g.cpu.knockback = 0; }
@@ -87,6 +106,13 @@ export class CombatEngine {
       if (g.player.hp <= 0 || g.cpu.hp <= 0 || g.timer <= 1e-8) this.finishRound();
     }
     this.animate(g.player, dt); this.animate(g.cpu, dt);
+  }
+
+  private resolveCpuInput(match: Match, dt: number, override?: CombatInput): CombatInput {
+    if (override) return override;
+    if (this.practice && match.practiceOptions?.dummyGuard) return { ...emptyInput(), guard: true };
+    if (this.ai) return decideAI(match.cpu, match.player, this.brain, dt, this.random);
+    return emptyInput();
   }
 
   private notice(text: string, time: number): void { this.state.notice = text; this.state.noticeTime = time; }

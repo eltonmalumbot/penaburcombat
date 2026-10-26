@@ -11,7 +11,8 @@ function button(text: string, action: () => void, secondary = false): HTMLButton
   node.type = 'button'; node.addEventListener('click', action); return node;
 }
 interface Actions { menu: () => void; select: () => void; choose: (id: FighterId) => void;
-  start: () => void; practice: () => void; resetPractice: () => void; pause: () => void }
+  start: () => void; practice: () => void; resetPractice: () => void;
+  togglePracticeGuard: () => void; togglePracticeMeter: () => void; pause: () => void }
 export class Screens {
   private readonly root: HTMLElement;
   private readonly actions: Actions;
@@ -20,6 +21,8 @@ export class Screens {
   private pauseButton: HTMLButtonElement | null = null;
   private touchPad: HTMLElement | null = null;
   private fullscreenButton: HTMLButtonElement | null = null;
+  private dummyGuardButton: HTMLButtonElement | null = null;
+  private infiniteMeterButton: HTMLButtonElement | null = null;
   private controlSize: 'compact' | 'normal' | 'large' = 'normal';
   constructor(root: HTMLElement, actions: Actions) {
     this.root = root; this.actions = actions;
@@ -54,7 +57,8 @@ export class Screens {
   }
 
   private page(): HTMLElement {
-    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null; this.touchPad = null;
+    this.status = null; this.announcement = null; this.pauseButton = null; this.fullscreenButton = null;
+    this.touchPad = null; this.dummyGuardButton = null; this.infiniteMeterButton = null;
     // Leaving a match always returns to the regular browser layout.
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     const header = element('header', 'top'), logo = element('a', 'logo', 'PENABUR Combat');
@@ -127,6 +131,20 @@ export class Screens {
     return bar;
   }
 
+  private createPracticeControls(): HTMLElement {
+    const group = element('section', 'practice-options');
+    group.setAttribute('aria-label', 'Practice training options');
+    group.append(element('span', 'practice-options-heading', 'TRAINING OPTIONS'));
+    this.dummyGuardButton = button('DUMMY: FREE', this.actions.togglePracticeGuard, true);
+    this.dummyGuardButton.id = 'practice-dummy-guard';
+    this.dummyGuardButton.setAttribute('aria-pressed', 'false');
+    this.infiniteMeterButton = button('METER: NORMAL', this.actions.togglePracticeMeter, true);
+    this.infiniteMeterButton.id = 'practice-infinite-meter';
+    this.infiniteMeterButton.setAttribute('aria-pressed', 'false');
+    group.append(this.dummyGuardButton, this.infiniteMeterButton);
+    return group;
+  }
+
   private createTouchPad(input: InputController): HTMLElement {
     const pad = element('section', 'touch-pad gamepad gamepad-v2');
     pad.dataset.size = this.controlSize;
@@ -174,7 +192,9 @@ export class Screens {
     layout.append(wrap);
     page.classList.add('fight-page');
     this.root.classList.add('in-fight');
-    page.append(bar, layout);
+    page.append(bar);
+    if (practice) page.append(this.createPracticeControls());
+    page.append(layout);
 
     // Keep the original InputController bindings; only their visual arrangement changes.
     // All controls are real buttons, so keyboard and touch can coexist.
@@ -198,6 +218,28 @@ export class Screens {
     canvas.focus({ preventScroll: true }); return canvas;
   }
 
+  private updatePracticeButtons(match: Match): void {
+    const dummyGuard = match.mode === 'practice' && Boolean(match.practiceOptions?.dummyGuard);
+    const infiniteMeter = match.mode === 'practice' && Boolean(match.practiceOptions?.infiniteMeter);
+    if (this.dummyGuardButton) {
+      this.dummyGuardButton.textContent = dummyGuard ? 'DUMMY: GUARD' : 'DUMMY: FREE';
+      this.dummyGuardButton.setAttribute('aria-pressed', String(dummyGuard));
+    }
+    if (this.infiniteMeterButton) {
+      this.infiniteMeterButton.textContent = infiniteMeter ? 'METER: ∞' : 'METER: NORMAL';
+      this.infiniteMeterButton.setAttribute('aria-pressed', String(infiniteMeter));
+    }
+  }
+
+  private updateAttackReadiness(match: Match): void {
+    for (const [selector, cost] of [['.touch-l', 20], ['.touch-u', 65]] as const) {
+      const control = this.touchPad?.querySelector<HTMLButtonElement>(selector);
+      if (!control) continue;
+      const ready = match.player.meter >= cost;
+      control.dataset.ready = String(ready);
+      control.setAttribute('aria-description', ready ? 'Ready to use' : `Requires ${cost} meter`);
+    }  }
+
   update(match: Match, paused: boolean): void {
     if (!this.status) return;
     const matchSummary = match.mode === 'practice'
@@ -208,18 +250,15 @@ export class Screens {
     this.status.dataset.mode = match.mode ?? 'vs';
     this.status.dataset.practiceHits = String(match.practiceStats?.hits ?? 0);
     this.status.dataset.practiceDamage = String(match.practiceStats?.damage ?? 0);
+    this.status.dataset.dummyGuard = String(match.practiceOptions?.dummyGuard ?? false);
+    this.status.dataset.infiniteMeter = String(match.practiceOptions?.infiniteMeter ?? false);
     this.status.dataset.playerHealth = String(match.player.hp); this.status.dataset.cpuHealth = String(match.cpu.hp);
     this.status.dataset.playerMeter = String(match.player.meter); this.status.dataset.cpuMeter = String(match.cpu.meter);
     this.status.dataset.timer = String(Math.ceil(match.timer)); this.status.dataset.paused = String(paused);
     if (this.announcement && this.announcement.textContent !== match.notice) this.announcement.textContent = match.notice;
     this.pauseButton?.setAttribute('aria-pressed', String(paused));
-    for (const [selector, cost] of [['.touch-l', 20], ['.touch-u', 65]] as const) {
-      const control = this.touchPad?.querySelector<HTMLButtonElement>(selector);
-      if (!control) continue;
-      const ready = match.player.meter >= cost;
-      control.dataset.ready = String(ready);
-      control.setAttribute('aria-description', ready ? 'Ready to use' : `Requires ${cost} meter`);
-    }
+    this.updatePracticeButtons(match);
+    this.updateAttackReadiness(match);
   }
 
   result(match: Match): void {
