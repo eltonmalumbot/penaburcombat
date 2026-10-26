@@ -11,6 +11,7 @@ import { Screens } from './ui/screens.ts';
 let selected: FighterId = 'Ali';
 let engine: CombatEngine | null = null, renderer: GameRenderer | null = null;
 let paused = false, accumulator = 0, lastTime = 0, statusTime = 0;
+let selectedMode: 'vs' | 'practice' = 'vs';
 const aliReviewEnabled = ['v3', 'v4', 'v5', 'v51'].includes(new URLSearchParams(window.location.search).get('aliArtReview') ?? '');
 let reviewAliAtlas: SpriteAtlas | null = null;
 let reviewAliEdition: AliCandidateEdition | null = null;
@@ -20,7 +21,12 @@ const resize = new ResizeObserver(() => renderer?.resize());
 const input = new InputController(togglePause, showSelection, () => setPaused(true));
 const root = document.querySelector<HTMLDivElement>('#app')!;
 const screens = new Screens(root, { menu: showMenu, select: showSelection,
-  choose: id => { selected = id; showSelection(); }, start: startMatch, pause: togglePause });
+  choose: id => { selected = id; showSelection(); },
+  start: () => { selectedMode = 'vs'; startMatch(); },
+  practice: () => { selectedMode = 'practice'; startMatch(); },
+  resetPractice: () => { engine?.resetPractice(); input.clear(); accumulator = 0;
+    if (engine) screens.update(engine.state, paused); },
+  pause: togglePause });
 
 function leaveMatch(): void {
   input.setEnabled(false); resize.disconnect(); engine = null; renderer = null; paused = false; accumulator = 0;
@@ -114,8 +120,8 @@ function attachAliArtReview(): void {
 }
 
 function startMatch(): void {
-  leaveMatch(); engine = new CombatEngine(selected);
-  const canvas = screens.fight(input); const gameRenderer = new GameRenderer(canvas);
+  leaveMatch(); engine = new CombatEngine(selected, { practice: selectedMode === 'practice' });
+  const canvas = screens.fight(input, selectedMode === 'practice'); const gameRenderer = new GameRenderer(canvas);
   renderer = gameRenderer;
   void gameRenderer.prepare([engine.state.player.id, engine.state.cpu.id]);
   if (aliReviewEnabled && reviewAliAtlas) gameRenderer.setAliReviewAtlas(reviewAliAtlas);

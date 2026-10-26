@@ -166,3 +166,50 @@ test('rapid second light tap during startup is buffered without changing combat 
   assert.equal(e.state.player.attack?.combo, 2);
   assert.equal(e.state.player.attack?.queued, false);
 });
+
+test('practice mode is endless, passive and records authentic hit damage', () => {
+  const e = new CombatEngine('Ali', { practice: true });
+  assert.equal(e.state.mode, 'practice');
+  assert.deepEqual(e.state.practiceStats, { hits: 0, damage: 0 });
+  assert.equal(e.state.cpu.x, 590);
+  e.state.phase = 'active'; e.state.cpu.x = e.state.player.x + 100;
+  e.update(FIXED_STEP, input({ attack: 'light' }));
+  frames(e, 20);
+  assert.equal(e.state.cpu.hp, 93);
+  assert.deepEqual(e.state.practiceStats, { hits: 1, damage: 7 });
+  assert.equal(e.state.player.hp, 100);
+  e.state.cpu.hp = 0; frames(e, 1);
+  assert.equal(e.state.cpu.hp, 100);
+  assert.equal(e.state.phase, 'active');
+  // A training session cannot time out, award rounds or redirect to game over.
+  e.state.timer = FIXED_STEP;
+  frames(e, 120);
+  assert.equal(e.state.phase, 'active');
+  assert.equal(e.state.timer, 90);
+  assert.deepEqual(e.state.score, [0, 0]);
+  assert.equal(e.state.result, null);
+});
+
+test('practice reset clears dummy positions and statistics without changing VS rules', () => {
+  const e = new CombatEngine('Elton', { practice: true });
+  e.state.phase = 'active'; e.state.player.x = 900; e.state.cpu.x = 1000;
+  e.state.player.hp = 12; e.state.cpu.hp = 14; e.state.player.meter = 65;
+  e.state.practiceStats = { hits: 15, damage: 80 };
+  e.resetPractice();
+  assert.equal(e.state.player.id, 'Elton');
+  assert.equal(e.state.cpu.id, 'Ali');
+  assert.equal(e.state.player.x, 490);
+  assert.equal(e.state.cpu.x, 590);
+  assert.equal(e.state.player.hp, 100);
+  assert.equal(e.state.cpu.hp, 100);
+  assert.equal(e.state.player.meter, 0);
+  assert.deepEqual(e.state.practiceStats, { hits: 0, damage: 0 });
+  assert.equal(e.state.phase, 'active');
+  const versus = active();
+  const before = structuredClone(versus.state);
+  versus.resetPractice();
+  assert.deepEqual(versus.state, before);
+  versus.state.timer = FIXED_STEP;
+  frames(versus, 1);
+  assert.equal(versus.state.phase, 'between');
+});

@@ -10,7 +10,8 @@ function button(text: string, action: () => void, secondary = false): HTMLButton
   const node = element('button', `button ${secondary ? 'secondary' : 'primary'}`, text);
   node.type = 'button'; node.addEventListener('click', action); return node;
 }
-interface Actions { menu: () => void; select: () => void; choose: (id: FighterId) => void; start: () => void; pause: () => void }
+interface Actions { menu: () => void; select: () => void; choose: (id: FighterId) => void;
+  start: () => void; practice: () => void; resetPractice: () => void; pause: () => void }
 export class Screens {
   private readonly root: HTMLElement;
   private readonly actions: Actions;
@@ -102,34 +103,31 @@ export class Screens {
     canvas.setAttribute('aria-label', `${selected} HD fighter artwork`);
     sidebar.dataset.fighter = selected;
     sidebar.append(canvas, element('span', 'eyebrow', 'HD CHIBI • VS CPU'), element('h3', '', selected.toUpperCase()), element('p', '', character(selected).title),
-      element('p', 'ultimate-name', character(selected).ultimateName ?? ''), button('FIGHT CPU →', this.actions.start));
+      element('p', 'ultimate-name', character(selected).ultimateName ?? ''),
+      button('FIGHT CPU →', this.actions.start), button('PRACTICE COMBOS', this.actions.practice, true));
     layout.append(roster, sidebar); page.append(layout);
     page.append(element('p', 'note', 'Ali & Elton playable • Lima petarung lain segera hadir. Animasi pertarungan masih menggunakan gaya prototipe.'));
     const fighter = createFighter(selected, 240, 1); fighter.y = 400; void drawPortraits(canvas, [{ fighter, scale: 1.2 }]);
   }
 
-  fight(input: InputController): HTMLCanvasElement {
-    const page = this.page(), bar = element('div', 'battle-bar');
+  private createBattleBar(practice: boolean): HTMLDivElement {
+    const bar = element('div', 'battle-bar');
     this.pauseButton = button('PAUSE / RESUME', this.actions.pause, true); this.pauseButton.setAttribute('aria-pressed', 'false');
-    bar.append(element('span', 'eyebrow', 'PENABUR Combat • LIVE MATCH • 16.59'));
+    bar.append(element('span', 'eyebrow', practice ? 'PENABUR Combat • PRACTICE MODE' : 'PENABUR Combat • LIVE MATCH • 16.59'));
+    if (practice) bar.classList.add('practice-bar');
     if (document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function') {
       this.fullscreenButton = button('FULL SCREEN', () => { void this.toggleFullscreen(); }, true);
       this.fullscreenButton.classList.add('fullscreen-toggle');
       this.fullscreenButton.setAttribute('aria-pressed', 'false');
       bar.append(this.fullscreenButton);
     }
-    bar.append(this.pauseButton, button('EXIT', this.actions.select, true));
-    const wrap = element('div', 'game-wrap'), canvas = element('canvas');
-    canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
-    wrap.append(canvas);
-    const layout = element('div', 'fight-layout');
-    layout.append(wrap);
-    page.classList.add('fight-page');
-    this.root.classList.add('in-fight');
-    page.append(bar, layout);
+    bar.append(this.pauseButton);
+    if (practice) bar.append(button('RESET DUMMY', this.actions.resetPractice, true));
+    bar.append(button('EXIT', this.actions.select, true));
+    return bar;
+  }
 
-    // Keep the original InputController bindings; only their visual arrangement changes.
-    // All controls are real buttons, so keyboard and touch can coexist.
+  private createTouchPad(input: InputController): HTMLElement {
     const pad = element('section', 'touch-pad gamepad gamepad-v2');
     pad.dataset.size = this.controlSize;
     pad.setAttribute('aria-label', 'On-screen combat controls');
@@ -164,6 +162,23 @@ export class Screens {
       }
       section.append(buttons); pad.append(section);
     }
+    return pad;
+  }
+
+  fight(input: InputController, practice = false): HTMLCanvasElement {
+    const page = this.page(), bar = this.createBattleBar(practice);
+    const wrap = element('div', 'game-wrap'), canvas = element('canvas');
+    canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
+    wrap.append(canvas);
+    const layout = element('div', 'fight-layout');
+    layout.append(wrap);
+    page.classList.add('fight-page');
+    this.root.classList.add('in-fight');
+    page.append(bar, layout);
+
+    // Keep the original InputController bindings; only their visual arrangement changes.
+    // All controls are real buttons, so keyboard and touch can coexist.
+    const pad = this.createTouchPad(input);
     layout.append(pad);
     const resizePad = button(`PAD: ${this.controlSize.toUpperCase()}`, () => {
       const sizes = ['normal', 'large', 'compact'] as const;
@@ -185,8 +200,14 @@ export class Screens {
 
   update(match: Match, paused: boolean): void {
     if (!this.status) return;
-    this.status.textContent = `${match.player.id} health ${match.player.hp}, meter ${Math.floor(match.player.meter)}. ${match.cpu.id} health ${match.cpu.hp}, meter ${Math.floor(match.cpu.meter)}. Round ${match.round}, score ${match.score.join(' to ')}, ${Math.ceil(match.timer)} seconds. ${paused ? 'Paused.' : ''}`;
+    const matchSummary = match.mode === 'practice'
+      ? `Practice: ${match.practiceStats?.hits ?? 0} hits, ${match.practiceStats?.damage ?? 0} damage, unlimited time.`
+      : `Round ${match.round}, score ${match.score.join(' to ')}, ${Math.ceil(match.timer)} seconds.`;
+    this.status.textContent = `${match.player.id} health ${match.player.hp}, meter ${Math.floor(match.player.meter)}. ${match.cpu.id} health ${match.cpu.hp}, meter ${Math.floor(match.cpu.meter)}. ${matchSummary} ${paused ? 'Paused.' : ''}`;
     this.status.dataset.phase = match.phase; this.status.dataset.round = String(match.round);
+    this.status.dataset.mode = match.mode ?? 'vs';
+    this.status.dataset.practiceHits = String(match.practiceStats?.hits ?? 0);
+    this.status.dataset.practiceDamage = String(match.practiceStats?.damage ?? 0);
     this.status.dataset.playerHealth = String(match.player.hp); this.status.dataset.cpuHealth = String(match.cpu.hp);
     this.status.dataset.playerMeter = String(match.player.meter); this.status.dataset.cpuMeter = String(match.cpu.meter);
     this.status.dataset.timer = String(Math.ceil(match.timer)); this.status.dataset.paused = String(paused);

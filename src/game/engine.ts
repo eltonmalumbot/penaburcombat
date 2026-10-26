@@ -6,7 +6,7 @@ import { emptyInput } from './types.ts';
 import type { Brain, CombatEvent, CombatInput, Fighter, FighterId, Match, Move, Pose } from './types.ts';
 
 export const FIXED_STEP = 1 / 60;
-interface Options { ai?: boolean; random?: () => number }
+interface Options { ai?: boolean; random?: () => number; practice?: boolean }
 
 export class CombatEngine {
   readonly state: Match;
@@ -14,16 +14,34 @@ export class CombatEngine {
   private events: CombatEvent[] = [];
   private readonly ai: boolean;
   private readonly random: () => number;
+  private readonly practice: boolean;
 
   constructor(selected: FighterId, options: Options = {}) {
     if (!character(selected).available) throw new Error(`${selected} is not playable yet`);
-    this.ai = options.ai ?? true;
+    this.practice = options.practice ?? false;
+    this.ai = !this.practice && (options.ai ?? true);
     this.random = options.random ?? Math.random;
-    this.state = { player: createFighter(selected, 360, 1), cpu: createFighter(selected === 'Ali' ? 'Elton' : 'Ali', 920, -1),
-      phase: 'ready', round: 1, score: [0, 0], timer: 90, phaseTime: 1.7, result: null, notice: 'ROUND 1', noticeTime: 1.7 };
+    this.state = { player: createFighter(selected, this.practice ? 490 : 360, 1),
+      cpu: createFighter(selected === 'Ali' ? 'Elton' : 'Ali', this.practice ? 590 : 920, -1),
+      phase: 'ready', round: 1, score: [0, 0], timer: 90, phaseTime: 1.7, result: null,
+      notice: this.practice ? 'PRACTICE' : 'ROUND 1', noticeTime: 1.7,
+      mode: this.practice ? 'practice' : 'vs',
+      practiceStats: this.practice ? { hits: 0, damage: 0 } : undefined };
   }
 
   drainEvents(): CombatEvent[] { const events = this.events; this.events = []; return events; }
+
+  /** Training-only reset: preserve the normal duel rules and never mutate its state. */
+  resetPractice(): void {
+    if (!this.practice) return;
+    const g = this.state;
+    g.player = createFighter(g.player.id, 490, 1);
+    g.cpu = createFighter(g.cpu.id, 590, -1);
+    g.phase = 'active'; g.round = 1; g.score = [0, 0]; g.timer = 90;
+    g.phaseTime = 0; g.result = null;
+    g.practiceStats = { hits: 0, damage: 0 };
+    this.events = []; this.notice('PRACTICE RESET', .8);
+  }
 
   /** Called at 60 Hz. No clocks, DOM, artwork or input listeners live in the simulation. */
   update(dt: number, playerInput: CombatInput = emptyInput(), cpuOverride?: CombatInput): void {
@@ -59,8 +77,15 @@ export class CombatEngine {
       if (contact.attacker.attack) contact.attacker.attack.connected = true;
       this.hit(contact.attacker, contact.defender, contact.attack);
     }
-    g.timer = Math.max(0, g.timer - dt);
-    if (g.player.hp <= 0 || g.cpu.hp <= 0 || g.timer <= 1e-8) this.finishRound();
+    if (this.practice) {
+      // The passive dummy regenerates after a KO; the simulation still uses
+      // exactly the same attack damage, startup, hitboxes and 60Hz rules.
+      if (g.cpu.hp <= 0) { g.cpu.hp = 100; g.cpu.stun = 0; g.cpu.knockback = 0; }
+      g.timer = 90;
+    } else {
+      g.timer = Math.max(0, g.timer - dt);
+      if (g.player.hp <= 0 || g.cpu.hp <= 0 || g.timer <= 1e-8) this.finishRound();
+    }
     this.animate(g.player, dt); this.animate(g.cpu, dt);
   }
 
@@ -130,6 +155,10 @@ export class CombatEngine {
     const data = moveData(attack);
     const blocked = defender.guard && grounded(defender) && defender.face === -attacker.face;
     const damage = blocked ? Math.max(1, Math.round(data.damage * .2)) : data.damage;
+    if (this.practice && attacker === this.state.player && this.state.practiceStats) {
+      this.state.practiceStats.hits++;
+      this.state.practiceStats.damage += Math.min(defender.hp, damage);
+    }
     defender.hp = Math.max(0, defender.hp - damage);
     defender.stun = blocked ? .09 : data.stun;
     defender.knockback = attacker.face * data.push * (blocked ? .35 : 1);
