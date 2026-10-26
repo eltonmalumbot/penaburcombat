@@ -243,8 +243,11 @@ export class GameRenderer {
       ctx.fillText(f.meter >= 65 ? `${ultimate} [U]` : `METER ${Math.floor(f.meter)} / 100 · ${ultimate}`, i === 0 ? x : x + 538, 141);
     }
     rect(ctx, 565, 4, 153, 104, '#0a1939'); ctx.fillStyle = '#ffe7b1'; ctx.textAlign = 'center'; ctx.font = 'bold 54px system-ui';
-    ctx.fillText(String(Math.ceil(match.timer)), 641, 62); ctx.font = 'bold 16px system-ui';
-    ctx.fillText(`ROUND ${match.round} • ${match.score[0]} : ${match.score[1]}`, 641, 95);
+    ctx.fillText(match.mode === 'practice' ? '∞' : String(Math.ceil(match.timer)), 641, 62);
+    ctx.font = match.mode === 'practice' ? 'bold 12px system-ui' : 'bold 16px system-ui';
+    ctx.fillText(match.mode === 'practice'
+      ? `PRACTICE · ${match.practiceStats?.hits ?? 0} HITS / ${match.practiceStats?.damage ?? 0} DMG`
+      : `ROUND ${match.round} • ${match.score[0]} : ${match.score[1]}`, 641, 95);
     if (match.notice) {
       const fighter = [match.player, match.cpu].find(f => match.notice === `${f.id.toUpperCase()} ULTIMATE!`);
       const notice = fighter ? `${fighter.id.toUpperCase()} · ${character(fighter.id).ultimateName ?? 'ULTIMATE'}` : match.notice;
