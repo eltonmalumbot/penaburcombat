@@ -25,6 +25,8 @@ export interface Match {
   timer: number; phaseTime: number; result: 0 | 1 | null; notice: string; noticeTime: number;
   /** Optional training HUD data; normal best-of-three matches keep existing rules. */
   mode?: 'vs' | 'practice'; practiceStats?: { hits: number; damage: number };
+  /** Optional practice-only toggles; never change normal versus combat. */
+  practiceOptions?: { dummyGuard: boolean; infiniteMeter: boolean };
 }
 export type CombatEvent = { type: 'hit'; x: number; y: number; color: string; blocked: boolean } | { type: 'round'; winner: 0 | 1 | null };
 export const emptyInput = (): CombatInput => ({ move: 0, guard: false, jump: false, dash: false, attack: null });
