@@ -91,6 +91,9 @@ def write_review_candidate(source, art4, art5, provenance):
         if any(art.tobytes() == old.tobytes() for old in frames.values()):
             raise ValueError("Cloned V5 pose supplied instead of independently authored " + name)
         replacement.append((name, art, list(bbox), path.name))
+    if replacement[0][1].tobytes() == replacement[1][1].tobytes():
+        raise ValueError("Light3 F4/F5 must be distinct independently authored poses")
+    for name, art, _, _ in replacement:
         frames[name] = art
     # Security: output path is never read from CLI arguments. mkdtemp creates
     # a fresh user-owned directory with nonpredictable name, no traversal.

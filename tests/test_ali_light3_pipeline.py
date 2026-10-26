@@ -128,6 +128,44 @@ class AliLight3PipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "margin"):
             self.create_candidate()
 
+    def test_rejects_identical_new_f4_f5_before_writing_output(self):
+        shutil.copyfile(self.frame4, self.frame5)
+        with self.assertRaisesRegex(ValueError, "must be distinct"):
+            self.create_candidate()
+        self.assertEqual(list(self.root.glob("ali-light3-review-*")), [])
+
+    def test_bidirectional_contact_sheet_is_review_only_and_non_destructive(self):
+        import ali_light3_review_sheet as sheet
+        candidate = self.create_candidate()
+        before = {p.relative_to(candidate): reb.checksum(p)
+                  for p in candidate.rglob("*") if p.is_file()}
+        output = self.root / "right-left-light3-qa.png"
+        sheet.save_review_sheet(candidate, output)
+        with Image.open(output) as result:
+            self.assertEqual(result.size, (4 * 720, 2 * (540 + 36)))
+            self.assertEqual(result.mode, "RGB")
+            rgba = Image.open(candidate / "frames" / "light3-02.png").convert("RGBA")
+            x, y = 100, 140
+            pixel = rgba.getpixel((x, y))
+            bg = (236, 241, 246) if (x // 32 + y // 32) % 2 == 0 else (212, 221, 231)
+            alpha = pixel[3] / 255
+            expected = tuple(round(pixel[i] * alpha + bg[i] * (1 - alpha)) for i in range(3))
+            self.assertEqual(result.getpixel((x, 36 + y)), expected)
+            self.assertEqual(result.getpixel((720 - 1 - x, 540 + 72 + y)), expected)
+        self.assertEqual(before, {p.relative_to(candidate): reb.checksum(p)
+                                  for p in candidate.rglob("*") if p.is_file()})
+        with self.assertRaises(FileExistsError):
+            sheet.save_review_sheet(candidate, output)
+
+    def test_review_sheet_rejects_modified_candidate(self):
+        import ali_light3_review_sheet as sheet
+        candidate = self.create_candidate()
+        with open(candidate / "frames" / "light3-03.png", "ab") as fd:
+            fd.write(b"tampered")
+        with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+            sheet.save_review_sheet(candidate, self.root / "should-not-exist.png")
+        self.assertFalse((self.root / "should-not-exist.png").exists())
+
     def test_rejects_missing_provenance_and_source_mutation(self):
         with self.assertRaisesRegex(ValueError, "provenance"):
             reb.write_review_candidate(self.source, self.frame4, self.frame5, "")
