@@ -1,0 +1,95 @@
+{
+  "status": "REVIEW_ONLY_NOT_APPROVED",
+  "humanArtApproval": false,
+  "productionActivated": false,
+  "basePR": 25,
+  "baseSHA": "abab529c233281711004e8e976b181112765fc3a",
+  "creationDate": "2026-10-26",
+  "authorMethod": "OpenAI image generation directed by Codex at the project owner request; not human-drawn artwork",
+  "references": {
+    "approvedRepoAli": "3d33a2327da2de6be3d1e4d3270f2c922df44aad11892c61135dac84b3408905",
+    "sourceV5Atlas": "43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521",
+    "sourceV5Zip": "8d25598658ce3edc4410c43324cb537545c73dc41d1585c9cb80c3289e1a623f"
+  },
+  "permissionBasis": "User expressly requested creation using project-owner supplied sources and repository Ali identity. Repository records consent to likeness publication. No general reuse license or independent third-party rights certification asserted; owner must approve the new candidate before release.",
+  "generation": {
+    "F4": "Entire character newly generated using approved Ali and real V5 F3 as identity/registration references; full-body palm contact, complete newly generated legs and shoes.",
+    "F5": "Separately generated using new F4 and real V5 F6/approved Ali as references; visibly retracted bent-elbow follow-through and smaller dissipating effect. No programmatic copying/pasting of V5 lower legs or frame pixels.",
+    "rejectedCleanupAttempt": "exec-11a3c65c-3e7b-4f5b-b557-97d189f01cdc.png changed head proportions and was not used."
+  },
+  "export": {
+    "rawSize": [
+      1448,
+      1086
+    ],
+    "imageMagickSteps": "-channel A -fx 'u<8/255?0:u' +channel -resize 50% -background none -gravity northwest -extent 720x540+12-18 PNG32:output.png",
+    "explanation": "Remove only near-invisible generator alpha speckle (<8/255); same uniform half-scale and -12,+18 registration for both entire new drawings. No limb stretching, nonuniform scaling, old-art pixel reuse or engine compensation. Original raw generations retained unchanged.",
+    "bounds": {
+      "F4": [
+        106,
+        108,
+        629,
+        525
+      ],
+      "F5": [
+        107,
+        103,
+        549,
+        524
+      ]
+    }
+  },
+  "packaging": "Existing V6 rebuilder used without modification. Its 16 re-encoded unchanged PNGs were pixel-compared and then replaced with original V5 PNG byte streams; frameQA hashes updated to those exact retained files. Full atlas/pixel/timing validator rerun. Only F4/F5 PNG bytes differ from V5; atlas and manifest necessarily differ.",
+  "limitations": [
+    "AI generation provenance, not a claim of hand-authored art.",
+    "Identity/equipment detail continuity needs owner signoff; existing F3/F6 and other 16 V5 poses remain unapproved and have known edge artifacts.",
+    "Physical Android/iPhone QA and human artwork approval pending."
+  ],
+  "checksums": {
+    "source-generations/f4-contact-raw.png": "2c45f075482b9cf56776a7d6c59e578d134a77fa71a8f9e6c881f3c2e3087f26",
+    "source-generations/f5-follow-through-raw.png": "59d7fbb94e7c83fcdee2c3ad585d80cc437044b05e495913a51e692f98512311",
+    "evidence/before-after.png": "a4dd30e47e2c737ecbb393ea538d3764905f35d80340e26904650c7bc1163d9d",
+    "evidence/light3-left-1x.webp": "c0d0a3bf2dd6c32d9cadfc8a1273ede9f768edbc36abe858334c250a8e4f26bc",
+    "evidence/light3-right-1x.webp": "0970dce46f921bfc4a2ac79fa3e7fc57b825364e5400bf40b111b84ad736ef40",
+    "evidence/two-facings.png": "5b0e09a585e80e3a516d03492588516ce7cf1150ad188b8566f03e85c404f770",
+    "evidence/light3-right-025x.webp": "5a184b2d527abd9c0c7f852f2dabe6e15c0374dfc120268448051030f09213aa",
+    "evidence/light3-left-025x.webp": "3378d5899715c79be6d7ab0d267c05afe0c407ef11e1a179085f1ea783f5c43c",
+    "inputs/light3-03.png": "26bfd79f294b523fc4b94588011a02187e75c50a9630db0518cc44898a5f522e",
+    "inputs/light3-04.png": "a4a6495146ba1b228509c96e0500fc0ef5e824532daa52e6a0d893f6a5a7361d",
+    "candidate/ali-combat-frames.png": "1f71c0f4498acbe5e9d55c93953bb8ad294e0a7f33715092b0135b9b2da008c4",
+    "reference-v5/light3-04-COMPOSITE-REFERENCE-ONLY.png": "035ca2cf8a90881e5c5b106c16e2d0dc5af88e1fd3c2abc1e42058573fffa5b2",
+    "reference-v5/light3-03-COMPOSITE-REFERENCE-ONLY.png": "3fd2b992243bc138b5b8cc0f474cc79fd6989cee033236c92b670f697e6521c4",
+    "evidence/browser/V6-vs-0.25x.png": "59ae73b023e37e76926af71e482b2345192e4d9a5d435deaeebde16004e04edc",
+    "evidence/browser/V6-right-F4.png": "cb0c19cffc00249227fc980fcb9ae06240a4b5051af1525a4ca1cf67c4d8fddc",
+    "evidence/browser/V6-right-F6.png": "0b58c01cb87218e82cd6b4d90279408a10c4c3b9d6b6477a290d0346e5b717a9",
+    "evidence/browser/V6-vs-1x.png": "50b85fb94784b426ac2daa88d69b53ec90990dfc62eb14681daf45de6585b5fd",
+    "evidence/browser/V6-practice-0.25x.png": "713b7cb9dbdae6696a597dac5c543cd8d4e868ed72394e3a089e06e94418a103",
+    "evidence/browser/V6-right-F3.png": "e4bc64aa36de52dc12103181313385c470aead2c20dd59d6a25b6df74a23b14b",
+    "evidence/browser/V6-practice-1x.png": "713b7cb9dbdae6696a597dac5c543cd8d4e868ed72394e3a089e06e94418a103",
+    "evidence/browser/V6-right-F5.png": "4ee62870af7458afaecf42de2626a2dbed87a8c529d0f4765d0ed7cb6ef3bbe1",
+    "evidence/browser/V6-left-F5.png": "871471e47bb81eb70b415e0ab059339b7686cebcf137d85ba2539b12701a8513",
+    "evidence/browser/V6-left-F6.png": "a4a822ef100c7f958f03091a966a1f82ac88c495e04e6b639b666ce93678e394",
+    "evidence/browser/V6-left-F3.png": "dde2a82c8cf2a3ab589e80f753449b49f8ca80008ffc50dda5aed9371fcfbfbb",
+    "evidence/browser/V6-vs-0.5x.png": "af4a51701984dd057b76ffd04c7a002ee0d7c981034e464e9ced5d119649c6bf",
+    "evidence/browser/V6-left-F4.png": "48f565b818acd0cf48a1920ca96b73821bc9e09914edb4438d565e1f8bed0517",
+    "evidence/browser/V6-practice-0.5x.png": "713b7cb9dbdae6696a597dac5c543cd8d4e868ed72394e3a089e06e94418a103",
+    "candidate/frames/light1-00.png": "74c0024831182e57d34eb5df4bf596720c3f12b6d78544a59640356d0bbfcc8b",
+    "candidate/frames/light2-01.png": "1a6c5a6ac45ef3ed42b7129caaf4ad1eafff929aeaf7f52baaf7a54863bc2881",
+    "candidate/frames/light2-02.png": "ab87c4bec261544e169368deaf7138ec7a2673a28f55606187df2e4776ea9499",
+    "candidate/frames/light3-00.png": "fd861fc14270f46bd90dd528f2e647c860cfbc12f7788352c7088cb7205d7fda",
+    "candidate/frames/light3-03.png": "3b889fed8b57ea049aeb03470b296e7658c41f138adbdf0f7c85b9a24c420d66",
+    "candidate/frames/light1-05.png": "2c2070d54bf5aca2466874bc718301665d3a246861d3abc105965cfc71953b2a",
+    "candidate/frames/light3-04.png": "21d619eca2aa7e1bcc2652c64bc734a0fcd00d3814ca616e20ec0d33ca95f3e6",
+    "candidate/frames/light2-04.png": "443d8d93fc969ab630c1aed150c16dc714864650aa9da75fbb08b4a65c020ff6",
+    "candidate/frames/light1-02.png": "de1d5a2362cacfc76f4641928f3fd36ff8de58f950a8589608c8d839aabba4f3",
+    "candidate/frames/light3-01.png": "d76c8e6449d8f37dad2a5b87b2eb0dc5b32950a726aac655213a5da4068ba664",
+    "candidate/frames/light1-03.png": "c46ff781a620dd95ec244a5d2fbe131c9123c7c33ff7e5cc2756b89edfdcc299",
+    "candidate/frames/light2-05.png": "38800c8a2b64305474b994de0ef431c5cf1d9217c3993f8de5cbf258014ad4ad",
+    "candidate/frames/light2-03.png": "43ff2b38858caa0baf8d57f5776f314e171c1df953ff87bb1d422a2e569c2490",
+    "candidate/frames/light1-04.png": "9123cc84c48e72503248204972a799be4cc94789adc4756b5f67f16134bccd2a",
+    "candidate/frames/light3-05.png": "a28f3dc7a9106d02577060cbf6c4b1cea5639f0b8450c4056fbb83571153fa79",
+    "candidate/frames/light2-00.png": "d078eecdd96f5a2116256b133203a22ab2f86dd313e3f610a16ca17d3fb11004",
+    "candidate/frames/light1-01.png": "8c820e629e7e2b30519602f59aea0fe4dae0f23847ae6e43fb05e5e4c6a309bd",
+    "candidate/frames/light3-02.png": "46c83081db5abd87c783c8ff11b691d445c1a364c984ff36acb45ef481dee16a"
+  }
+}

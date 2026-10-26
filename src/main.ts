@@ -12,7 +12,8 @@ let selected: FighterId = 'Ali';
 let engine: CombatEngine | null = null, renderer: GameRenderer | null = null;
 let paused = false, accumulator = 0, lastTime = 0, statusTime = 0;
 let selectedMode: 'vs' | 'practice' = 'vs';
-const aliReviewEnabled = ['v3', 'v4', 'v5', 'v51'].includes(new URLSearchParams(window.location.search).get('aliArtReview') ?? '');
+const aliReviewVersion = new URLSearchParams(window.location.search).get('aliArtReview') ?? '';
+const aliReviewEnabled = ['v3', 'v4', 'v5', 'v51', 'v6'].includes(aliReviewVersion);
 let reviewAliAtlas: SpriteAtlas | null = null;
 let reviewAliEdition: AliCandidateEdition | null = null;
 /** Review-only simulation rate, never applied without the explicit URL opt-in. */
@@ -49,11 +50,15 @@ function attachAliArtReview(): void {
   if (!parent) return;
   const panel = document.createElement('section');
   panel.className = 'art-playtest';
-  panel.setAttribute('aria-label', 'Ali V3 candidate local playtest');
+  panel.setAttribute('aria-label', 'Ali candidate local playtest');
   const heading = document.createElement('strong');
-  heading.textContent = 'REVIEW ONLY — Ali Combo V3/V4/V5/V5.1 belum disetujui';
+  heading.textContent = aliReviewVersion === 'v6'
+    ? 'REVIEW ONLY — Ali V6 F4/F5 belum disetujui'
+    : 'REVIEW ONLY — Ali Combo V3/V4/V5/V5.1 belum disetujui';
   const note = document.createElement('p');
-  note.textContent = 'Pilih ali-combat-frames.png dari ZIP V3, Repair V4, FX Polish V5, atau FX Edge Review V5.1. File hanya diproses di browser; F5 tetap komposit sementara, BUKAN keyframe HD final.';
+  note.textContent = aliReviewVersion === 'v6'
+    ? 'Pilih ali-combat-frames.png dari paket V6 review. F4/F5 adalah redraw AI baru; identitas, gerak, dan hak penggunaan masih memerlukan persetujuan manusia. File hanya diproses di browser.'
+    : 'Pilih ali-combat-frames.png dari ZIP V3, Repair V4, FX Polish V5, atau FX Edge Review V5.1. File hanya diproses di browser; F5 tetap komposit sementara, BUKAN keyframe HD final.';
   const file = document.createElement('input');
   file.type = 'file'; file.accept = '.png,image/png';
   file.id = 'ali-v3-local-file';

@@ -1,0 +1,24 @@
+{
+  "artApproval": false,
+  "humanReview": "PENDING",
+  "realAndroidChrome": "UNVERIFIED",
+  "realiPhoneSafari": "UNVERIFIED",
+  "engineChanged": false,
+  "productionSpriteChanged": false,
+  "realSourceValidator": "PASS",
+  "realV6Validator": "PASS",
+  "unchangedFrames": "16 byte-identical original PNGs retained; 2 replacement frame files",
+  "actualArtBrowserCoverage": [
+    "F3-F6 frame stepping right/left",
+    "Nonlooping full playback right/left at 1x,.5x,.25x",
+    "Real V6 F4/F5 drawImage crops seen during VS CPU and Practice Combos at 1x,.5x,.25x",
+    "Rendering leaves fighter state unchanged",
+    "Explicit local-file SHA gate and reset to approved original"
+  ],
+  "targetedRuns": "Studio and five mode/rate cases passed together; last practice .25x interrupted by development HMR reload, then passed unchanged on isolated rerun. Earlier new-test locator/option and TypeScript-this errors were fixed; no gameplay or assertions weakened. Full suites and exact-head CI results are recorded in PR body.",
+  "visualFindings": [
+    "F4 contact open palm and cyan burst, F5 bent elbow/retracted palm and smaller dissipating effect are distinct newly generated poses.",
+    "Both complete shoes/legs visible, new F4/F5 vertical registration differs by about one pixel.",
+    "Equipment/face differences across inherited F3/F6 need human evaluation; older V5 frames still contain known cut edges."
+  ]
+}
