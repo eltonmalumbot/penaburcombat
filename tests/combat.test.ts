@@ -171,7 +171,7 @@ test('practice mode is endless, passive and records authentic hit damage', () =>
   const e = new CombatEngine('Ali', { practice: true });
   assert.equal(e.state.mode, 'practice');
   assert.deepEqual(e.state.practiceStats, { hits: 0, damage: 0 });
-  assert.equal(e.state.cpu.x, 610);
+  assert.equal(e.state.cpu.x, 590);
   e.state.phase = 'active'; e.state.cpu.x = e.state.player.x + 100;
   e.update(FIXED_STEP, input({ attack: 'light' }));
   frames(e, 20);
@@ -199,7 +199,7 @@ test('practice reset clears dummy positions and statistics without changing VS r
   assert.equal(e.state.player.id, 'Elton');
   assert.equal(e.state.cpu.id, 'Ali');
   assert.equal(e.state.player.x, 490);
-  assert.equal(e.state.cpu.x, 610);
+  assert.equal(e.state.cpu.x, 590);
   assert.equal(e.state.player.hp, 100);
   assert.equal(e.state.cpu.hp, 100);
   assert.equal(e.state.player.meter, 0);
