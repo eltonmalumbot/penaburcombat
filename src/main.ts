@@ -26,6 +26,16 @@ const screens = new Screens(root, { menu: showMenu, select: showSelection,
   practice: () => { selectedMode = 'practice'; startMatch(); },
   resetPractice: () => { engine?.resetPractice(); input.clear(); accumulator = 0;
     if (engine) screens.update(engine.state, paused); },
+  togglePracticeGuard: () => {
+    if (!engine || engine.state.mode !== 'practice') return;
+    engine.setPracticeDummyGuard(!engine.state.practiceOptions?.dummyGuard);
+    screens.update(engine.state, paused);
+  },
+  togglePracticeMeter: () => {
+    if (!engine || engine.state.mode !== 'practice') return;
+    engine.setPracticeInfiniteMeter(!engine.state.practiceOptions?.infiniteMeter);
+    screens.update(engine.state, paused);
+  },
   pause: togglePause });
 
 function leaveMatch(): void {
