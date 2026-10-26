@@ -110,8 +110,8 @@ export class Screens {
     const fighter = createFighter(selected, 240, 1); fighter.y = 400; void drawPortraits(canvas, [{ fighter, scale: 1.2 }]);
   }
 
-  fight(input: InputController, practice = false): HTMLCanvasElement {
-    const page = this.page(), bar = element('div', 'battle-bar');
+  private createBattleBar(practice: boolean): HTMLDivElement {
+    const bar = element('div', 'battle-bar');
     this.pauseButton = button('PAUSE / RESUME', this.actions.pause, true); this.pauseButton.setAttribute('aria-pressed', 'false');
     bar.append(element('span', 'eyebrow', practice ? 'PENABUR Combat • PRACTICE MODE' : 'PENABUR Combat • LIVE MATCH • 16.59'));
     if (practice) bar.classList.add('practice-bar');
@@ -124,17 +124,10 @@ export class Screens {
     bar.append(this.pauseButton);
     if (practice) bar.append(button('RESET DUMMY', this.actions.resetPractice, true));
     bar.append(button('EXIT', this.actions.select, true));
-    const wrap = element('div', 'game-wrap'), canvas = element('canvas');
-    canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
-    wrap.append(canvas);
-    const layout = element('div', 'fight-layout');
-    layout.append(wrap);
-    page.classList.add('fight-page');
-    this.root.classList.add('in-fight');
-    page.append(bar, layout);
+    return bar;
+  }
 
-    // Keep the original InputController bindings; only their visual arrangement changes.
-    // All controls are real buttons, so keyboard and touch can coexist.
+  private createTouchPad(input: InputController): HTMLElement {
     const pad = element('section', 'touch-pad gamepad gamepad-v2');
     pad.dataset.size = this.controlSize;
     pad.setAttribute('aria-label', 'On-screen combat controls');
@@ -169,6 +162,23 @@ export class Screens {
       }
       section.append(buttons); pad.append(section);
     }
+    return pad;
+  }
+
+  fight(input: InputController, practice = false): HTMLCanvasElement {
+    const page = this.page(), bar = this.createBattleBar(practice);
+    const wrap = element('div', 'game-wrap'), canvas = element('canvas');
+    canvas.id = 'game'; canvas.width = 1280; canvas.height = 720; canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Fighting arena');
+    wrap.append(canvas);
+    const layout = element('div', 'fight-layout');
+    layout.append(wrap);
+    page.classList.add('fight-page');
+    this.root.classList.add('in-fight');
+    page.append(bar, layout);
+
+    // Keep the original InputController bindings; only their visual arrangement changes.
+    // All controls are real buttons, so keyboard and touch can coexist.
+    const pad = this.createTouchPad(input);
     layout.append(pad);
     const resizePad = button(`PAD: ${this.controlSize.toUpperCase()}`, () => {
       const sizes = ['normal', 'large', 'compact'] as const;
@@ -190,7 +200,10 @@ export class Screens {
 
   update(match: Match, paused: boolean): void {
     if (!this.status) return;
-    this.status.textContent = `${match.player.id} health ${match.player.hp}, meter ${Math.floor(match.player.meter)}. ${match.cpu.id} health ${match.cpu.hp}, meter ${Math.floor(match.cpu.meter)}. ${match.mode === 'practice' ? `Practice: ${match.practiceStats?.hits ?? 0} hits, ${match.practiceStats?.damage ?? 0} damage, unlimited time.` : `Round ${match.round}, score ${match.score.join(' to ')}, ${Math.ceil(match.timer)} seconds.`} ${paused ? 'Paused.' : ''}`;
+    const matchSummary = match.mode === 'practice'
+      ? `Practice: ${match.practiceStats?.hits ?? 0} hits, ${match.practiceStats?.damage ?? 0} damage, unlimited time.`
+      : `Round ${match.round}, score ${match.score.join(' to ')}, ${Math.ceil(match.timer)} seconds.`;
+    this.status.textContent = `${match.player.id} health ${match.player.hp}, meter ${Math.floor(match.player.meter)}. ${match.cpu.id} health ${match.cpu.hp}, meter ${Math.floor(match.cpu.meter)}. ${matchSummary} ${paused ? 'Paused.' : ''}`;
     this.status.dataset.phase = match.phase; this.status.dataset.round = String(match.round);
     this.status.dataset.mode = match.mode ?? 'vs';
     this.status.dataset.practiceHits = String(match.practiceStats?.hits ?? 0);
