@@ -28,7 +28,7 @@ a{color:#7be5ff}button:focus-visible,input:focus-visible,select:focus-visible{ou
 <section><p>V6: pilih atlas lokal dari <code>art-review/ali-light3-v6/candidate/ali-combat-frames.png</code>. Redraw AI F4/F5 belum disetujui manusia. <a href="/?aliArtReview=v6">Uji V6 dalam game</a>.</p><h2>1. Muat kandidat dari ZIP V2, Cleanup V3, Repair V4, FX Polish V5, atau V5.1 FX Edge Review</h2>
 <p>Ekstrak <code>PENABUR_Combat_Ali_Light_Combo_Art_Pack_V2.zip</code> , <code>PENABUR_Combat_Ali_Light_Combo_Cleanup_V3.zip</code>, , <code>PENABUR_Combat_Ali_Light_Combo_Repair_V4.zip</code>, atau <code>PENABUR_Combat_Ali_FX_Polish_V5.zip</code> atau <code>PENABUR_Combat_Ali_FX_Edge_Review_V5_1.zip</code>, lalu pilih <code>ali-combat-frames.png</code>. Gambar diverifikasi SHA-256 sebelum dapat diputar. Referensi kiri dibaca langsung dari aset Ali yang disetujui di repository.</p>
 <label for="atlas"><span>Atlas PNG lokal:</span><input id="atlas" type="file" accept=".png,image/png" aria-describedby="status"></label>
-<p id="status" role="status" aria-live="polite">Belum ada PNG kandidat V2/V3/V4/V5/V5.1/V6. Sprite asli Ali tersedia sebagai pembanding.</p>
+<output id="status" aria-live="polite">Belum ada PNG kandidat V2/V3/V4/V5/V5.1/V6. Sprite asli Ali tersedia sebagai pembanding.</output>
 <p id="border-warning" style="color:#f7c483" role="note"></p>
 <details id="hardcut-panel" hidden><summary id="hardcut-summary">Periksa potongan internal yang mencurigakan</summary><p><small>Deteksi otomatis menemukan perubahan alpha yang sangat mendadak dalam sebuah frame, bukan hanya di tepi atlas. Ini adalah indikator untuk pemeriksaan manual—bukan bukti kesalahan atau persetujuan artwork.</small></p><div id="hardcut-list" class="controls"></div></details>
 <div class="meta"><span>18 frame • 6 per combo</span><span>4320 × 1620 RGBA</span><span id="edition">VERSI: belum dimuat</span><span>Light 1/2: 0,35 dtk • Light 3: 0,39 dtk</span></div>
@@ -174,7 +174,7 @@ try{
 const bytes=await file.arrayBuffer();
 const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
 const edition=Object.keys(knownHashes).find(name=>knownHashes[name]===digest);
-if(!edition)throw Error('SHA-256 tidak cocok dengan kandidat V2/V3/V4/V5/V5.1/V6 yang diaudit. Jangan gunakan file ini.');
+if(!edition)throw new Error('SHA-256 tidak cocok dengan kandidat V2/V3/V4/V5/V5.1/V6 yang diaudit. Jangan gunakan file ini.');
 acceptedEdition=edition;
 $('edition').textContent='VERSI: '+edition;
 const url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
