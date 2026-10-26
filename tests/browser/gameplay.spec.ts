@@ -9,6 +9,12 @@ test('production build exposes a verifiable commit identity', async ({ request }
   if (process.env.EXPECTED_DEPLOY_SHA) expect(info.commit).toBe(process.env.EXPECTED_DEPLOY_SHA);
 });
 
+// Advance only through runFor: slow browser IPC must not add unrequested combat time.
+async function controlledClock(page: Page) {
+  await page.clock.install({ time: new Date('2026-10-26T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-10-26T00:01:00Z'));
+}
+
 async function start(page: Page, fighter: 'Ali' | 'Elton' = 'Ali') {
   await page.goto('/');
   await page.getByRole('button', { name: 'START FIGHT' }).click();
@@ -143,7 +149,7 @@ test('desktop controls, combat, pause and clearing held input on exit', async ({
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => { Math.random = () => .99; });
-  await page.clock.install();
+  await controlledClock(page);
   await start(page, 'Elton');
   const status = page.locator('.match-status');
   await page.clock.runFor(2100);
@@ -235,7 +241,7 @@ test('player combos earn meter for skill and ultimate before a complete victory'
   page.on('pageerror', error => errors.push(error.message));
   // A repeatable aggressive opponent still uses the normal AI; there is no game-state injection.
   await page.addInitScript(() => { Math.random = () => .99; });
-  await page.clock.install(); await start(page);
+  await controlledClock(page); await start(page);
   const status = page.locator('.match-status');
   await page.clock.runFor(2100);
   await page.keyboard.down('d'); await page.clock.runFor(800);

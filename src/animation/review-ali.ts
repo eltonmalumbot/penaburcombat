@@ -7,7 +7,13 @@ export const ALI_V4_SHA256 = 'b998f44db137f601617852e9fb7083a17c507839e60d562015
 export const ALI_V5_SHA256 = '43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521';
 /** Visual-only V5.1: FX alpha edges cleaned, F5 body still V4-derived. */
 export const ALI_V5_1_SHA256 = '0efa47867d718c0a5b8374fecb19f449037e22da755ebe11a1f0aedbc2457674';
-export type AliCandidateEdition = 'V3' | 'V4' | 'V5' | 'V5.1';
+/** New AI-drawn F4/F5, explicitly unapproved and local-import only. */
+export const ALI_V6_SHA256 = '1f71c0f4498acbe5e9d55c93953bb8ad294e0a7f33715092b0135b9b2da008c4';
+export type AliCandidateEdition = 'V3' | 'V4' | 'V5' | 'V5.1' | 'V6';
+const candidateEditions: ReadonlyMap<string, AliCandidateEdition> = new Map([
+  [ALI_V3_SHA256, 'V3'], [ALI_V4_SHA256, 'V4'], [ALI_V5_SHA256, 'V5'],
+  [ALI_V5_1_SHA256, 'V5.1'], [ALI_V6_SHA256, 'V6'],
+]);
 const frameDurations = {
   light1: [.04, .04, .035, .055, .09, .09],
   light2: [.04, .04, .035, .055, .09, .09],
@@ -35,11 +41,8 @@ export async function loadAliForReview(file: File): Promise<{ atlas: SpriteAtlas
   if (file.size > 20 * 1024 * 1024 || file.size < 100)
     throw new Error('Ukuran PNG kandidat tidak sesuai (maksimal 20 MB).');
   const checksum = await sha256(await file.arrayBuffer());
-  const edition: AliCandidateEdition | null = checksum === ALI_V3_SHA256 ? 'V3' :
-    checksum === ALI_V4_SHA256 ? 'V4' :
-    checksum === ALI_V5_SHA256 ? 'V5' :
-    checksum === ALI_V5_1_SHA256 ? 'V5.1' : null;
-  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari ZIP V3, Repair V4, FX Polish V5, atau V5.1 FX Edge Review asli.');
+  const edition = candidateEditions.get(checksum);
+  if (!edition) throw new Error('Checksum salah. Pilih ali-combat-frames.png dari paket review V3, V4, V5, V5.1, atau V6 asli.');
   const image = await decodeFile(file);
   validateCandidateImage(image);
   const original = await loadAtlas('/assets/fighters/ali.json');

@@ -1,0 +1,448 @@
+{
+  "version": 6,
+  "fighter": "Ali",
+  "status": "NEW_KEYFRAMES_CANDIDATE_REVIEW_REQUIRED",
+  "isApprovedProductionArt": false,
+  "frameSize": [
+    720,
+    540
+  ],
+  "combatOnlySize": [
+    4320,
+    1620
+  ],
+  "combinedAtlasSize": [
+    4320,
+    2700
+  ],
+  "pivots": {
+    "pivotX": 320,
+    "pivotY": 525
+  },
+  "scale": 0.6420824295,
+  "facing": "right",
+  "sampling": "smooth",
+  "originalRepoAssetSha256": "3d33a2327da2de6be3d1e4d3270f2c922df44aad11892c61135dac84b3408905",
+  "clipTiming": {
+    "light1": [
+      0.04,
+      0.04,
+      0.035,
+      0.055,
+      0.09,
+      0.09
+    ],
+    "light2": [
+      0.04,
+      0.04,
+      0.035,
+      0.055,
+      0.09,
+      0.09
+    ],
+    "light3": [
+      0.05,
+      0.04,
+      0.03,
+      0.045,
+      0.045,
+      0.18
+    ]
+  },
+  "clips": {
+    "light1": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "light1-0",
+          "duration": 0.04
+        },
+        {
+          "frame": "light1-1",
+          "duration": 0.04
+        },
+        {
+          "frame": "light1-2",
+          "duration": 0.035
+        },
+        {
+          "frame": "light1-3",
+          "duration": 0.055
+        },
+        {
+          "frame": "light1-4",
+          "duration": 0.09
+        },
+        {
+          "frame": "light1-5",
+          "duration": 0.09
+        }
+      ]
+    },
+    "light2": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "light2-0",
+          "duration": 0.04
+        },
+        {
+          "frame": "light2-1",
+          "duration": 0.04
+        },
+        {
+          "frame": "light2-2",
+          "duration": 0.035
+        },
+        {
+          "frame": "light2-3",
+          "duration": 0.055
+        },
+        {
+          "frame": "light2-4",
+          "duration": 0.09
+        },
+        {
+          "frame": "light2-5",
+          "duration": 0.09
+        }
+      ]
+    },
+    "light3": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "light3-0",
+          "duration": 0.05
+        },
+        {
+          "frame": "light3-1",
+          "duration": 0.04
+        },
+        {
+          "frame": "light3-2",
+          "duration": 0.03
+        },
+        {
+          "frame": "light3-3",
+          "duration": 0.045
+        },
+        {
+          "frame": "light3-4",
+          "duration": 0.045
+        },
+        {
+          "frame": "light3-5",
+          "duration": 0.18
+        }
+      ]
+    }
+  },
+  "combatFrameRects": {
+    "light1-0": {
+      "x": 0,
+      "y": 1080,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light1-1": {
+      "x": 720,
+      "y": 1080,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light1-2": {
+      "x": 1440,
+      "y": 1080,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light1-3": {
+      "x": 2160,
+      "y": 1080,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light1-4": {
+      "x": 2880,
+      "y": 1080,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light1-5": {
+      "x": 3600,
+      "y": 1080,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light2-0": {
+      "x": 0,
+      "y": 1620,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light2-1": {
+      "x": 720,
+      "y": 1620,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light2-2": {
+      "x": 1440,
+      "y": 1620,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light2-3": {
+      "x": 2160,
+      "y": 1620,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light2-4": {
+      "x": 2880,
+      "y": 1620,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light2-5": {
+      "x": 3600,
+      "y": 1620,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light3-0": {
+      "x": 0,
+      "y": 2160,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light3-1": {
+      "x": 720,
+      "y": 2160,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light3-2": {
+      "x": 1440,
+      "y": 2160,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light3-3": {
+      "x": 2160,
+      "y": 2160,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light3-4": {
+      "x": 2880,
+      "y": 2160,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    },
+    "light3-5": {
+      "x": 3600,
+      "y": 2160,
+      "w": 720,
+      "h": 540,
+      "pivotX": 320,
+      "pivotY": 525
+    }
+  },
+  "frameQA": [
+    {
+      "frame": "light1-00.png",
+      "sha256": "74c0024831182e57d34eb5df4bf596720c3f12b6d78544a59640356d0bbfcc8b"
+    },
+    {
+      "frame": "light1-01.png",
+      "sha256": "8c820e629e7e2b30519602f59aea0fe4dae0f23847ae6e43fb05e5e4c6a309bd"
+    },
+    {
+      "frame": "light1-02.png",
+      "sha256": "de1d5a2362cacfc76f4641928f3fd36ff8de58f950a8589608c8d839aabba4f3"
+    },
+    {
+      "frame": "light1-03.png",
+      "sha256": "c46ff781a620dd95ec244a5d2fbe131c9123c7c33ff7e5cc2756b89edfdcc299"
+    },
+    {
+      "frame": "light1-04.png",
+      "sha256": "9123cc84c48e72503248204972a799be4cc94789adc4756b5f67f16134bccd2a"
+    },
+    {
+      "frame": "light1-05.png",
+      "sha256": "2c2070d54bf5aca2466874bc718301665d3a246861d3abc105965cfc71953b2a"
+    },
+    {
+      "frame": "light2-00.png",
+      "sha256": "d078eecdd96f5a2116256b133203a22ab2f86dd313e3f610a16ca17d3fb11004"
+    },
+    {
+      "frame": "light2-01.png",
+      "sha256": "1a6c5a6ac45ef3ed42b7129caaf4ad1eafff929aeaf7f52baaf7a54863bc2881"
+    },
+    {
+      "frame": "light2-02.png",
+      "sha256": "ab87c4bec261544e169368deaf7138ec7a2673a28f55606187df2e4776ea9499"
+    },
+    {
+      "frame": "light2-03.png",
+      "sha256": "43ff2b38858caa0baf8d57f5776f314e171c1df953ff87bb1d422a2e569c2490"
+    },
+    {
+      "frame": "light2-04.png",
+      "sha256": "443d8d93fc969ab630c1aed150c16dc714864650aa9da75fbb08b4a65c020ff6"
+    },
+    {
+      "frame": "light2-05.png",
+      "sha256": "38800c8a2b64305474b994de0ef431c5cf1d9217c3993f8de5cbf258014ad4ad"
+    },
+    {
+      "frame": "light3-00.png",
+      "sha256": "fd861fc14270f46bd90dd528f2e647c860cfbc12f7788352c7088cb7205d7fda"
+    },
+    {
+      "frame": "light3-01.png",
+      "sha256": "d76c8e6449d8f37dad2a5b87b2eb0dc5b32950a726aac655213a5da4068ba664"
+    },
+    {
+      "frame": "light3-02.png",
+      "sha256": "46c83081db5abd87c783c8ff11b691d445c1a364c984ff36acb45ef481dee16a"
+    },
+    {
+      "frame": "light3-03.png",
+      "sha256": "3b889fed8b57ea049aeb03470b296e7658c41f138adbdf0f7c85b9a24c420d66"
+    },
+    {
+      "frame": "light3-04.png",
+      "sha256": "21d619eca2aa7e1bcc2652c64bc734a0fcd00d3814ca616e20ec0d33ca95f3e6"
+    },
+    {
+      "frame": "light3-05.png",
+      "sha256": "a28f3dc7a9106d02577060cbf6c4b1cea5639f0b8450c4056fbb83571153fa79"
+    }
+  ],
+  "combatOnlySha256": "1f71c0f4498acbe5e9d55c93953bb8ad294e0a7f33715092b0135b9b2da008c4",
+  "reviewStatus": "MANUAL_ART_AND_DEVICE_REVIEW_REQUIRED",
+  "alteredFrames": [
+    "light3-03.png",
+    "light3-04.png"
+  ],
+  "sourceV5AtlasSha256": "43b0140642cf023be71f3d8d1bd69ca391d43f39abad35cf287cf8d21b06b521",
+  "artistProvenance": "OpenAI image generation directed by Codex, 2026-10-26; project-owner-supplied Ali identity reference authorized for this requested game artwork. F4 newly generated full body; F5 separately generated with F4 identity/registration reference and bent-elbow follow-through. Uniform export and low-alpha speck cleanup only; no V5 limb pixels pasted. Review-only; no human art approval or third-party license certification asserted.",
+  "reauthoredFrames": [
+    {
+      "frame": "light3-03.png",
+      "sourceFile": "light3-03.png",
+      "bbox": [
+        106,
+        108,
+        629,
+        525
+      ]
+    },
+    {
+      "frame": "light3-04.png",
+      "sourceFile": "light3-04.png",
+      "bbox": [
+        107,
+        103,
+        549,
+        524
+      ]
+    }
+  ],
+  "sourceV5History": {
+    "sourceGeneratedAsset": "Conservative horizontal premultiplied-alpha seam softening at Light3 F3/F4/F5 FX right bounds; derived from V4, no new pose or independent body drawing.",
+    "v3Cleanup": {
+      "methods": "Alpha-only localized removal of clear neighbouring sprite fragments and feathered light-trail edges. RGB originals preserved. No new limbs reconstructed.",
+      "modifiedFiles": {
+        "light1-03.png": {
+          "altered_alpha_pixels": 25332,
+          "rgb_unchanged": true
+        },
+        "light2-03.png": {
+          "altered_alpha_pixels": 25154,
+          "rgb_unchanged": true
+        },
+        "light3-01.png": {
+          "altered_alpha_pixels": 0,
+          "rgb_unchanged": true
+        },
+        "light3-02.png": {
+          "altered_alpha_pixels": 290,
+          "rgb_unchanged": true
+        },
+        "light3-03.png": {
+          "altered_alpha_pixels": 23121,
+          "rgb_unchanged": true
+        },
+        "light3-04.png": {
+          "altered_alpha_pixels": 1111,
+          "rgb_unchanged": true
+        }
+      }
+    },
+    "v4Repair": {
+      "source": "V3 alpha-cleanup candidate",
+      "modifiedFrames": [
+        "light3-03.png",
+        "light3-04.png"
+      ],
+      "technique": "Retouch alpha edge fragments in Light3 F4; fill missing lower-left portion of Light3 F5 from aligned intact light3 F3 combat pose, as TEMPORARY NON-FINAL COMPOSITE.",
+      "knownLimitations": [
+        "Frame F5 is a pose composite, not full original anatomy reconstruction",
+        "Manual character-identity and motion review outstanding",
+        "Not approved for game production"
+      ]
+    },
+    "knownBlockers": [
+      "Light3 F5 contains composite lower leg from V4, not independent authored frame",
+      "Nine V4 alpha-column warnings require manual review, V5 only softens right cyan FX cuts",
+      "Original GitHub Ali idle/walk remains authoritative; do not merge as final art"
+    ],
+    "sourceV4AtlasSha256": "b998f44db137f601617852e9fb7083a17c507839e60d562015fce8df4e660325"
+  },
+  "sourceGeneratedAsset": "New full-body AI-drawn F4 contact and F5 follow-through using approved Ali identity; other 16 frame PNGs are byte-identical V5 source. See ../PROVENANCE.json and retained raw generations. Not human-approved production artwork.",
+  "knownBlockers": [
+    "Owner visual, identity and usage approval of the new AI redraws is pending",
+    "Inherited V5 F3/F6 and other unchanged poses retain known alpha/equipment discontinuities; the complete combat animation is not final",
+    "Physical Android Chrome/iPhone Safari QA and release review pending"
+  ]
+}
