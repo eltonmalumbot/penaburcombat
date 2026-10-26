@@ -21,6 +21,7 @@ function fallbackStrike(fighter: Fighter): { x: number; rotation: number } {
     return t * t * (3 - 2 * t);
   };
   const elapsed = Math.max(0, attack.elapsed);
+  if (elapsed === 0) return { x: 0, rotation: 0 };
   if (elapsed < data.startup) {
     const anticipate = ease(elapsed / data.startup);
     return { x: -7 * anticipate, rotation: .025 * anticipate };
