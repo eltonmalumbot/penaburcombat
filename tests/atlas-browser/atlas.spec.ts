@@ -209,3 +209,41 @@ test('a delayed pair never shows a half-loaded matchup or overwrites a newer pre
   });
   expect(stableBeforeRelease).toBe(true); expect(stableAfterRelease).toBe(true);
 });
+
+test('approved Ali/Elton cutouts animate staged fallback attacks without mutating fighter or replacing their image', async ({ page }) => {
+  await page.goto('/');
+  const cases = await page.evaluate(async () => {
+    const { loadAtlas } = await import('/src/animation/atlas.ts' as string);
+    const { drawFighter } = await import('/src/render/renderer.ts' as string);
+    const { createFighter } = await import('/src/game/characters.ts' as string);
+    const samples = [];
+    for (const id of ['Ali', 'Elton'] as const) {
+      const atlas = await loadAtlas(`/assets/fighters/${id.toLowerCase()}.json`);
+      for (const face of [-1, 1] as const) {
+        const f = createFighter(id, 390, face);
+        f.pose = 'heavy';
+        f.attack = { move: 'heavy', combo: 0, elapsed: .26, connected: false, queued: false };
+        const snapshot = JSON.stringify(f);
+        const ctx = document.createElement('canvas').getContext('2d')!;
+        const originalTranslate = ctx.translate.bind(ctx);
+        const originalDraw = ctx.drawImage.bind(ctx);
+        const translations: number[] = []; const sources: unknown[] = [];
+        ctx.translate = (x, y) => { translations.push(x); originalTranslate(x, y); };
+        ctx.drawImage = ((...args: Parameters<typeof ctx.drawImage>) => {
+          sources.push(args[0]); originalDraw(...args);
+        }) as typeof ctx.drawImage;
+        drawFighter(ctx, f, 1, atlas);
+        samples.push({ face, id, localX: translations[1],
+          imageIsOriginal: sources.length === 1 && sources[0] === atlas.image,
+          unchanged: JSON.stringify(f) === snapshot });
+      }
+    }
+    return samples;
+  });
+  expect(cases).toHaveLength(4);
+  for (const value of cases) {
+    expect(value.localX).toBeGreaterThan(10);
+    expect(value.imageIsOriginal).toBe(true);
+    expect(value.unchanged).toBe(true);
+  }
+});
