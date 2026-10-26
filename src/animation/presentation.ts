@@ -31,6 +31,7 @@ function fallbackStrike(fighter: Fighter): { x: number; rotation: number } {
       rotation: -.048 - Math.sin(Math.PI * contact) * .012 };
   }
   const recover = 1 - ease((elapsed - data.startup - data.active) / data.recovery);
+  if (recover === 0) return { x: 0, rotation: 0 };
   return { x: strength * recover, rotation: -.048 * recover };
 }
 
