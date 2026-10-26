@@ -39,7 +39,7 @@ or stretched. The final nonzero alpha bounds are F4 `(106,108,629,525)` and F5
 The unchanged rebuilder produced the atlas. Because it re-encodes PNGs, packaging
 then pixel-compared and restored the original V5 **byte streams** for the other
 16 frames and updated their `frameQA` checksums. Revalidation confirms exact atlas
-pixels and every file checksum. Only the F4/F5 frame PNG files differ from V5.
+pixels and every file checksum. Only the F4/F5 frame PNG files differ from V5. Historical V5 cleanup/composite notes are retained under `sourceV5History`; current candidate metadata describes the new redraws and pending approval.
 The separately retained original F4/F5 are conspicuously named composite references.
 
 ## Local opt-in review
@@ -71,7 +71,7 @@ npm run test:atlas
 substitutes), steps and plays both facings, verifies real F4/F5 draw calls in VS
 and Practice at each speed, and checks drawing does not mutate fighter state.
 The other atlas tests retain synthetic fixtures and fallback/default-mode checks.
-Execution results and external gates are recorded in the Draft PR.
+Local results: 44 Node, 9 Python, 25 gameplay and 27 atlas cases passed; build/typechecks and real V6 validator passed. Test clock control prevents browser-action wall time from accidentally advancing combat. In-game screenshots capture the completed game Canvas at exact F4/F5 draws. Latest-commit external gates are recorded in the Draft PR.
 
 ## Visual findings and release gates
 

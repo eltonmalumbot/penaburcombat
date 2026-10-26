@@ -1,13 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { resolve } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 
 const atlasPath = resolve('art-review/ali-light3-v6/candidate/ali-combat-frames.png');
 test.setTimeout(120_000); // Real HD decoding, screenshots and slow-motion playback.
+test.beforeEach(async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-26T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-10-26T00:01:00Z'));
+});
 
 test('real V6 atlas steps F3-F6 both ways and plays at 1x, .5x and .25x', async ({ page }, info) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.clock.install();
   await page.goto('/review/ali-combo-v2.html');
   await page.locator('#atlas').setInputFiles(atlasPath);
   await expect(page.locator('#edition')).toContainText('V6 AI redraw');
@@ -62,7 +66,6 @@ for (const practice of [false, true]) for (const rate of [1, .5, .25]) {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.addInitScript(() => { Math.random = () => .99; });
-    await page.clock.install();
     await page.goto('/?aliArtReview=v6');
     await page.getByRole('button', { name: 'START FIGHT' }).click();
     await page.getByRole('button', { name: 'ALI READY', exact: true }).click();
@@ -73,11 +76,20 @@ for (const practice of [false, true]) for (const rate of [1, .5, .25]) {
     await page.locator('#ali-review-speed').selectOption(String(rate));
     await page.evaluate(() => {
       const seen: number[] = [];
-      Object.assign(window, { v6Crops: seen });
+      const captures: Record<string, string> = {};
+      Object.assign(window, { v6Crops: seen, v6Captures: captures });
       const draw = CanvasRenderingContext2D.prototype.drawImage;
       CanvasRenderingContext2D.prototype.drawImage = function (this: CanvasRenderingContext2D, ...args: Parameters<typeof draw>) {
         const source = args[0];
-        if (source instanceof HTMLImageElement && source.naturalWidth === 4320 && args[2] === 1080) seen.push(args[1] as number);
+        if (source instanceof HTMLImageElement && source.naturalWidth === 4320 && args[2] === 1080) {
+          const x = args[1] as number;
+          seen.push(x);
+          if ((x === 2160 || x === 2880) && !captures[x]) {
+            captures[x] = 'pending';
+            // Capture after the complete renderer/HUD call, only once per keyframe.
+            queueMicrotask(() => { captures[x] = this.canvas.toDataURL('image/png'); });
+          }
+        }
         return draw.apply(this, args);
       } as typeof draw;
     });
@@ -89,7 +101,11 @@ for (const practice of [false, true]) for (const rate of [1, .5, .25]) {
     const seen = await page.evaluate(() => (window as unknown as { v6Crops: number[] }).v6Crops);
     expect(seen).toContain(2160); // F4/contact from the real V6 image, not idle fallback.
     expect(seen).toContain(2880); // F5/follow-through.
-    await page.locator('#game').screenshot({ path: info.outputPath(`V6-${practice ? 'practice' : 'vs'}-${rate}x.png`) });
+    const captures = await page.evaluate(() => (window as unknown as { v6Captures: Record<string, string> }).v6Captures);
+    for (const [x, frame] of [[2160, 'F4'], [2880, 'F5']] as const) {
+      expect(captures[x]).toMatch(/^data:image\/png;base64,/);
+      await writeFile(info.outputPath(`V6-${practice ? 'practice' : 'vs'}-${rate}x-${frame}.png`), Buffer.from(captures[x].split(',')[1], 'base64'));
+    }
     await page.getByRole('button', { name: 'Kembalikan sprite Ali asli' }).click();
     await expect(page.locator('#ali-v3-review-status')).toContainText('Sprite Ali asli aktif kembali');
     expect(errors).toEqual([]);

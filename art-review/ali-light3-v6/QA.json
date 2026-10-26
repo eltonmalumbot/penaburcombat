@@ -15,10 +15,20 @@
     "Rendering leaves fighter state unchanged",
     "Explicit local-file SHA gate and reset to approved original"
   ],
-  "targetedRuns": "Studio and five mode/rate cases passed together; last practice .25x interrupted by development HMR reload, then passed unchanged on isolated rerun. Earlier new-test locator/option and TypeScript-this errors were fixed; no gameplay or assertions weakened. Full suites and exact-head CI results are recorded in PR body.",
+  "targetedRuns": "Final complete suites passed: 25 gameplay and 27 atlas/render/input/VFX cases. Initial desktop pause/resume and exact-score checks failed while the fake clock kept advancing between slow browser actions; only the test clocks were controlled with pauseAt, keeping all original assertions. V6 tests use the same deterministic clock. Initial new-test locator/option/type errors and development-HMR interruption were corrected; no gameplay or assertions weakened.",
   "visualFindings": [
     "F4 contact open palm and cyan burst, F5 bent elbow/retracted palm and smaller dissipating effect are distinct newly generated poses.",
     "Both complete shoes/legs visible, new F4/F5 vertical registration differs by about one pixel.",
     "Equipment/face differences across inherited F3/F6 need human evaluation; older V5 frames still contain known cut edges."
-  ]
+  ],
+  "localFinalChecks": {
+    "npm ci": "PASS frozen lockfile",
+    "npm test": "44 passed",
+    "npm run build": "PASS source and test typechecks + Vite bundle",
+    "Python 3.12 Pillow 11.3.0": "9 passed",
+    "npm run test:e2e": "25 passed",
+    "npm run test:atlas": "27 passed",
+    "actual V6 validator": "PASS after byte-preserving packaging and provenance clarification"
+  },
+  "screenshots": "Game PNGs are captured in a microtask after the renderer/HUD finishes the exact F4/F5 draw, once per real keyframe. No screenshot is substituted for rendered artwork."
 }
