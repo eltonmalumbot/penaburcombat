@@ -28,22 +28,6 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_ali_light3_pipeline.py' -v
       - name: Typecheck and bundle
         run: npm run build
-      - name: Diagnose practice-mode Sonar findings (temporary)
-        continue-on-error: true
-        run: |
-          python - <<'PY'
-          import json, urllib.request
-          url='https://sonarcloud.io/api/issues/search?componentKeys=eltonmalumbot_penaburcombat&pullRequest=22&ps=100'
-          try:
-              with urllib.request.urlopen(url, timeout=12) as reply:
-                  data=json.load(reply)
-              for finding in data.get('issues',[]):
-                  print('SONAR-ISSUE',finding.get('rule'),finding.get('severity'),
-                        finding.get('component'),finding.get('line'),finding.get('message'))
-              print('SONAR-COUNT',data.get('total'))
-          except Exception as error:
-              print('SONAR-ERROR',type(error).__name__,str(error))
-          PY
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Browser gameplay tests
