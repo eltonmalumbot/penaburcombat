@@ -88,3 +88,21 @@ Exact duplicate decoded poses now fail across **all** six moves, in both builder
 and verifier. Similar poses, damaged anatomy, identity drift, sliding feet and
 bad motion still require visual review. Synthetic browser fixtures test this
 reviewer's controls and rejection behavior; they are not actual Elton artwork.
+
+## V3 polish preserving V2
+
+Keep the original V2 directory and ZIP unchanged. Use a separate local copy
+at `.local-art/elton-v3-work/frames/` with its own `provenance.json`.
+`python scripts/elton_v3_review.py` accepts no arguments and verifies the pinned
+V2 atlas and ZIP before using the existing builder on that fixed V3 workspace.
+It creates a fresh review-only package with `candidateEdition: V3`,
+`two-facings-v3.png`, `v2-v3-comparison.png` and `revisions-v3.json`.
+Comparison rows per move are V2-right, V3-right, V2-left and V3-left.
+Sole-band centroids help inspect registration; they do not certify anatomy.
+
+Keep full frames, provenance and ZIPs local. Lightweight contact-sheet PNGs
+and `REPORT-V3.md` under `art-review/elton-hd-v3/` support independent review
+without uploading the large ZIP; they remain outside production assets.
+Review all six poses at 1x/.5x/.25x in both directions. Heavy F02 must show
+contact and recovery should retract progressively, preserving combat timing.
+Document Ali F3/F6 edge defects separately; keep Ali artwork unchanged.
