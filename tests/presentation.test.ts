@@ -95,7 +95,6 @@ test('attack-pose gating isolates combat timing and fallback motion for Ali and 
       connected: false, queued: false };
     fighter.pose = 'light1'; // Another combo pose must use its own presentation time.
     fighter.animationTime = .02;
-    const before = structuredClone(fighter);
     const mismatch = spritePresentation(metadata, fighter);
     assert.equal(mismatch.temporary, false);
     assert.equal(mismatch.frame, metadata.frames['idle-0'], id + ' mismatch uses animation clock');
@@ -126,7 +125,7 @@ test('attack-pose gating isolates combat timing and fallback motion for Ali and 
     const otherFallback = spritePresentation(metadata, fighter);
     assert.equal(otherFallback.x, 0);
     assert.equal(otherFallback.rotation, 0);
-    assert.deepEqual(before.attack, fighter.attack && { ...fighter.attack, elapsed: .2 },
-      id + ' presentation does not mutate the stored attack');
+    assert.equal(fighter.attack?.elapsed, .12, id + ' presentation never changes combat time');
+    assert.equal(fighter.x, 400, id + ' presentation never moves the actual fighter');
   }
 });
