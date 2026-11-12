@@ -5,8 +5,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
 
 
-def write_review(root: Path, doc: dict) -> None:
-    """Caller must verify the candidate first. Pin the exact atlas bytes in HTML."""
+def _write_contact_sheet(root: Path, doc: dict) -> None:
+    """Produce a right/left review sheet from already validated frames."""
     sheet = Image.new('RGB', (2160, 12 * 294), '#dae1e8')
     draw = ImageDraw.Draw(sheet)
     for row, (move, clip) in enumerate(doc['clips'].items()):
@@ -28,9 +28,13 @@ def write_review(root: Path, doc: dict) -> None:
                 draw.line((pivot, y + 279, pivot, y + 293), fill='#0084ee')
                 draw.text((x + 4, y + 4), f'{move} {i:02} {"LEFT" if left else "RIGHT"} {entry["duration"]}s', fill='black')
     sheet.save(root / 'two-facings.png')
+
+
+def _review_html(doc: dict) -> str:
+    """Embed the pinned checksum and validated timing contract in a local reviewer."""
     # Only validated hashes, identifiers and numeric timings enter the script.
     config = {'sha': doc['combatOnlySha256'], 'clips': doc['clips']}
-    html = '''<!doctype html><meta charset="utf-8">
+    return '''<!doctype html><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob:; connect-src 'none'">
 <title>Elton candidate local review</title>
 <style>body{font:16px system-ui;background:#18232f;color:white}canvas{background:repeating-conic-gradient(#dbe3eb 0% 25%,#b8c7d6 0% 50%) 0/32px 32px;max-width:100%}label,button,select{margin:8px}</style>
@@ -76,4 +80,9 @@ function tick(now){if(playing&&image){elapsed+=(now-last)/1000*Number(byId('spee
  const frames=config.clips[byId('move').value].frames;
  while(playing&&elapsed>=frames[index].duration){elapsed-=frames[index].duration;if(index===5)stop();else index++}render()}last=now;requestAnimationFrame(tick)}requestAnimationFrame(tick);
 </script>'''.replace('CONFIG', json.dumps(config))
-    (root / 'review.html').write_text(html, encoding='utf-8')
+
+
+def write_review(root: Path, doc: dict) -> None:
+    """Caller verifies candidate before building local-only visual evidence."""
+    _write_contact_sheet(root, doc)
+    (root / 'review.html').write_text(_review_html(doc), encoding='utf-8')
