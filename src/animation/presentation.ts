@@ -38,17 +38,17 @@ function fallbackStrike(fighter: Fighter): { x: number; rotation: number } {
 
 /** Temporary whole-sprite staging, never a claim that a missing pose has authored frames. */
 export function spritePresentation(metadata: AtlasMetadata, fighter: Fighter, idleBounds?: { left: number; right: number }) {
-  // Authored attack frames must follow the combat clock (not animationTime,
-  // which can start/restart at an independent presentation tick).
-  const combatPose = fighter.pose === 'light1' || fighter.pose === 'light2' ||
-    fighter.pose === 'light3' || fighter.pose === 'heavy' ||
-    fighter.pose === 'skill' || fighter.pose === 'ultimate';
-  const time = combatPose && fighter.attack ? fighter.attack.elapsed : fighter.animationTime;
+  // Only the attack whose move/combo matches the displayed pose owns the
+  // animation clock. A stale or interrupted attack must not drive another clip.
+  const attack = fighter.attack;
+  const attackPose = attack?.move === 'light' ? `light${attack.combo}` : attack?.move;
+  const currentAttack = attack && fighter.pose === attackPose ? attack : null;
+  const time = currentAttack ? currentAttack.elapsed : fighter.animationTime;
   const authored = sampleFrame(metadata, fighter.pose, time);
   const frame = authored ?? sampleFrame(metadata, 'idle', 0)!;
   const temporary = !authored;
   const down = temporary && fighter.pose === 'ko';
-  const fallbackMotion = temporary && combatPose && fighter.attack
+  const fallbackMotion = temporary && currentAttack
     ? fallbackStrike(fighter) : { x: 0, rotation: 0 };
   let offsetX = fallbackMotion.x;
   if (down) offsetX = -frame.pivotY * metadata.scale / 2;
