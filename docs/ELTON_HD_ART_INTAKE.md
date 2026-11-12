@@ -41,12 +41,21 @@ These match existing `src/game/moves.ts`. Do not change any gameplay stats, hitb
 
 ```bash
 python -m pip install Pillow==11.3.0
-python scripts/elton_art_pipeline.py \
-  --artist-provenance "Describe who created the art and whether AI tools were involved" \
-  --usage-permission "Document permission for local review; production use still requires approval"
+# Copy the 36 PNG files into .local-art/elton-input/frames/
+# Create .local-art/elton-input/provenance.json as shown below.
+python scripts/elton_art_pipeline.py
 ```
 
-The command automatically verifies the generated candidate, creates a fresh OS temporary directory `elton-hd-review-*`, and prints its location. Source assets must be copied to the fixed Git-ignored inbox before running. The CLI deliberately accepts **no path arguments** to avoid arbitrary filesystem access.
+Create the following local-only file before running (do not commit it):
+
+```json
+{
+  "artistProvenance": "Who authored these frames and which tools were used",
+  "usagePermissionNote": "Document permission for local review; production use still requires approval"
+}
+```
+
+The command automatically verifies the generated candidate, creates a fresh OS temporary directory `elton-hd-review-*`, and prints its location. Source assets must be copied to the fixed Git-ignored inbox before running. The CLI deliberately accepts **no arguments**. All art and provenance inputs come from the fixed gitignored folder to avoid arbitrary filesystem access.
 
 Every PNG receives a SHA-256; the output includes `manifest.json`, `frames/`, and `elton-combat-frames.png`. The validator checks the pinned approved Elton source SHA, exact pixels, dimensions, alpha coverage/margins, required timings, duplicate poses per move and review-only flags. A pass is **technical integrity only**, not art or usage approval.
 
