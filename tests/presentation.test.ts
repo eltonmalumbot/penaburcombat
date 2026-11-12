@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseAtlas, sampleFrame } from '../src/animation/atlas.ts';
-import { spritePresentation } from '../src/animation/presentation.ts';
+import { presentingAttack, spritePresentation } from '../src/animation/presentation.ts';
 import { createFighter } from '../src/game/characters.ts';
 import { moveData } from '../src/game/moves.ts';
 import type { Pose } from '../src/game/types.ts';
@@ -127,5 +127,65 @@ test('attack-pose gating isolates combat timing and fallback motion for Ali and 
     assert.equal(otherFallback.rotation, 0);
     assert.equal(fighter.attack?.elapsed, .12, id + ' presentation never changes combat time');
     assert.equal(fighter.x, 400, id + ' presentation never moves the actual fighter');
+  }
+});
+
+test('Ali and Elton temporary strike motion stays continuous at phase boundaries', () => {
+  const tolerance = 0.01;
+  for (const id of ['Ali', 'Elton'] as const) {
+    const metadata = parseAtlas(JSON.parse(readFileSync(`public/assets/fighters/${id.toLowerCase()}.json`, 'utf8')));
+    for (const face of [-1, 1] as const) {
+      for (const move of ['light', 'heavy', 'skill', 'ultimate'] as const) {
+        for (const combo of (move === 'light' ? [1, 2, 3] : [0])) {
+          const fighter = createFighter(id, 480, face);
+          fighter.pose = move === 'light' ? (`light${combo}` as Pose) : move;
+          fighter.attack = { move, combo, elapsed: 0, connected: false, queued: false };
+          const originalX = fighter.x;
+          const data = moveData(fighter.attack);
+          const sample = (time: number) => {
+            fighter.attack!.elapsed = time;
+            return spritePresentation(metadata, fighter);
+          };
+          const phases = [0, data.startup, data.startup + data.active,
+            data.startup + data.active + data.recovery];
+          for (const boundary of phases) {
+            const before = sample(Math.max(0, boundary - 1e-8));
+            const at = sample(boundary);
+            const after = sample(boundary + 1e-8);
+            const label = `${id} facing ${face} ${move}/${combo} at ${boundary}`;
+            assert.ok(Math.abs(before.x - at.x) < tolerance, label + ' x-before');
+            assert.ok(Math.abs(at.x - after.x) < tolerance, label + ' x-after');
+            assert.ok(Math.abs(before.rotation - at.rotation) < tolerance, label + ' rotation-before');
+            assert.ok(Math.abs(at.rotation - after.rotation) < tolerance, label + ' rotation-after');
+            assert.equal(at.y, 0, label + ' foot anchor');
+            assert.equal(at.temporary, true, label + ' remains unapproved fallback');
+          }
+          assert.equal(fighter.x, originalX, 'no hitbox or combat position movement');
+          assert.equal(sample(0).x, 0, 'start at neutral pose');
+          assert.equal(sample(data.startup + data.active + data.recovery).rotation, 0,
+            'fully recovered rotation');
+        }
+      }
+    }
+  }
+});
+
+test('temporary attack effects use the same match gate as presented strikes', () => {
+  for (const id of ['Ali', 'Elton'] as const) {
+    const fighter = createFighter(id, 400, 1);
+    fighter.attack = { move: 'light', combo: 2, elapsed: .16, connected: false, queued: false };
+    fighter.pose = 'light1';
+    assert.equal(presentingAttack(fighter), null, id + ' mismatched combo');
+    fighter.pose = 'light2';
+    assert.equal(presentingAttack(fighter), fighter.attack, id + ' exact combo');
+    fighter.pose = 'hurt';
+    assert.equal(presentingAttack(fighter), null, id + ' interrupted hit');
+    fighter.attack = { move: 'ultimate', combo: 0, elapsed: .42, connected: false, queued: false };
+    fighter.pose = 'skill';
+    assert.equal(presentingAttack(fighter), null, id + ' unrelated skill');
+    fighter.pose = 'ultimate';
+    assert.equal(presentingAttack(fighter), fighter.attack, id + ' matching ultimate');
+    fighter.attack = null;
+    assert.equal(presentingAttack(fighter), null, id + ' no active attack');
   }
 });

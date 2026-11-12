@@ -3,7 +3,7 @@ import { ARENA } from '../game/geometry.ts';
 import { moveData } from '../game/moves.ts';
 import type { CombatEvent, Fighter, FighterId, Match } from '../game/types.ts';
 import { loadAtlas } from '../animation/atlas.ts';
-import { spritePresentation } from '../animation/presentation.ts';
+import { presentingAttack, spritePresentation } from '../animation/presentation.ts';
 import { addImpactCue, advanceImpactCues, drawImpactCues } from './impact.ts';
 import type { ImpactCue } from './impact.ts';
 import type { SpriteAtlas } from '../animation/atlas.ts';
@@ -106,14 +106,15 @@ function drawTemporaryEffects(ctx: CanvasRenderingContext2D, f: Fighter, color: 
   if (f.pose === 'guard') {
     ctx.beginPath(); ctx.arc(15, -145, 115, -1.25, 1.25); ctx.stroke();
   }
-  if (f.attack) {
-    const data = moveData(f.attack);
-    const active = f.attack.elapsed >= data.startup && f.attack.elapsed < data.startup + data.active;
+  const attack = presentingAttack(f);
+  if (attack) {
+    const data = moveData(attack);
+    const active = attack.elapsed >= data.startup && attack.elapsed < data.startup + data.active;
     ctx.globalAlpha = active ? .9 : .3;
     ctx.lineWidth = active ? 7 : 2;
     ctx.beginPath(); ctx.ellipse(55, -150, Math.max(20, data.reach - 55), 65, 0, -1.1, 1.1); ctx.stroke();
-    if (f.attack.move === 'skill' || f.attack.move === 'ultimate') {
-      ctx.beginPath(); ctx.arc(0, -150, f.attack.move === 'ultimate' ? 165 : 125, 0, Math.PI * 2); ctx.stroke();
+    if (attack.move === 'skill' || attack.move === 'ultimate') {
+      ctx.beginPath(); ctx.arc(0, -150, attack.move === 'ultimate' ? 165 : 125, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.globalAlpha = 1;
   }

@@ -28,21 +28,31 @@ function fallbackStrike(fighter: Fighter): { x: number; rotation: number } {
   }
   if (elapsed < data.startup + data.active) {
     const contact = (elapsed - data.startup) / data.active;
-    return { x: strength + Math.sin(Math.PI * contact) * 3,
-      rotation: -.048 - Math.sin(Math.PI * contact) * .012 };
+    // Preserve the startup end pose at the boundary, then reach contact quickly.
+    // This removes the one-frame pop from -7 to +strength pixels.
+    const extend = ease(contact / .3);
+    const pulse = Math.sin(Math.PI * contact);
+    return { x: -7 + (strength + 7) * extend + pulse * 3,
+      rotation: .025 - .073 * extend - pulse * .012 };
   }
   const recover = 1 - ease((elapsed - data.startup - data.active) / data.recovery);
   if (recover === 0) return { x: 0, rotation: 0 };
   return { x: strength * recover, rotation: -.048 * recover };
 }
 
+/** Return only the active strike that actually owns the visible pose. */
+export function presentingAttack(fighter: Fighter) {
+  const attack = fighter.attack;
+  if (!attack) return null;
+  const pose = attack.move === 'light' ? `light${attack.combo}` : attack.move;
+  return fighter.pose === pose ? attack : null;
+}
+
 /** Temporary whole-sprite staging, never a claim that a missing pose has authored frames. */
 export function spritePresentation(metadata: AtlasMetadata, fighter: Fighter, idleBounds?: { left: number; right: number }) {
   // Only the attack whose move/combo matches the displayed pose owns the
   // animation clock. A stale or interrupted attack must not drive another clip.
-  const attack = fighter.attack;
-  const attackPose = attack?.move === 'light' ? `light${attack.combo}` : attack?.move;
-  const currentAttack = attack && fighter.pose === attackPose ? attack : null;
+  const currentAttack = presentingAttack(fighter);
   const time = currentAttack ? currentAttack.elapsed : fighter.animationTime;
   const authored = sampleFrame(metadata, fighter.pose, time);
   const frame = authored ?? sampleFrame(metadata, 'idle', 0)!;
