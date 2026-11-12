@@ -117,6 +117,26 @@ class EltonArtIntakeTests(unittest.TestCase):
         finally:
             frame.write_bytes(original)
 
+    def test_rejects_cross_move_duplicate(self):
+        frame = self.source / "frames/heavy-00.png"
+        original = frame.read_bytes()
+        try:
+            shutil.copyfile(self.source / "frames/light1-00.png", frame)
+            with self.assertRaisesRegex(ValueError, "Repeated identical pose"):
+                art.build(self.source, self.repo, "Artist", "Local review only")
+        finally:
+            frame.write_bytes(original)
+
+    def test_offline_review_has_pinned_hash_and_both_facings(self):
+        doc = json.loads((self.candidate / "manifest.json").read_text())
+        html = (self.candidate / "review.html").read_text()
+        self.assertIn(doc["combatOnlySha256"], html)
+        self.assertIn("SHA-256 mismatch", html)
+        self.assertIn("connect-src 'none'", html)
+        self.assertNotIn("Original local artwork review fixture", html)
+        with Image.open(self.candidate / "two-facings.png") as sheet:
+            self.assertEqual(sheet.size, (2160, 3528))
+
     def test_rejects_reference_and_missing_rights(self):
         with self.assertRaisesRegex(ValueError, "usage permission"):
             art.build(self.source, self.repo, "Artist", "")
