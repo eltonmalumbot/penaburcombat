@@ -80,3 +80,53 @@ test('independently authored attack clips override all fallback lunge effects', 
   assert.equal(authored.x, 0); assert.equal(authored.rotation, 0);
   assert.equal(authored.y, 0);
 });
+
+test('attack-pose gating isolates combat timing and fallback motion for Ali and Elton', () => {
+  for (const id of ['Ali', 'Elton'] as const) {
+    const metadata = parseAtlas(JSON.parse(readFileSync(`public/assets/fighters/${id.toLowerCase()}.json`, 'utf8')));
+    const frames = [
+      { frame: 'idle-0', duration: .1 },
+      { frame: 'walk-0', duration: .2 },
+    ];
+    metadata.clips.light1 = { loop: false, frames };
+    metadata.clips.light2 = { loop: false, frames };
+    const fighter = createFighter(id, 400, 1);
+    fighter.attack = { move: 'light', combo: 2, elapsed: .2,
+      connected: false, queued: false };
+    fighter.pose = 'light1'; // Another combo pose must use its own presentation time.
+    fighter.animationTime = .02;
+    const before = structuredClone(fighter);
+    const mismatch = spritePresentation(metadata, fighter);
+    assert.equal(mismatch.temporary, false);
+    assert.equal(mismatch.frame, metadata.frames['idle-0'], id + ' mismatch uses animation clock');
+    assert.equal(mismatch.x, 0);
+    assert.equal(mismatch.rotation, 0);
+
+    fighter.pose = 'light2'; // Correct pose follows the authoritative attack clock.
+    const matched = spritePresentation(metadata, fighter);
+    assert.equal(matched.frame, metadata.frames['walk-0'], id + ' matching combo uses attack clock');
+    assert.equal(matched.x, 0);
+    assert.equal(matched.rotation, 0);
+
+    delete metadata.clips.light1;
+    fighter.pose = 'light1';
+    const staleFallback = spritePresentation(metadata, fighter);
+    assert.equal(staleFallback.temporary, true);
+    assert.equal(staleFallback.x, 0, id + ' mismatched combo cannot lunge');
+    assert.equal(staleFallback.rotation, 0);
+
+    delete metadata.clips.light2;
+    fighter.pose = 'light2';
+    fighter.attack.elapsed = .12;
+    const activeFallback = spritePresentation(metadata, fighter);
+    assert.equal(activeFallback.temporary, true);
+    assert.ok(activeFallback.x > 10, id + ' matching missing clip still lunges');
+
+    fighter.pose = 'skill'; // An interrupted unrelated attack cannot animate a skill.
+    const otherFallback = spritePresentation(metadata, fighter);
+    assert.equal(otherFallback.x, 0);
+    assert.equal(otherFallback.rotation, 0);
+    assert.deepEqual(before.attack, fighter.attack && { ...fighter.attack, elapsed: .2 },
+      id + ' presentation does not mutate the stored attack');
+  }
+});
