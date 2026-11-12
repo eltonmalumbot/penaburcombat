@@ -166,64 +166,77 @@ def build(source: Path, repo_root: Path, artist: str, permission: str) -> Path:
     return target
 
 
-def verify(root: Path):
-    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+def read_review_manifest(root: Path):
+    doc = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     if (
-        manifest.get("fighter") != "Elton"
-        or manifest.get("version") != 1
-        or manifest.get("status") != "REVIEW_ONLY_ART_NOT_APPROVED"
-        or manifest.get("isApprovedProductionArt") is not False
-        or manifest.get("approvedOriginalEltonSha256") != APPROVED_ELTON_SHA
-        or not manifest.get("artistProvenance")
-        or not manifest.get("usagePermissionNote")
-        or manifest.get("pivot") != {"x": 320, "y": 525}
-        or manifest.get("nativeFacing") != "right"
-        or manifest.get("frameWidth") != WIDTH
-        or manifest.get("frameHeight") != HEIGHT
+        doc.get("fighter") != "Elton"
+        or doc.get("version") != 1
+        or doc.get("status") != "REVIEW_ONLY_ART_NOT_APPROVED"
+        or doc.get("isApprovedProductionArt") is not False
+        or doc.get("approvedOriginalEltonSha256") != APPROVED_ELTON_SHA
+        or not doc.get("artistProvenance")
+        or not doc.get("usagePermissionNote")
+        or doc.get("pivot") != {"x": 320, "y": 525}
+        or doc.get("nativeFacing") != "right"
+        or doc.get("frameWidth") != WIDTH
+        or doc.get("frameHeight") != HEIGHT
     ):
         raise ValueError("Elton manifest is not a valid review-only candidate")
-    check_timing(manifest.get("clips"))
-    entries = manifest.get("frameQA")
+    return doc
+
+
+def checked_frame_hashes(doc):
+    entries = doc.get("frameQA")
     if not isinstance(entries, list):
         raise ValueError("Missing frame checksum manifest")
     names = frame_names()
     found = [entry.get("frame") for entry in entries if isinstance(entry, dict)]
     if len(entries) != len(names) or len(set(found)) != len(names) or set(found) != set(names):
         raise ValueError("Expected 36 unique frame checksums")
-    expected = {entry["frame"]: entry["sha256"] for entry in entries}
+    return {entry["frame"]: entry["sha256"] for entry in entries}
+
+
+def check_atlas_frames(root: Path, atlas, expected):
+    for row, move in enumerate(MOVES):
+        for col in range(FRAMES_PER_MOVE):
+            name = f"{move}-{col:02}.png"
+            path = root / "frames" / name
+            if sha256(path) != expected[name]:
+                raise ValueError("Elton frame checksum mismatch: " + name)
+            frame = check_frame(path)
+            box = (col * WIDTH, row * HEIGHT, (col + 1) * WIDTH, (row + 1) * HEIGHT)
+            if atlas.crop(box).tobytes() != frame.tobytes():
+                raise ValueError("Elton atlas pixels differ: " + name)
+
+
+def verify(root: Path):
+    doc = read_review_manifest(root)
+    check_timing(doc.get("clips"))
+    expected = checked_frame_hashes(doc)
     sheet = root / "elton-combat-frames.png"
-    if sha256(sheet) != manifest.get("combatOnlySha256"):
+    if sha256(sheet) != doc.get("combatOnlySha256"):
         raise ValueError("Elton atlas checksum mismatch")
     with Image.open(sheet) as atlas:
         if atlas.format != "PNG" or atlas.mode != "RGBA" or atlas.size != (
             FRAMES_PER_MOVE * WIDTH, len(MOVES) * HEIGHT
         ):
             raise ValueError("Expected 4320x3240 RGBA Elton atlas")
-        for row, move in enumerate(MOVES):
-            for i in range(FRAMES_PER_MOVE):
-                name = f"{move}-{i:02}.png"
-                path = root / "frames" / name
-                if sha256(path) != expected[name]:
-                    raise ValueError("Elton frame checksum mismatch: " + name)
-                frame = check_frame(path)
-                box = (i * WIDTH, row * HEIGHT, (i + 1) * WIDTH, (row + 1) * HEIGHT)
-                if atlas.crop(box).tobytes() != frame.tobytes():
-                    raise ValueError("Elton atlas pixels differ: " + name)
+        check_atlas_frames(root, atlas, expected)
     print("PASS: 36 Elton frames, timings and pixels; ART NOT APPROVED")
 
 
 if __name__ == "__main__":
+    # The CLI intentionally accepts NO path arguments. All read locations are
+    # anchored to this checked-out repository and its gitignored local art inbox.
+    # Review candidates are emitted into a newly created OS temp directory.
     cli = argparse.ArgumentParser(description=__doc__)
-    modes = cli.add_subparsers(dest="command", required=True)
-    create = modes.add_parser("build", help="Create a fresh review-only atlas from artist PNGs")
-    create.add_argument("--source", required=True, type=Path)
-    create.add_argument("--repo-root", type=Path, default=Path("."))
-    create.add_argument("--artist-provenance", required=True)
-    create.add_argument("--usage-permission", required=True)
-    scan = modes.add_parser("verify", help="Read-only validation of a review candidate")
-    scan.add_argument("--root", required=True, type=Path)
+    cli.add_argument("--artist-provenance", required=True)
+    cli.add_argument("--usage-permission", required=True)
     args = cli.parse_args()
-    if args.command == "build":
-        build(args.source, args.repo_root, args.artist_provenance, args.usage_permission)
-    else:
-        verify(args.root)
+    repo_root = Path(__file__).resolve().parent.parent
+    build(
+        repo_root / ".local-art/elton-input",
+        repo_root,
+        args.artist_provenance,
+        args.usage_permission,
+    )
