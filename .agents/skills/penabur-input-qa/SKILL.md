@@ -20,3 +20,5 @@ Adapt input-systems discipline principles to existing src/ui/input.ts and the cu
 6. Run unit input/combination tests plus Chromium emulation in portrait and landscape at representative widths; physical Android/iPhone remains a separate approval gate.
 
 Report exact actions, test cases, input leakage bugs fixed and anything requiring real-device verification.
+
+No production deployment, merge to main, or unapproved control change without explicit owner authorization.
