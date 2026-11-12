@@ -5,7 +5,6 @@ Expected source: --source/frames/{light1,light2,light3,heavy,skill,ultimate}-00.
 All source PNGs are 720x540, transparent RGBA, with native facing right.
 Outputs are placed in a fresh OS temporary folder, outside public/ and dist/.
 """
-import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -226,17 +225,18 @@ def verify(root: Path):
 
 
 if __name__ == "__main__":
-    # The CLI intentionally accepts NO path arguments. All read locations are
-    # anchored to this checked-out repository and its gitignored local art inbox.
-    # Review candidates are emitted into a newly created OS temp directory.
-    cli = argparse.ArgumentParser(description=__doc__)
-    cli.add_argument("--artist-provenance", required=True)
-    cli.add_argument("--usage-permission", required=True)
-    args = cli.parse_args()
+    # No CLI arguments whatsoever: no untrusted path or metadata crosses the
+    # command line. Codex/artist files belong in the fixed gitignored inbox.
     repo_root = Path(__file__).resolve().parent.parent
-    build(
-        repo_root / ".local-art/elton-input",
-        repo_root,
-        args.artist_provenance,
-        args.usage_permission,
-    )
+    inbox = repo_root / ".local-art/elton-input"
+    metadata = inbox / "provenance.json"
+    if metadata.is_symlink():
+        raise ValueError("Provenance must not be a symlink")
+    notes = json.loads(metadata.read_text(encoding="utf-8"))
+    if not isinstance(notes, dict):
+        raise ValueError("Provenance must be a JSON object")
+    artist = notes.get("artistProvenance")
+    rights = notes.get("usagePermissionNote")
+    if not isinstance(artist, str) or not isinstance(rights, str):
+        raise ValueError("Artist provenance and usage permission notes must be strings")
+    build(inbox, repo_root, artist, rights)
