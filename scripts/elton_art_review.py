@@ -5,6 +5,27 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
 
 
+def _checkerboard(draw: ImageDraw.ImageDraw, x: int, y: int) -> None:
+    """Draw one 360×270 transparent-background reference panel."""
+    for yy in range(0, 270, 16):
+        for xx in range(0, 360, 16):
+            if (xx // 16 + yy // 16) % 2:
+                draw.rectangle(
+                    (x + xx, y + yy, min(x + xx + 15, x + 359),
+                     min(y + yy + 15, y + 269)),
+                    fill='#bac6d2',
+                )
+
+
+def _paste_pose(sheet: Image.Image, path: Path, x: int, y: int, left: bool) -> None:
+    """Render one authored pose without modifying its source PNG."""
+    with Image.open(path) as source:
+        frame = source.resize((360, 270), Image.Resampling.LANCZOS)
+        if left:
+            frame = ImageOps.mirror(frame)
+        sheet.paste(frame, (x, y), frame)
+
+
 def _write_contact_sheet(root: Path, doc: dict) -> None:
     """Produce a right/left review sheet from already validated frames."""
     sheet = Image.new('RGB', (2160, 12 * 294), '#dae1e8')
@@ -14,15 +35,9 @@ def _write_contact_sheet(root: Path, doc: dict) -> None:
             y = (row * 2 + int(left)) * 294
             for i, entry in enumerate(clip['frames']):
                 x = i * 360
-                for yy in range(0, 270, 16):
-                    for xx in range(0, 360, 16):
-                        if (xx // 16 + yy // 16) % 2:
-                            draw.rectangle((x + xx, y + 24 + yy, min(x + xx + 15, x + 359), min(y + 24 + yy + 15, y + 293)), fill='#bac6d2')
-                with Image.open(root / 'frames' / f'{move}-{i:02}.png') as frame:
-                    frame = frame.resize((360, 270), Image.Resampling.LANCZOS)
-                    if left:
-                        frame = ImageOps.mirror(frame)
-                    sheet.paste(frame, (x, y + 24), frame)
+                _checkerboard(draw, x, y + 24)
+                _paste_pose(sheet, root / 'frames' / f'{move}-{i:02}.png',
+                            x, y + 24, left)
                 pivot = x + (200 if left else 160)
                 draw.line((x, y + 286, x + 359, y + 286), fill='#ed6215')
                 draw.line((pivot, y + 279, pivot, y + 293), fill='#0084ee')
