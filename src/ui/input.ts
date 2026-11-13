@@ -7,7 +7,10 @@ const attacks: Record<string, Move> = { j: 'light', k: 'heavy', l: 'skill', u: '
 export class InputController {
   private enabled = false;
   private readonly held = new Map<string, string>();
-  private readonly pressed = new Set<string>();
+  // Keep the two sources separate: a cancelled touch may only discard its own
+  // queued edge, never another finger's or a keyboard key's input.
+  private readonly keyboardPressed = new Set<string>();
+  private readonly pointerPressed = new Map<number, Set<string>>();
   private readonly pointers = new Map<number, string>();
   private readonly pointerButtons = new Map<number, HTMLButtonElement>();
   private readonly pointerOrigins = new Map<number, HTMLButtonElement>();
@@ -23,7 +26,7 @@ export class InputController {
       if (key === 'p') { this.clear(); onPause(); return; }
       if (key === 'escape') { this.clear(); onExit(); return; }
       if (controls.has(key)) {
-        if (![...this.held.values()].includes(key)) this.pressed.add(key);
+        if (![...this.held.values()].includes(key)) this.keyboardPressed.add(key);
         this.held.set(event.code || raw, key);
       }
     });
@@ -33,10 +36,11 @@ export class InputController {
     const blur = () => { this.clear(); if (this.enabled) onBlur(); };
     window.addEventListener('blur', blur);
     document.addEventListener('visibilitychange', () => { if (document.hidden) blur(); });
+    window.addEventListener('pagehide', blur);
   }
   setEnabled(enabled: boolean): void { this.enabled = enabled; this.clear(); }
   clear(): void {
-    this.held.clear(); this.pressed.clear(); this.pointers.clear();
+    this.held.clear(); this.keyboardPressed.clear(); this.pointerPressed.clear(); this.pointers.clear();
     this.lastDirectionTap = null;
     const active = [...this.pointerOrigins];
     for (const button of new Set(this.pointerButtons.values())) button.classList.remove('is-held');
@@ -59,7 +63,7 @@ export class InputController {
     if (key !== oldKey) this.lastDirectionTap = null;
     if (previous && ![...this.pointerButtons.values()].includes(previous)) previous.classList.remove('is-held');
     // Sliding onto jump is a fresh jump press, but never fires a second attack.
-    if (key !== oldKey) this.pressed.add(key);
+    if (key !== oldKey) this.pointerPressed.set(pointerId, new Set([key]));
   }
 
   bind(button: HTMLButtonElement, key: string): void {
@@ -84,8 +88,7 @@ export class InputController {
         key, at: now, x: event.clientX, y: event.clientY, dash: Boolean(dash), multitouch: alreadyTouching,
       });
       button.classList.add('is-held');
-      this.pressed.add(key);
-      if (dash) this.pressed.add('shift');
+      this.pointerPressed.set(event.pointerId, new Set(dash ? [key, 'shift'] : [key]));
       // The previous tap is consumed, including on a valid second tap.
       if (direction || key === 's' || key === 'w') this.lastDirectionTap = null;
     });
@@ -111,6 +114,9 @@ export class InputController {
       this.pointerButtons.delete(event.pointerId);
       this.pointers.delete(event.pointerId);
       this.touchStarts.delete(event.pointerId);
+      // A cancelled or capture-lost finger is not a completed button press.
+      // Keep genuine quick pointerup taps queued until the next game sample.
+      if (event.type !== 'pointerup') this.pointerPressed.delete(event.pointerId);
       // Only quick, stationary, fully released first taps may set up a Dash.
       // Cancel and lost capture must never arm a gesture.
       if (event.type === 'pointerup' && start && (start.key === 'a' || start.key === 'd')
@@ -127,9 +133,11 @@ export class InputController {
   sample(): CombatInput {
     if (!this.enabled) return emptyInput();
     const down = (key: string) => [...this.held.values()].includes(key) || [...this.pointers.values()].includes(key);
+    const edge = (key: string) => this.keyboardPressed.has(key) ||
+      [...this.pointerPressed.values()].some(keys => keys.has(key));
     const result: CombatInput = { move: (Number(down('d')) - Number(down('a'))) as -1 | 0 | 1,
-      guard: down('s'), jump: this.pressed.has('w'), dash: this.pressed.has('shift'), attack: null };
-    for (const key of ['u', 'l', 'k', 'j']) if (this.pressed.has(key)) { result.attack = attacks[key]; break; }
-    this.pressed.clear(); return result;
+      guard: down('s'), jump: edge('w'), dash: edge('shift'), attack: null };
+    for (const key of ['u', 'l', 'k', 'j']) if (edge(key)) { result.attack = attacks[key]; break; }
+    this.keyboardPressed.clear(); this.pointerPressed.clear(); return result;
   }
 }
