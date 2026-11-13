@@ -29,6 +29,21 @@ class EltonV3Tests(unittest.TestCase):
                     self.assertEqual(sheet.getpixel((20, y)), color)
                     self.assertEqual(sheet.getpixel((219, y + 408)), color)
 
+    def test_review_manifest_rejects_unsafe_and_duplicate_frame_names(self):
+        good = {'frameQA': [{'frame': name, 'sha256': 'a' * 64}
+                            for name in v3.frame_names()]}
+        self.assertEqual(len(v3._validated_frame_hashes(good)), 36)
+        for unsafe in ('../../private.png', '/tmp/other.png',
+                       'light1-00.png/../../other', 'light2-03.png'):
+            poisoned = {'frameQA': [dict(entry) for entry in good['frameQA']]}
+            poisoned['frameQA'][0]['frame'] = unsafe
+            with self.assertRaisesRegex(ValueError, 'unsafe frame name'):
+                v3._validated_frame_hashes(poisoned)
+        poisoned = {'frameQA': [dict(entry) for entry in good['frameQA']]}
+        poisoned['frameQA'][0]['sha256'] = 'not-a-digest'
+        with self.assertRaisesRegex(ValueError, 'Invalid frame SHA-256'):
+            v3._validated_frame_hashes(poisoned)
+
     def test_wrong_baseline_pin_stops_before_build(self):
         with patch.object(v3, 'sha256', return_value='0' * 64):
             with patch.object(v3, 'build') as build:
