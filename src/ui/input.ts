@@ -4,6 +4,12 @@ import type { CombatInput, Move } from '../game/types.ts';
 const aliases: Record<string, string> = { arrowleft: 'a', arrowright: 'd', arrowup: 'w', arrowdown: 's', ' ': 'w' };
 const controls = new Set(['a', 'd', 'w', 's', 'j', 'k', 'l', 'u', 'shift']);
 const attacks: Record<string, Move> = { j: 'light', k: 'heavy', l: 'skill', u: 'ultimate' };
+
+/** Keep game hotkeys out of text fields and native review controls. */
+function isEditableTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable ||
+    Boolean(target.closest('input, textarea, select, [role="textbox"]')));
+}
 export class InputController {
   private enabled = false;
   private readonly held = new Map<string, string>();
@@ -19,7 +25,8 @@ export class InputController {
 
   constructor(onPause: () => void, onExit: () => void, onBlur: () => void) {
     window.addEventListener('keydown', event => {
-      if (!this.enabled || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (!this.enabled || event.ctrlKey || event.metaKey || event.altKey ||
+          isEditableTarget(event.target)) return;
       const raw = event.key.toLowerCase(), key = aliases[raw] ?? raw;
       if (controls.has(key) || key === 'p' || key === 'escape') event.preventDefault();
       if (event.repeat) return;
@@ -35,6 +42,11 @@ export class InputController {
     });
     const blur = () => { this.clear(); if (this.enabled) onBlur(); };
     window.addEventListener('blur', blur);
+    // Entering a form field mid-hold must not leave movement/attack queued
+    // while the player edits the local art-review form.
+    document.addEventListener('focusin', event => {
+      if (this.enabled && isEditableTarget(event.target)) this.clear();
+    });
     document.addEventListener('visibilitychange', () => { if (document.hidden) blur(); });
     window.addEventListener('pagehide', blur);
   }
