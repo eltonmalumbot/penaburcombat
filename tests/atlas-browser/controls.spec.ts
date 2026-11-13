@@ -192,3 +192,73 @@ test('retargeting a D-pad finger replaces stale input and pagehide clears everyt
   expect(values.clearedHeld).toBe(true);
   expect(values.backgrounded).toBe(1);
 });
+
+test('editing an art-review field never triggers movement, attacks or pause/exit shortcuts', async ({ page }) => {
+  const values = await page.evaluate(async () => {
+    const { InputController } = await import('/src/ui/input.ts' as string);
+    let pauses = 0, exits = 0;
+    const input = new InputController(() => { pauses++; }, () => { exits++; }, () => {});
+    const field = document.createElement('input');
+    field.type = 'file'; field.id = 'local-art-review';
+    const select = document.createElement('select');
+    select.innerHTML = '<option value="1">1×</option><option value=".5">0.5×</option>';
+    const text = document.createElement('textarea');
+    const editable = document.createElement('div');
+    editable.contentEditable = 'true';
+    document.body.append(field, select, text, editable);
+    input.setEnabled(true);
+    const key = (target: HTMLElement, name: string, code: string) => {
+      const event = new KeyboardEvent('keydown', {
+        key: name, code, bubbles: true, cancelable: true,
+      });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    field.focus();
+    const filePrevented = key(field, 'Escape', 'Escape');
+    key(field, 'p', 'KeyP');
+    key(field, 'j', 'KeyJ');
+    select.focus();
+    const selectPrevented = key(select, 'ArrowLeft', 'ArrowLeft');
+    key(select, ' ', 'Space');
+    text.focus();
+    key(text, 'w', 'KeyW');
+    editable.focus();
+    key(editable, 'u', 'KeyU');
+    const whileEditing = input.sample();
+    return { pauses, exits, filePrevented, selectPrevented, whileEditing };
+  });
+  expect(values).toEqual({
+    pauses: 0, exits: 0, filePrevented: false, selectPrevented: false,
+    whileEditing: { move: 0, guard: false, jump: false, dash: false, attack: null },
+  });
+});
+
+test('focusing an editor clears pending combat edges but restores normal shortcuts afterward', async ({ page }) => {
+  const values = await page.evaluate(async () => {
+    const { InputController } = await import('/src/ui/input.ts' as string);
+    let pauses = 0;
+    const input = new InputController(() => { pauses++; }, () => {}, () => {});
+    input.setEnabled(true);
+    const emit = (name: string, code: string) =>
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: name, code, bubbles: true }));
+    emit('d', 'KeyD');
+    emit('j', 'KeyJ'); // Both pending and held until an editor takes focus.
+    const editor = document.createElement('input');
+    editor.type = 'text'; document.body.append(editor); editor.focus();
+    const clearedOnFocus = input.sample();
+    editor.blur();
+    emit('j', 'KeyJ');
+    const afterEditing = input.sample().attack;
+    emit('p', 'KeyP');
+    const afterPause = input.sample();
+    input.clear();
+    return { clearedOnFocus, afterEditing, afterPause, pauses };
+  });
+  expect(values).toEqual({
+    clearedOnFocus: { move: 0, guard: false, jump: false, dash: false, attack: null },
+    afterEditing: 'light',
+    afterPause: { move: 0, guard: false, jump: false, dash: false, attack: null },
+    pauses: 1,
+  });
+});
