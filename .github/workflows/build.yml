@@ -30,6 +30,8 @@ jobs:
         run: python scripts/ali_light3_validate.py --root art-review/ali-light3-v6/candidate
       - name: Elton synthetic HD attack art pipeline security and timing tests
         run: python -m unittest discover -s tests -p 'test_elton_art_pipeline.py' -v
+      - name: Elton V3 evidence, comparison and manifest security regressions
+        run: python -m unittest discover -s tests -p 'test_elton_v3_pipeline.py' -v
       - name: Typecheck and bundle
         run: npm run build
       - name: Install Chromium

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build or verify an unapproved Elton HD combat atlas; never install game assets.
 
-Expected source: --source/frames/{light1,light2,light3,heavy,skill,ultimate}-00..05.png.
+Expected source: .local-art/elton-input/frames/{light1,light2,light3,heavy,skill,ultimate}-00..05.png.
 All source PNGs are 720x540, transparent RGBA, with native facing right.
 Outputs are placed in a fresh OS temporary folder, outside public/ and dist/.
 """
@@ -116,8 +116,8 @@ def build(source: Path, repo_root: Path, artist: str, permission: str) -> Path:
     check_timing(clips)
     # Validate every frame before creating any output.
     loaded = {}
+    pixel_hashes = set()
     for move in MOVES:
-        pixel_hashes = set()
         for i in range(FRAMES_PER_MOVE):
             name = f"{move}-{i:02}.png"
             frame = check_frame(source / "frames" / name)
@@ -160,6 +160,8 @@ def build(source: Path, repo_root: Path, artist: str, permission: str) -> Path:
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     verify(target)
+    from elton_art_review import write_review
+    write_review(target, manifest)
     print("REVIEW-ONLY Elton candidate:", target)
     print("DO NOT copy into public/ or merge into main without owner signoff")
     return target
@@ -196,6 +198,7 @@ def checked_frame_hashes(doc):
 
 
 def check_atlas_frames(root: Path, atlas, expected):
+    pixels_seen = set()
     for row, move in enumerate(MOVES):
         for col in range(FRAMES_PER_MOVE):
             name = f"{move}-{col:02}.png"
@@ -203,6 +206,10 @@ def check_atlas_frames(root: Path, atlas, expected):
             if sha256(path) != expected[name]:
                 raise ValueError("Elton frame checksum mismatch: " + name)
             frame = check_frame(path)
+            digest = hashlib.sha256(frame.tobytes()).hexdigest()
+            if digest in pixels_seen:
+                raise ValueError("Repeated identical pose in candidate: " + name)
+            pixels_seen.add(digest)
             box = (col * WIDTH, row * HEIGHT, (col + 1) * WIDTH, (row + 1) * HEIGHT)
             if atlas.crop(box).tobytes() != frame.tobytes():
                 raise ValueError("Elton atlas pixels differ: " + name)

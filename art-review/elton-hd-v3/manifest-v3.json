@@ -1,0 +1,342 @@
+{
+  "fighter": "Elton",
+  "version": 1,
+  "status": "REVIEW_ONLY_ART_NOT_APPROVED",
+  "isApprovedProductionArt": false,
+  "approvedOriginalEltonSha256": "685823f1b1021e9d661a5157725db2653ceb4cc1478c176d0ba5f1c6dc52b7f0",
+  "artistProvenance": "V3 OpenAI image generation edits, directed by Codex at owner request. V2 pose + official Elton + shared V3 wardrobe + per-move stance references. Gradual recovery, black outer sleeves/blue cuffs, central portrait ID, stable gear. Alpha below8 cleanup and uniform whole-frame scale/translation only; no pasted limbs or warps. Raw hashes and transformations in export-records-v3.json. Model revision/seed not exposed. Original V2 untouched. A second pass independently regenerated all twelve F04/F05 recoveries using V3 contact03 and the immediately preceding recovery as pose references to reduce arm swapping and abrupt guard resets. All pass-one frames/raw sources are retained.",
+  "usagePermissionNote": "Local review-only AI-generated candidates requested by owner. Artistic and production usage approval PENDING.",
+  "frameWidth": 720,
+  "frameHeight": 540,
+  "pivot": {
+    "x": 320,
+    "y": 525
+  },
+  "nativeFacing": "right",
+  "combatOnlySha256": "279236de558e6b84bb4d72d4fd51fb2422c60ecdb0bc39a0ac4c1f041ee41988",
+  "clips": {
+    "light1": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "light1-0",
+          "duration": 0.04
+        },
+        {
+          "frame": "light1-1",
+          "duration": 0.04
+        },
+        {
+          "frame": "light1-2",
+          "duration": 0.045
+        },
+        {
+          "frame": "light1-3",
+          "duration": 0.045
+        },
+        {
+          "frame": "light1-4",
+          "duration": 0.09
+        },
+        {
+          "frame": "light1-5",
+          "duration": 0.09
+        }
+      ]
+    },
+    "light2": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "light2-0",
+          "duration": 0.04
+        },
+        {
+          "frame": "light2-1",
+          "duration": 0.04
+        },
+        {
+          "frame": "light2-2",
+          "duration": 0.045
+        },
+        {
+          "frame": "light2-3",
+          "duration": 0.045
+        },
+        {
+          "frame": "light2-4",
+          "duration": 0.09
+        },
+        {
+          "frame": "light2-5",
+          "duration": 0.09
+        }
+      ]
+    },
+    "light3": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "light3-0",
+          "duration": 0.06
+        },
+        {
+          "frame": "light3-1",
+          "duration": 0.06
+        },
+        {
+          "frame": "light3-2",
+          "duration": 0.045
+        },
+        {
+          "frame": "light3-3",
+          "duration": 0.045
+        },
+        {
+          "frame": "light3-4",
+          "duration": 0.09
+        },
+        {
+          "frame": "light3-5",
+          "duration": 0.09
+        }
+      ]
+    },
+    "heavy": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "heavy-0",
+          "duration": 0.1
+        },
+        {
+          "frame": "heavy-1",
+          "duration": 0.1
+        },
+        {
+          "frame": "heavy-2",
+          "duration": 0.06
+        },
+        {
+          "frame": "heavy-3",
+          "duration": 0.06
+        },
+        {
+          "frame": "heavy-4",
+          "duration": 0.15
+        },
+        {
+          "frame": "heavy-5",
+          "duration": 0.15
+        }
+      ]
+    },
+    "skill": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "skill-0",
+          "duration": 0.115
+        },
+        {
+          "frame": "skill-1",
+          "duration": 0.115
+        },
+        {
+          "frame": "skill-2",
+          "duration": 0.07
+        },
+        {
+          "frame": "skill-3",
+          "duration": 0.07
+        },
+        {
+          "frame": "skill-4",
+          "duration": 0.145
+        },
+        {
+          "frame": "skill-5",
+          "duration": 0.145
+        }
+      ]
+    },
+    "ultimate": {
+      "loop": false,
+      "frames": [
+        {
+          "frame": "ultimate-0",
+          "duration": 0.2
+        },
+        {
+          "frame": "ultimate-1",
+          "duration": 0.2
+        },
+        {
+          "frame": "ultimate-2",
+          "duration": 0.125
+        },
+        {
+          "frame": "ultimate-3",
+          "duration": 0.125
+        },
+        {
+          "frame": "ultimate-4",
+          "duration": 0.25
+        },
+        {
+          "frame": "ultimate-5",
+          "duration": 0.25
+        }
+      ]
+    }
+  },
+  "frameQA": [
+    {
+      "frame": "light1-00.png",
+      "sha256": "ab958b854216d44170a13255a0d119e668ef73f962141d33722d3351958cbe11"
+    },
+    {
+      "frame": "light1-01.png",
+      "sha256": "9db135614468ae05192bf1a5a57df8a372e7f6bb2c66cca307bd0ef7b022de16"
+    },
+    {
+      "frame": "light1-02.png",
+      "sha256": "89a43089893307c51f017187c4250f21ccf566853040a09bdaff203b7ca864a7"
+    },
+    {
+      "frame": "light1-03.png",
+      "sha256": "970946ff4cc16aa6b521f027875e0f3df0600b07141daa77c0267234ef553f92"
+    },
+    {
+      "frame": "light1-04.png",
+      "sha256": "005bee02e94d7754eefb6606e350729449c7ec68b3eeeab065484c6c6252659d"
+    },
+    {
+      "frame": "light1-05.png",
+      "sha256": "c1b42cf9fc6f7a464a429aa7ed7b3e11c8540990345e1b4689c42005938c5f4d"
+    },
+    {
+      "frame": "light2-00.png",
+      "sha256": "3fc9310f80faa8e00a3d0f96f7b74c6a8482a119219116375fdba7d6ffe3417b"
+    },
+    {
+      "frame": "light2-01.png",
+      "sha256": "a147dc5a2ad5ccba1892f0026b185589d024163b7872a3265988b80785a2271a"
+    },
+    {
+      "frame": "light2-02.png",
+      "sha256": "c417692b7f4c48b980d9870e0a9fcad618cd0692c34c9286da3dbbebd2c4801a"
+    },
+    {
+      "frame": "light2-03.png",
+      "sha256": "d91f5f1a5d61595735e0305cce34522a9d9c22936b6cb0bf908f75bba75c7712"
+    },
+    {
+      "frame": "light2-04.png",
+      "sha256": "6451f0482749169bcb0910e1295edc5f9e3c76e90b2ed0820e793c0475b29139"
+    },
+    {
+      "frame": "light2-05.png",
+      "sha256": "8b1ecefe7da883025b27888f363a4691c468383a067fa2841f4d263d52453d58"
+    },
+    {
+      "frame": "light3-00.png",
+      "sha256": "1c4f4bf865ccdcf8f3ba2811b1990bf822d8f07e49d36209fc947d32e603cc2d"
+    },
+    {
+      "frame": "light3-01.png",
+      "sha256": "f9da527846ca11cdcb5de3372bf757349c1d777159642c9da696bcbabbe7ebe8"
+    },
+    {
+      "frame": "light3-02.png",
+      "sha256": "b0d378eda87225c0b1209dab652d34094d8f5e6b159003a0e53cc032faffaac0"
+    },
+    {
+      "frame": "light3-03.png",
+      "sha256": "e07adb29135c8c076d252efa7449ebe24af55673854e74acdcf51b4817471b96"
+    },
+    {
+      "frame": "light3-04.png",
+      "sha256": "335ade1fe616310247609496185d90d5d65a8e06f0729a91b389eeed38d752af"
+    },
+    {
+      "frame": "light3-05.png",
+      "sha256": "861b58a2258bc3e8e1459925512d876f6b0a3dcdb9609dd480ebe37e39ea41ec"
+    },
+    {
+      "frame": "heavy-00.png",
+      "sha256": "abbdba3ad897f1013195de3457fb8394d04a332758d2b1146c7bb38ab9af3f8b"
+    },
+    {
+      "frame": "heavy-01.png",
+      "sha256": "b342b05d1a7bee73373dbb3adef4636a607280cff1bf92e30e7d54a12e04d6de"
+    },
+    {
+      "frame": "heavy-02.png",
+      "sha256": "aa7b983c8b45e168241fe5fa724d811855349a2e2101af91a572296a2fb8e7a5"
+    },
+    {
+      "frame": "heavy-03.png",
+      "sha256": "0bd71446dc801636bd2e5759b07e741008be6253955ae05105132a71af40918c"
+    },
+    {
+      "frame": "heavy-04.png",
+      "sha256": "b02ab2f0f8daf9415c26b8776ecb2b0baf9f1f082acc1e09b769951f2f85d78c"
+    },
+    {
+      "frame": "heavy-05.png",
+      "sha256": "50bd13ab61913766e2f7921ccb35f9be5171e2bc5cb9e6410074b66e3078fbf7"
+    },
+    {
+      "frame": "skill-00.png",
+      "sha256": "8b3c4ec0a8ffa1378616f15348c5329e8c5bddcd17e42f99eac87325ee293f9d"
+    },
+    {
+      "frame": "skill-01.png",
+      "sha256": "c2a64587402870ae58d1440d4a80459df904bd655865aedfdc09e96e33689dcd"
+    },
+    {
+      "frame": "skill-02.png",
+      "sha256": "116e8848a07d5430e743207b61eb47bdaae2096732bef7ccd408f630b4045746"
+    },
+    {
+      "frame": "skill-03.png",
+      "sha256": "40b0962d6fedd1dc7126ea17d1912145d8ceab6989e5322a8643781193029c0b"
+    },
+    {
+      "frame": "skill-04.png",
+      "sha256": "678ce9d44d844a764ca4e1da40f32beda9ea06a5644e06666e4407546a0de82b"
+    },
+    {
+      "frame": "skill-05.png",
+      "sha256": "cd90f6b2f6dcd59a308b306d499b13a5ed5e95ecba33162da520e6b10cc44de0"
+    },
+    {
+      "frame": "ultimate-00.png",
+      "sha256": "cc9a88c0519ed04879ae581e471d303caae853cd7c2379f319de44ffbf8e36ba"
+    },
+    {
+      "frame": "ultimate-01.png",
+      "sha256": "82e9ae4c2ce5d20ebd4667e9c901e82c69a980b89b06b245265222ae45158e4f"
+    },
+    {
+      "frame": "ultimate-02.png",
+      "sha256": "ead0ff3ab50d24564815b34a4c7d6d5c843438a9404e92df90f1674efc7c939d"
+    },
+    {
+      "frame": "ultimate-03.png",
+      "sha256": "f353b6a4b16ea06d22ed42a22ef8dc72d88f05a368a862ae2ae61cd727b24436"
+    },
+    {
+      "frame": "ultimate-04.png",
+      "sha256": "9bc4db08b18017140dcc472954a73934380ade5a2df507b56f46ecd97cf4e6fc"
+    },
+    {
+      "frame": "ultimate-05.png",
+      "sha256": "e049a0a2f7b3156037e9ec9a9e9eee0497fedd346a3003b79d5fcdbf9a535321"
+    }
+  ],
+  "candidateEdition": "V3",
+  "baselineV2AtlasSha256": "238acc8beaa136dc433e2a684c574e81db67d8bcf488c764cdd0e25d1077c1d6",
+  "baselineV2ZipSha256": "29cbfc674d139115a1effa3380541d6c88684b696c1630607341c24bb14af103"
+}

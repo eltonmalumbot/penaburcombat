@@ -70,3 +70,39 @@ Every PNG receives a SHA-256; the output includes `manifest.json`, `frames/`, an
 ## CI
 
 `python -m unittest discover -s tests -p 'test_elton_art_pipeline.py' -v` tests the real builder and validator using **synthetic** fixtures. No synthetic fighter art is shipped, enabled or passed off as Elton's approved artwork.
+
+## Offline review output
+
+The pipeline also writes `two-facings.png` and `review.html` beside its verified
+candidate, outside the checkout. The comparison sheet shows all 36 poses at half
+scale, both facings, with ground and pivot guides. The reviewer opens locally in
+Chromium, requires manual selection of the exact generated atlas, verifies its
+SHA-256 before decoding, and supports frame stepping plus nonlooping 1×/.5×/.25×
+playback. It has no network access or connection to the game. Reset and rejected
+files clear the canvas; a rejected candidate cannot keep playing the prior art.
+The checksum is pinned into the generated HTML, so keep that HTML with its
+original verified package. This protects against selecting the wrong PNG; it is
+not an artist identity, authenticity, or approval certificate.
+
+Exact duplicate decoded poses now fail across **all** six moves, in both builder
+and verifier. Similar poses, damaged anatomy, identity drift, sliding feet and
+bad motion still require visual review. Synthetic browser fixtures test this
+reviewer's controls and rejection behavior; they are not actual Elton artwork.
+
+## V3 polish preserving V2
+
+Keep the original V2 directory and ZIP unchanged. Use a separate local copy
+at `.local-art/elton-v3-work/frames/` with its own `provenance.json`.
+`python scripts/elton_v3_review.py` accepts no arguments and verifies the pinned
+V2 atlas and ZIP before using the existing builder on that fixed V3 workspace.
+It creates a fresh review-only package with `candidateEdition: V3`,
+`two-facings-v3.png`, `v2-v3-comparison.png` and `revisions-v3.json`.
+Comparison rows per move are V2-right, V3-right, V2-left and V3-left.
+Sole-band centroids help inspect registration; they do not certify anatomy.
+
+Keep full frames, provenance and ZIPs local. Lightweight contact-sheet PNGs
+and `REPORT-V3.md` under `art-review/elton-hd-v3/` support independent review
+without uploading the large ZIP; they remain outside production assets.
+Review all six poses at 1x/.5x/.25x in both directions. Heavy F02 must show
+contact and recovery should retract progressively, preserving combat timing.
+Document Ali F3/F6 edge defects separately; keep Ali artwork unchanged.

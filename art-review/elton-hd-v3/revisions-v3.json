@@ -1,0 +1,513 @@
+{
+  "candidateEdition": "V3",
+  "artApproved": false,
+  "baselineV2AtlasSha256": "238acc8beaa136dc433e2a684c574e81db67d8bcf488c764cdd0e25d1077c1d6",
+  "baselineV2ZipSha256": "29cbfc674d139115a1effa3380541d6c88684b696c1630607341c24bb14af103",
+  "atlasSha256": "279236de558e6b84bb4d72d4fd51fb2422c60ecdb0bc39a0ac4c1f041ee41988",
+  "frames": [
+    {
+      "frame": "light1-00.png",
+      "v2Sha256": "5d24848af691e9028483d7d28a37bb0743887164ab8936f17d4b3134ace8ee84",
+      "v3Sha256": "ab958b854216d44170a13255a0d119e668ef73f962141d33722d3351958cbe11",
+      "changed": true,
+      "v2SoleCentroids": [
+        238.02,
+        396.09
+      ],
+      "v3SoleCentroids": [
+        242.47,
+        402.31
+      ]
+    },
+    {
+      "frame": "light1-01.png",
+      "v2Sha256": "b516ad97e9cb8993de17c20c035983a618ddccbfdf2a55d6a4a167281fe76cbb",
+      "v3Sha256": "9db135614468ae05192bf1a5a57df8a372e7f6bb2c66cca307bd0ef7b022de16",
+      "changed": true,
+      "v2SoleCentroids": [
+        235.48,
+        404.58
+      ],
+      "v3SoleCentroids": [
+        242.49,
+        401.31
+      ]
+    },
+    {
+      "frame": "light1-02.png",
+      "v2Sha256": "be9c1163941987b5de5d8734ead8615fa632b7be7d84a304df9881cf06f23436",
+      "v3Sha256": "89a43089893307c51f017187c4250f21ccf566853040a09bdaff203b7ca864a7",
+      "changed": true,
+      "v2SoleCentroids": [
+        225.05,
+        406.43
+      ],
+      "v3SoleCentroids": [
+        233.74,
+        409.17
+      ]
+    },
+    {
+      "frame": "light1-03.png",
+      "v2Sha256": "2ca07168392a90a91ccffbbfd464cfd4b51b3ec9b4ece64bfb948bbfe9fa3538",
+      "v3Sha256": "970946ff4cc16aa6b521f027875e0f3df0600b07141daa77c0267234ef553f92",
+      "changed": true,
+      "v2SoleCentroids": [
+        212.62,
+        415.21
+      ],
+      "v3SoleCentroids": [
+        222.78,
+        419.65
+      ]
+    },
+    {
+      "frame": "light1-04.png",
+      "v2Sha256": "d25ee108c86a59a11bc1b3851036f5459ea8087d9dfa4bbcadedb9ba686f0253",
+      "v3Sha256": "005bee02e94d7754eefb6606e350729449c7ec68b3eeeab065484c6c6252659d",
+      "changed": true,
+      "v2SoleCentroids": [
+        238.18,
+        395.99
+      ],
+      "v3SoleCentroids": [
+        217.52,
+        424.23
+      ]
+    },
+    {
+      "frame": "light1-05.png",
+      "v2Sha256": "e3d4824c1315630005e7f1881915752fa39a1f4c6c2674c81b4edbad9fa51180",
+      "v3Sha256": "c1b42cf9fc6f7a464a429aa7ed7b3e11c8540990345e1b4689c42005938c5f4d",
+      "changed": true,
+      "v2SoleCentroids": [
+        240.18,
+        395.53
+      ],
+      "v3SoleCentroids": [
+        218.93,
+        423.54
+      ]
+    },
+    {
+      "frame": "light2-00.png",
+      "v2Sha256": "fcde9820db46596b67714c96e693b54d67cc896d2873ed31b6fa07b9b2040b4a",
+      "v3Sha256": "3fc9310f80faa8e00a3d0f96f7b74c6a8482a119219116375fdba7d6ffe3417b",
+      "changed": true,
+      "v2SoleCentroids": [
+        223.57,
+        410.41
+      ],
+      "v3SoleCentroids": [
+        235.04,
+        410.18
+      ]
+    },
+    {
+      "frame": "light2-01.png",
+      "v2Sha256": "33114dc8f1d39a91f3ab1aeeee57dcad0ed1d5691e51d67a9ee4ea53b4c01b0f",
+      "v3Sha256": "a147dc5a2ad5ccba1892f0026b185589d024163b7872a3265988b80785a2271a",
+      "changed": true,
+      "v2SoleCentroids": [
+        206.02,
+        423.69
+      ],
+      "v3SoleCentroids": [
+        215.65,
+        425.39
+      ]
+    },
+    {
+      "frame": "light2-02.png",
+      "v2Sha256": "b95fc8f46e1da22ebd9c6c3e243a30cf65d1fb46115ba91410f550789eb421b9",
+      "v3Sha256": "c417692b7f4c48b980d9870e0a9fcad618cd0692c34c9286da3dbbebd2c4801a",
+      "changed": true,
+      "v2SoleCentroids": [
+        208.02,
+        425.66
+      ],
+      "v3SoleCentroids": [
+        218.9,
+        423.69
+      ]
+    },
+    {
+      "frame": "light2-03.png",
+      "v2Sha256": "152d8677c4df7fb50f8a526df1425206f8678f69bedd9b4601c5e402d3baf836",
+      "v3Sha256": "d91f5f1a5d61595735e0305cce34522a9d9c22936b6cb0bf908f75bba75c7712",
+      "changed": true,
+      "v2SoleCentroids": [
+        196.71,
+        426.1
+      ],
+      "v3SoleCentroids": [
+        216.47,
+        425.3
+      ]
+    },
+    {
+      "frame": "light2-04.png",
+      "v2Sha256": "e2ce421f6023022893348cf376c987f0c4772e263fd2afc79754418370b0bd67",
+      "v3Sha256": "6451f0482749169bcb0910e1295edc5f9e3c76e90b2ed0820e793c0475b29139",
+      "changed": true,
+      "v2SoleCentroids": [
+        217.92,
+        415.18
+      ],
+      "v3SoleCentroids": [
+        212.92,
+        429.94
+      ]
+    },
+    {
+      "frame": "light2-05.png",
+      "v2Sha256": "7af310f851a5b280ab51c13d082a92748e7fe6f487807ce147b694103a06f6fd",
+      "v3Sha256": "8b1ecefe7da883025b27888f363a4691c468383a067fa2841f4d263d52453d58",
+      "changed": true,
+      "v2SoleCentroids": [
+        238.57,
+        395.66
+      ],
+      "v3SoleCentroids": [
+        212.6,
+        428.94
+      ]
+    },
+    {
+      "frame": "light3-00.png",
+      "v2Sha256": "1151d0530a34459d6f9a0b940eb23feca7e04f79470400a530d63f1d742cb696",
+      "v3Sha256": "1c4f4bf865ccdcf8f3ba2811b1990bf822d8f07e49d36209fc947d32e603cc2d",
+      "changed": true,
+      "v2SoleCentroids": [
+        192.43,
+        432.22
+      ],
+      "v3SoleCentroids": [
+        198.56,
+        444.34
+      ]
+    },
+    {
+      "frame": "light3-01.png",
+      "v2Sha256": "bdf58f1f7170185bbb5ca3a08c5f58caaebe387266e91d968233f756d6cd936b",
+      "v3Sha256": "f9da527846ca11cdcb5de3372bf757349c1d777159642c9da696bcbabbe7ebe8",
+      "changed": true,
+      "v2SoleCentroids": [
+        203.73,
+        423.53
+      ],
+      "v3SoleCentroids": [
+        234.01,
+        408.67
+      ]
+    },
+    {
+      "frame": "light3-02.png",
+      "v2Sha256": "cf23a79b738aadeccb09693ddaa0939422eebee313ce5a418e223e9582d2f20b",
+      "v3Sha256": "b0d378eda87225c0b1209dab652d34094d8f5e6b159003a0e53cc032faffaac0",
+      "changed": true,
+      "v2SoleCentroids": [
+        207.63,
+        417.73
+      ],
+      "v3SoleCentroids": [
+        212.58,
+        429.57
+      ]
+    },
+    {
+      "frame": "light3-03.png",
+      "v2Sha256": "3f0cda505ae11ff40db37ceae9e43c5f37071deb8015381aba4ef806d187c8fe",
+      "v3Sha256": "e07adb29135c8c076d252efa7449ebe24af55673854e74acdcf51b4817471b96",
+      "changed": true,
+      "v2SoleCentroids": [
+        204.31,
+        425.17
+      ],
+      "v3SoleCentroids": [
+        206.14,
+        437.68
+      ]
+    },
+    {
+      "frame": "light3-04.png",
+      "v2Sha256": "ebd66283561e9ab20d4a06834a84ba60c86b56c819dd17c0eb3541948816b214",
+      "v3Sha256": "335ade1fe616310247609496185d90d5d65a8e06f0729a91b389eeed38d752af",
+      "changed": true,
+      "v2SoleCentroids": [
+        234.51,
+        401.6
+      ],
+      "v3SoleCentroids": [
+        204.46,
+        437.71
+      ]
+    },
+    {
+      "frame": "light3-05.png",
+      "v2Sha256": "8e8cf3290a754391de2fb97cc8ae5be940246e8d7d7659aeeb415ce3eeaef3ae",
+      "v3Sha256": "861b58a2258bc3e8e1459925512d876f6b0a3dcdb9609dd480ebe37e39ea41ec",
+      "changed": true,
+      "v2SoleCentroids": [
+        240.5,
+        389.98
+      ],
+      "v3SoleCentroids": [
+        204.51,
+        437.84
+      ]
+    },
+    {
+      "frame": "heavy-00.png",
+      "v2Sha256": "74fb1f40d95e6bae52ec84f258d3bd0459137477927ca8a4559e4f8b4985984d",
+      "v3Sha256": "abbdba3ad897f1013195de3457fb8394d04a332758d2b1146c7bb38ab9af3f8b",
+      "changed": true,
+      "v2SoleCentroids": [
+        159.24,
+        462.82
+      ],
+      "v3SoleCentroids": [
+        173.35,
+        469.04
+      ]
+    },
+    {
+      "frame": "heavy-01.png",
+      "v2Sha256": "93f0343488d86db787488fefa76da53a9aba5b30b81e2e288b9725a479a7424c",
+      "v3Sha256": "b342b05d1a7bee73373dbb3adef4636a607280cff1bf92e30e7d54a12e04d6de",
+      "changed": true,
+      "v2SoleCentroids": [
+        184.39,
+        432.31
+      ],
+      "v3SoleCentroids": [
+        205.23,
+        436.48
+      ]
+    },
+    {
+      "frame": "heavy-02.png",
+      "v2Sha256": "9bca491d2aa07b65ef02d54ec3445e7db9c6a515ed60b7cf08c310f3835b5a13",
+      "v3Sha256": "aa7b983c8b45e168241fe5fa724d811855349a2e2101af91a572296a2fb8e7a5",
+      "changed": true,
+      "v2SoleCentroids": [
+        194.91,
+        427.02
+      ],
+      "v3SoleCentroids": [
+        181.67,
+        459.88
+      ]
+    },
+    {
+      "frame": "heavy-03.png",
+      "v2Sha256": "d5de8edccc5dccab97b6e408ff72a4f7ea6b22f26912e72f4dfddb57068be412",
+      "v3Sha256": "0bd71446dc801636bd2e5759b07e741008be6253955ae05105132a71af40918c",
+      "changed": true,
+      "v2SoleCentroids": [
+        194.61,
+        426.56
+      ],
+      "v3SoleCentroids": [
+        182.75,
+        459.98
+      ]
+    },
+    {
+      "frame": "heavy-04.png",
+      "v2Sha256": "c803d4d9f86b7d9ba5581c8709a88dda23159124edaee53fdc0782ad513f8cef",
+      "v3Sha256": "b02ab2f0f8daf9415c26b8776ecb2b0baf9f1f082acc1e09b769951f2f85d78c",
+      "changed": true,
+      "v2SoleCentroids": [
+        222.07,
+        411.83
+      ],
+      "v3SoleCentroids": [
+        182.77,
+        460.91
+      ]
+    },
+    {
+      "frame": "heavy-05.png",
+      "v2Sha256": "eae669142877862427fe7c7b338c5563df7838ceea942d132573fc65347f1419",
+      "v3Sha256": "50bd13ab61913766e2f7921ccb35f9be5171e2bc5cb9e6410074b66e3078fbf7",
+      "changed": true,
+      "v2SoleCentroids": [
+        221.24,
+        417.78
+      ],
+      "v3SoleCentroids": [
+        183.71,
+        460.28
+      ]
+    },
+    {
+      "frame": "skill-00.png",
+      "v2Sha256": "484f434dd7651007191544dcc686ee6ce0f0fea15d820011afc59d75fd893bc8",
+      "v3Sha256": "8b3c4ec0a8ffa1378616f15348c5329e8c5bddcd17e42f99eac87325ee293f9d",
+      "changed": true,
+      "v2SoleCentroids": [
+        204.59,
+        426.58
+      ],
+      "v3SoleCentroids": [
+        217.97,
+        426.64
+      ]
+    },
+    {
+      "frame": "skill-01.png",
+      "v2Sha256": "7dc8640212222a0cfcd022fbea1250c0210c60ed1ac41b029658d03c1024993e",
+      "v3Sha256": "c2a64587402870ae58d1440d4a80459df904bd655865aedfdc09e96e33689dcd",
+      "changed": true,
+      "v2SoleCentroids": [
+        226.9,
+        404.27
+      ],
+      "v3SoleCentroids": [
+        235.2,
+        409.29
+      ]
+    },
+    {
+      "frame": "skill-02.png",
+      "v2Sha256": "c3d19ef75052987cfa01e8d1f726f4a774573d42657b7dfd31295fbec770d618",
+      "v3Sha256": "116e8848a07d5430e743207b61eb47bdaae2096732bef7ccd408f630b4045746",
+      "changed": true,
+      "v2SoleCentroids": [
+        216.9,
+        414.3
+      ],
+      "v3SoleCentroids": [
+        220.43,
+        422.54
+      ]
+    },
+    {
+      "frame": "skill-03.png",
+      "v2Sha256": "1911f78c0bbd2ed1475a4a349b8352ad8190e245d0b3adc142440dfc9dd53253",
+      "v3Sha256": "40b0962d6fedd1dc7126ea17d1912145d8ceab6989e5322a8643781193029c0b",
+      "changed": true,
+      "v2SoleCentroids": [
+        192.94,
+        435.25
+      ],
+      "v3SoleCentroids": [
+        203.36,
+        439.63
+      ]
+    },
+    {
+      "frame": "skill-04.png",
+      "v2Sha256": "c88ed93c5069129a5373eaad6cffff49c24c45051a847dec041732d8b0fed1c9",
+      "v3Sha256": "678ce9d44d844a764ca4e1da40f32beda9ea06a5644e06666e4407546a0de82b",
+      "changed": true,
+      "v2SoleCentroids": [
+        206.33,
+        422.1
+      ],
+      "v3SoleCentroids": [
+        200.61,
+        441.67
+      ]
+    },
+    {
+      "frame": "skill-05.png",
+      "v2Sha256": "3a3b3465555c6278710e110f6fa88e84d99380bdd865f9c81ddfa692974f6cfc",
+      "v3Sha256": "cd90f6b2f6dcd59a308b306d499b13a5ed5e95ecba33162da520e6b10cc44de0",
+      "changed": true,
+      "v2SoleCentroids": [
+        237.6,
+        395.83
+      ],
+      "v3SoleCentroids": [
+        201.01,
+        441.54
+      ]
+    },
+    {
+      "frame": "ultimate-00.png",
+      "v2Sha256": "ddb42ed4f091f74ee18a8818987ea3e2532aa5775400026fff5a77bb44369c0a",
+      "v3Sha256": "cc9a88c0519ed04879ae581e471d303caae853cd7c2379f319de44ffbf8e36ba",
+      "changed": true,
+      "v2SoleCentroids": [
+        186.46,
+        438.57
+      ],
+      "v3SoleCentroids": [
+        198.32,
+        442.86
+      ]
+    },
+    {
+      "frame": "ultimate-01.png",
+      "v2Sha256": "4f1a6903874f801174210f15e30454151d84efaf38fe0aa1bcd00f5e4c2fd6df",
+      "v3Sha256": "82e9ae4c2ce5d20ebd4667e9c901e82c69a980b89b06b245265222ae45158e4f",
+      "changed": true,
+      "v2SoleCentroids": [
+        217.14,
+        412.36
+      ],
+      "v3SoleCentroids": [
+        225.57,
+        417.26
+      ]
+    },
+    {
+      "frame": "ultimate-02.png",
+      "v2Sha256": "c6d407e09aa58af16e58e42126420df37b5b6f615f19f77db35fea77067b1c16",
+      "v3Sha256": "ead0ff3ab50d24564815b34a4c7d6d5c843438a9404e92df90f1674efc7c939d",
+      "changed": true,
+      "v2SoleCentroids": [
+        202.8,
+        429.42
+      ],
+      "v3SoleCentroids": [
+        202.49,
+        441.04
+      ]
+    },
+    {
+      "frame": "ultimate-03.png",
+      "v2Sha256": "a9e4990045bc376a8126c781f4648f80af85b3dcc744c8439cae0505d4b8ddac",
+      "v3Sha256": "f353b6a4b16ea06d22ed42a22ef8dc72d88f05a368a862ae2ae61cd727b24436",
+      "changed": true,
+      "v2SoleCentroids": [
+        198.52,
+        432.28
+      ],
+      "v3SoleCentroids": [
+        202.81,
+        440.53
+      ]
+    },
+    {
+      "frame": "ultimate-04.png",
+      "v2Sha256": "3ce45020619923114d72e66f6098fd161a21409d095a0e229bb0730ec2949a61",
+      "v3Sha256": "9bc4db08b18017140dcc472954a73934380ade5a2df507b56f46ecd97cf4e6fc",
+      "changed": true,
+      "v2SoleCentroids": [
+        238.68,
+        394.09
+      ],
+      "v3SoleCentroids": [
+        201.55,
+        441.14
+      ]
+    },
+    {
+      "frame": "ultimate-05.png",
+      "v2Sha256": "e487c75cd444f96702d3ad27cbb9170b7a3b3951bf7e5f3a33b5e698ec29c390",
+      "v3Sha256": "e049a0a2f7b3156037e9ec9a9e9eee0497fedd346a3003b79d5fcdbf9a535321",
+      "changed": true,
+      "v2SoleCentroids": [
+        239.74,
+        393.81
+      ],
+      "v3SoleCentroids": [
+        200.04,
+        442.86
+      ]
+    }
+  ]
+}

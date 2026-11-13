@@ -1,0 +1,875 @@
+{
+  "status": "TECHNICAL_MEASUREMENTS_ONLY_ART_NOT_APPROVED",
+  "pivot": {
+    "x": 320,
+    "y": 525
+  },
+  "frames": [
+    {
+      "name": "light1-00.png",
+      "sha256": "ab958b854216d44170a13255a0d119e668ef73f962141d33722d3351958cbe11",
+      "decodedRgbaSha256": "435c9ec5dcdd9897cfbd5106c17dfdb3eb00142b2ec26ca118a641f8372a7f4c",
+      "alphaBounds": [
+        163,
+        72,
+        456,
+        525
+      ],
+      "footBandBounds": [
+        196,
+        470,
+        456,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        163,
+        72,
+        264,
+        15
+      ]
+    },
+    {
+      "name": "light1-01.png",
+      "sha256": "9db135614468ae05192bf1a5a57df8a372e7f6bb2c66cca307bd0ef7b022de16",
+      "decodedRgbaSha256": "185815f3110e92c004bc31bdc4cd0877c5763f6b74873660cb9bbad3ba4ff52d",
+      "alphaBounds": [
+        166,
+        79,
+        454,
+        525
+      ],
+      "footBandBounds": [
+        196,
+        470,
+        454,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        166,
+        79,
+        266,
+        15
+      ]
+    },
+    {
+      "name": "light1-02.png",
+      "sha256": "89a43089893307c51f017187c4250f21ccf566853040a09bdaff203b7ca864a7",
+      "decodedRgbaSha256": "2e8bc895c770f001888c916a59a9e23fdc5d977e9206b22064af6f3f4b60c020",
+      "alphaBounds": [
+        166,
+        73,
+        522,
+        525
+      ],
+      "footBandBounds": [
+        186,
+        470,
+        466,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        166,
+        73,
+        198,
+        15
+      ]
+    },
+    {
+      "name": "light1-03.png",
+      "sha256": "970946ff4cc16aa6b521f027875e0f3df0600b07141daa77c0267234ef553f92",
+      "decodedRgbaSha256": "6fff0d985a89d56ccb8a09dbe23dc18c4cf5d80dfeea2239b2ac371e492321f6",
+      "alphaBounds": [
+        166,
+        73,
+        541,
+        525
+      ],
+      "footBandBounds": [
+        180,
+        470,
+        475,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        166,
+        73,
+        179,
+        15
+      ]
+    },
+    {
+      "name": "light1-04.png",
+      "sha256": "005bee02e94d7754eefb6606e350729449c7ec68b3eeeab065484c6c6252659d",
+      "decodedRgbaSha256": "e95e098abe8331f9850e65a3fe596df9a4f60868fa3891eddd52c68bdac4759c",
+      "alphaBounds": [
+        152,
+        73,
+        483,
+        525
+      ],
+      "footBandBounds": [
+        173,
+        470,
+        483,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        152,
+        73,
+        237,
+        15
+      ]
+    },
+    {
+      "name": "light1-05.png",
+      "sha256": "c1b42cf9fc6f7a464a429aa7ed7b3e11c8540990345e1b4689c42005938c5f4d",
+      "decodedRgbaSha256": "b1925558790ade1adf0fa189360ff917ead7c5497dd96e8f0ee97b5f6469cf02",
+      "alphaBounds": [
+        152,
+        72,
+        482,
+        525
+      ],
+      "footBandBounds": [
+        174,
+        470,
+        482,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        152,
+        72,
+        238,
+        15
+      ]
+    },
+    {
+      "name": "light2-00.png",
+      "sha256": "3fc9310f80faa8e00a3d0f96f7b74c6a8482a119219116375fdba7d6ffe3417b",
+      "decodedRgbaSha256": "27e895cf87a77fd8c71dcccaf063220fcf8d64e5b58408cb57eb4cfdee4c50e4",
+      "alphaBounds": [
+        157,
+        70,
+        466,
+        525
+      ],
+      "footBandBounds": [
+        185,
+        470,
+        466,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        157,
+        70,
+        254,
+        15
+      ]
+    },
+    {
+      "name": "light2-01.png",
+      "sha256": "a147dc5a2ad5ccba1892f0026b185589d024163b7872a3265988b80785a2271a",
+      "decodedRgbaSha256": "b1aab55e124775150add12a3ccd3956346fcd48ec5d072408f0a5e644a336faf",
+      "alphaBounds": [
+        168,
+        78,
+        484,
+        525
+      ],
+      "footBandBounds": [
+        172,
+        470,
+        484,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        168,
+        78,
+        236,
+        15
+      ]
+    },
+    {
+      "name": "light2-02.png",
+      "sha256": "c417692b7f4c48b980d9870e0a9fcad618cd0692c34c9286da3dbbebd2c4801a",
+      "decodedRgbaSha256": "5743e21384d657a82169339588bd110d3ce7426a691e4318c5340100ff2ab885",
+      "alphaBounds": [
+        172,
+        72,
+        501,
+        525
+      ],
+      "footBandBounds": [
+        172,
+        470,
+        481,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        172,
+        72,
+        219,
+        15
+      ]
+    },
+    {
+      "name": "light2-03.png",
+      "sha256": "d91f5f1a5d61595735e0305cce34522a9d9c22936b6cb0bf908f75bba75c7712",
+      "decodedRgbaSha256": "40956655be407e505b4ad08a4e25d1cae141ab3d3878fd71a2a2833f4b99b10a",
+      "alphaBounds": [
+        162,
+        73,
+        547,
+        525
+      ],
+      "footBandBounds": [
+        172,
+        470,
+        486,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        162,
+        73,
+        173,
+        15
+      ]
+    },
+    {
+      "name": "light2-04.png",
+      "sha256": "6451f0482749169bcb0910e1295edc5f9e3c76e90b2ed0820e793c0475b29139",
+      "decodedRgbaSha256": "0cce23062a7dbf0795e529a3d9ad54d20bc8f430f0c92789842dde75e69f7785",
+      "alphaBounds": [
+        150,
+        71,
+        492,
+        525
+      ],
+      "footBandBounds": [
+        166,
+        470,
+        492,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        150,
+        71,
+        228,
+        15
+      ]
+    },
+    {
+      "name": "light2-05.png",
+      "sha256": "8b1ecefe7da883025b27888f363a4691c468383a067fa2841f4d263d52453d58",
+      "decodedRgbaSha256": "eb99dab93ce46de9a6fa7ecc32f44ce8eb70d875e22166bdd4d37b3f80960b9c",
+      "alphaBounds": [
+        149,
+        71,
+        491,
+        525
+      ],
+      "footBandBounds": [
+        165,
+        470,
+        491,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        149,
+        71,
+        229,
+        15
+      ]
+    },
+    {
+      "name": "light3-00.png",
+      "sha256": "1c4f4bf865ccdcf8f3ba2811b1990bf822d8f07e49d36209fc947d32e603cc2d",
+      "decodedRgbaSha256": "388c9be3c518d9967747d8baed977afeacd50b4672650a3427fb49a070f8bef8",
+      "alphaBounds": [
+        152,
+        66,
+        507,
+        525
+      ],
+      "footBandBounds": [
+        152,
+        470,
+        506,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        152,
+        66,
+        213,
+        15
+      ]
+    },
+    {
+      "name": "light3-01.png",
+      "sha256": "f9da527846ca11cdcb5de3372bf757349c1d777159642c9da696bcbabbe7ebe8",
+      "decodedRgbaSha256": "2d7834f0cb3867921cd6c2e15910873c4134b4a17ba9feabf0301af7a4bdd068",
+      "alphaBounds": [
+        159,
+        75,
+        466,
+        525
+      ],
+      "footBandBounds": [
+        187,
+        470,
+        466,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        159,
+        75,
+        254,
+        15
+      ]
+    },
+    {
+      "name": "light3-02.png",
+      "sha256": "b0d378eda87225c0b1209dab652d34094d8f5e6b159003a0e53cc032faffaac0",
+      "decodedRgbaSha256": "3f4d8eb7a48599beafb80ae488394b2491bf7ebb2364a1dfe544fc6ea9dd2fe2",
+      "alphaBounds": [
+        151,
+        69,
+        515,
+        525
+      ],
+      "footBandBounds": [
+        167,
+        470,
+        488,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        151,
+        69,
+        205,
+        15
+      ]
+    },
+    {
+      "name": "light3-03.png",
+      "sha256": "e07adb29135c8c076d252efa7449ebe24af55673854e74acdcf51b4817471b96",
+      "decodedRgbaSha256": "c0992d6d7552475299fe42ae4d1b020a493db75d0dc61882dbd12ac250383fe2",
+      "alphaBounds": [
+        149,
+        68,
+        530,
+        525
+      ],
+      "footBandBounds": [
+        157,
+        470,
+        499,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        149,
+        68,
+        190,
+        15
+      ]
+    },
+    {
+      "name": "light3-04.png",
+      "sha256": "335ade1fe616310247609496185d90d5d65a8e06f0729a91b389eeed38d752af",
+      "decodedRgbaSha256": "806af5f2872be1a66406af4819e1faa2e1f62c61c7ac7f73d5a1f5d792dd912a",
+      "alphaBounds": [
+        145,
+        68,
+        502,
+        525
+      ],
+      "footBandBounds": [
+        153,
+        470,
+        502,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        145,
+        68,
+        218,
+        15
+      ]
+    },
+    {
+      "name": "light3-05.png",
+      "sha256": "861b58a2258bc3e8e1459925512d876f6b0a3dcdb9609dd480ebe37e39ea41ec",
+      "decodedRgbaSha256": "98ac3438e585cbedc0e2f37d43c3a5caad4b9c73c8c5a03c288891b3cd9cf4b6",
+      "alphaBounds": [
+        145,
+        67,
+        501,
+        525
+      ],
+      "footBandBounds": [
+        152,
+        470,
+        501,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        145,
+        67,
+        219,
+        15
+      ]
+    },
+    {
+      "name": "heavy-00.png",
+      "sha256": "abbdba3ad897f1013195de3457fb8394d04a332758d2b1146c7bb38ab9af3f8b",
+      "decodedRgbaSha256": "365a5c69f6fb252a6fe1e0b83547a29677660c555dd7e1bcaef4f4db68c64b08",
+      "alphaBounds": [
+        132,
+        68,
+        529,
+        525
+      ],
+      "footBandBounds": [
+        132,
+        470,
+        529,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        132,
+        68,
+        191,
+        15
+      ]
+    },
+    {
+      "name": "heavy-01.png",
+      "sha256": "b342b05d1a7bee73373dbb3adef4636a607280cff1bf92e30e7d54a12e04d6de",
+      "decodedRgbaSha256": "61f14e3149f8b2ca70bdc72e4670de5761c7e37a68ab75bdb2ec17afa2dcd45a",
+      "alphaBounds": [
+        164,
+        74,
+        496,
+        525
+      ],
+      "footBandBounds": [
+        164,
+        470,
+        496,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        164,
+        74,
+        224,
+        15
+      ]
+    },
+    {
+      "name": "heavy-02.png",
+      "sha256": "aa7b983c8b45e168241fe5fa724d811855349a2e2101af91a572296a2fb8e7a5",
+      "decodedRgbaSha256": "e2d5d1cc32052a6e3b02e0e5418e46a66564b4300e9e2ef1dd1008c6ab02a05b",
+      "alphaBounds": [
+        134,
+        69,
+        537,
+        525
+      ],
+      "footBandBounds": [
+        134,
+        470,
+        525,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        134,
+        69,
+        183,
+        15
+      ]
+    },
+    {
+      "name": "heavy-03.png",
+      "sha256": "0bd71446dc801636bd2e5759b07e741008be6253955ae05105132a71af40918c",
+      "decodedRgbaSha256": "6c09579ed2ef5e50f6905c5693ab45f348001135e60c606befafebd08048e411",
+      "alphaBounds": [
+        132,
+        69,
+        589,
+        525
+      ],
+      "footBandBounds": [
+        132,
+        470,
+        528,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        132,
+        69,
+        131,
+        15
+      ]
+    },
+    {
+      "name": "heavy-04.png",
+      "sha256": "b02ab2f0f8daf9415c26b8776ecb2b0baf9f1f082acc1e09b769951f2f85d78c",
+      "decodedRgbaSha256": "aa89212444dacc52ecfe2b80d5a24c05e2f1f72e3201dd3cd250e5225b86a1a0",
+      "alphaBounds": [
+        131,
+        67,
+        528,
+        525
+      ],
+      "footBandBounds": [
+        131,
+        470,
+        528,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        131,
+        67,
+        192,
+        15
+      ]
+    },
+    {
+      "name": "heavy-05.png",
+      "sha256": "50bd13ab61913766e2f7921ccb35f9be5171e2bc5cb9e6410074b66e3078fbf7",
+      "decodedRgbaSha256": "992a0596ffc80838efd7921b883d64c5600f7aac00d73e39e5b2fc3854c09f86",
+      "alphaBounds": [
+        132,
+        68,
+        528,
+        525
+      ],
+      "footBandBounds": [
+        132,
+        470,
+        528,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        132,
+        68,
+        192,
+        15
+      ]
+    },
+    {
+      "name": "skill-00.png",
+      "sha256": "8b3c4ec0a8ffa1378616f15348c5329e8c5bddcd17e42f99eac87325ee293f9d",
+      "decodedRgbaSha256": "f4b91cd6e415512808405035b48ff7d87c56b227ac3e9b9d9f7174950631b056",
+      "alphaBounds": [
+        156,
+        63,
+        509,
+        525
+      ],
+      "footBandBounds": [
+        168,
+        470,
+        486,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        156,
+        63,
+        211,
+        15
+      ]
+    },
+    {
+      "name": "skill-01.png",
+      "sha256": "c2a64587402870ae58d1440d4a80459df904bd655865aedfdc09e96e33689dcd",
+      "decodedRgbaSha256": "57dc1bb90918a80779b76d50decbcaa50b6ea7f11d78c24e586b1305895014b8",
+      "alphaBounds": [
+        160,
+        72,
+        466,
+        525
+      ],
+      "footBandBounds": [
+        188,
+        470,
+        465,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        160,
+        72,
+        254,
+        15
+      ]
+    },
+    {
+      "name": "skill-02.png",
+      "sha256": "116e8848a07d5430e743207b61eb47bdaae2096732bef7ccd408f630b4045746",
+      "decodedRgbaSha256": "166c512fb4a45ecca8efe618e9285dc59cb5be2dc82cfafe4eb04c2f166b395b",
+      "alphaBounds": [
+        161,
+        65,
+        510,
+        525
+      ],
+      "footBandBounds": [
+        174,
+        470,
+        480,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        161,
+        65,
+        210,
+        15
+      ]
+    },
+    {
+      "name": "skill-03.png",
+      "sha256": "40b0962d6fedd1dc7126ea17d1912145d8ceab6989e5322a8643781193029c0b",
+      "decodedRgbaSha256": "7ec87933977cd966dec7fbee5b774bacd3bb525c956019122a73c39d73e4f2f8",
+      "alphaBounds": [
+        154,
+        65,
+        539,
+        525
+      ],
+      "footBandBounds": [
+        155,
+        470,
+        499,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        154,
+        65,
+        181,
+        15
+      ]
+    },
+    {
+      "name": "skill-04.png",
+      "sha256": "678ce9d44d844a764ca4e1da40f32beda9ea06a5644e06666e4407546a0de82b",
+      "decodedRgbaSha256": "2182503fc03573d60ac3b849cf4ad83f17589c986ea450c7aa8b61f78a7e7e33",
+      "alphaBounds": [
+        147,
+        64,
+        504,
+        525
+      ],
+      "footBandBounds": [
+        151,
+        470,
+        502,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        147,
+        64,
+        216,
+        15
+      ]
+    },
+    {
+      "name": "skill-05.png",
+      "sha256": "cd90f6b2f6dcd59a308b306d499b13a5ed5e95ecba33162da520e6b10cc44de0",
+      "decodedRgbaSha256": "28cd89490533e00606f60e7e690cbbf46ccf6095198825e8525d0f2d37052449",
+      "alphaBounds": [
+        147,
+        64,
+        502,
+        525
+      ],
+      "footBandBounds": [
+        152,
+        470,
+        502,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        147,
+        64,
+        218,
+        15
+      ]
+    },
+    {
+      "name": "ultimate-00.png",
+      "sha256": "cc9a88c0519ed04879ae581e471d303caae853cd7c2379f319de44ffbf8e36ba",
+      "decodedRgbaSha256": "5b9acf46788f4c3dee1adc999f534701459b4452ff2d363017433f18e92e5713",
+      "alphaBounds": [
+        154,
+        61,
+        503,
+        525
+      ],
+      "footBandBounds": [
+        154,
+        470,
+        503,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        154,
+        61,
+        217,
+        15
+      ]
+    },
+    {
+      "name": "ultimate-01.png",
+      "sha256": "82e9ae4c2ce5d20ebd4667e9c901e82c69a980b89b06b245265222ae45158e4f",
+      "decodedRgbaSha256": "b11ed7197c05d52d2fc3c50742c431980088e4ec532b732b8daf74be3db20458",
+      "alphaBounds": [
+        154,
+        69,
+        478,
+        525
+      ],
+      "footBandBounds": [
+        178,
+        470,
+        478,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        154,
+        69,
+        242,
+        15
+      ]
+    },
+    {
+      "name": "ultimate-02.png",
+      "sha256": "ead0ff3ab50d24564815b34a4c7d6d5c843438a9404e92df90f1674efc7c939d",
+      "decodedRgbaSha256": "e3a87211608925e0b194131685db388273713704124a0091eca69c01f055ebe7",
+      "alphaBounds": [
+        154,
+        63,
+        531,
+        525
+      ],
+      "footBandBounds": [
+        154,
+        470,
+        500,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        154,
+        63,
+        189,
+        15
+      ]
+    },
+    {
+      "name": "ultimate-03.png",
+      "sha256": "f353b6a4b16ea06d22ed42a22ef8dc72d88f05a368a862ae2ae61cd727b24436",
+      "decodedRgbaSha256": "7aa8f36df6cf7733734f4b4b5c4af61ae6ff71069cd166acdee4c4793772bf25",
+      "alphaBounds": [
+        152,
+        62,
+        639,
+        525
+      ],
+      "footBandBounds": [
+        152,
+        470,
+        502,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        152,
+        62,
+        81,
+        15
+      ]
+    },
+    {
+      "name": "ultimate-04.png",
+      "sha256": "9bc4db08b18017140dcc472954a73934380ade5a2df507b56f46ecd97cf4e6fc",
+      "decodedRgbaSha256": "caf32b576e04cd6fdfc87882f27cdc76d099fdfed23ec0c8fbb6907b12183768",
+      "alphaBounds": [
+        151,
+        62,
+        502,
+        525
+      ],
+      "footBandBounds": [
+        151,
+        470,
+        502,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        151,
+        62,
+        218,
+        15
+      ]
+    },
+    {
+      "name": "ultimate-05.png",
+      "sha256": "e049a0a2f7b3156037e9ec9a9e9eee0497fedd346a3003b79d5fcdbf9a535321",
+      "decodedRgbaSha256": "d48e79422f9e74f98721af7ed8dfe307dc91f88bfee1b071ac45aac06131d5c1",
+      "alphaBounds": [
+        149,
+        60,
+        505,
+        525
+      ],
+      "footBandBounds": [
+        149,
+        470,
+        505,
+        525
+      ],
+      "groundEdge": 525,
+      "margin": [
+        149,
+        60,
+        215,
+        15
+      ]
+    }
+  ],
+  "visualReview": "PENDING",
+  "sha256": "279236de558e6b84bb4d72d4fd51fb2422c60ecdb0bc39a0ac4c1f041ee41988"
+}
