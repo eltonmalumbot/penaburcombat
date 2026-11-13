@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
 
-from elton_art_pipeline import MOVES, build, sha256, verify
+from elton_art_pipeline import MOVES, build, frame_names, sha256, verify
 
 V2_ATLAS_SHA = '238acc8beaa136dc433e2a684c574e81db67d8bcf488c764cdd0e25d1077c1d6'
 V2_ZIP_SHA = '29cbfc674d139115a1effa3380541d6c88684b696c1630607341c24bb14af103'
@@ -66,15 +66,35 @@ def sole_centers(path: Path):
         return centers
 
 
+def _validated_frame_hashes(doc: dict) -> dict:
+    """Restrict every frame lookup to fixed names; never use manifest paths."""
+    expected = set(frame_names())
+    entries = doc.get('frameQA')
+    if not isinstance(entries, list) or len(entries) != len(expected):
+        raise ValueError('Frame checksum list must contain 36 entries')
+    hashes = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError('Invalid frame checksum entry')
+        name, digest = entry.get('frame'), entry.get('sha256')
+        if name not in expected or name in hashes or not isinstance(digest, str):
+            raise ValueError('Invalid, duplicate or unsafe frame name')
+        if len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
+            raise ValueError('Invalid frame SHA-256 digest')
+        hashes[name] = digest
+    return hashes
+
+
 def revision_manifest(baseline: Path, candidate: Path, doc: dict) -> dict:
     old = json.loads((baseline / 'manifest.json').read_text(encoding='utf-8'))
-    previous = {entry['frame']: entry['sha256'] for entry in old['frameQA']}
+    previous = _validated_frame_hashes(old)
+    current = _validated_frame_hashes(doc)
     revisions = []
-    for entry in doc['frameQA']:
-        name = entry['frame']
+    for name in frame_names():
+        # The only path component is from the fixed enumerated set, not doc.
         revisions.append({
-            'frame': name, 'v2Sha256': previous[name], 'v3Sha256': entry['sha256'],
-            'changed': previous[name] != entry['sha256'],
+            'frame': name, 'v2Sha256': previous[name], 'v3Sha256': current[name],
+            'changed': previous[name] != current[name],
             'v2SoleCentroids': sole_centers(baseline / 'frames' / name),
             'v3SoleCentroids': sole_centers(candidate / 'frames' / name),
         })
@@ -94,14 +114,15 @@ def main() -> Path:
     verify(baseline)
     notes = json.loads((source / 'provenance.json').read_text(encoding='utf-8'))
     target = build(source, repo, notes['artistProvenance'], notes['usagePermissionNote'])
+    # Preserve the builder's checksum-verified manifest byte-for-byte.
+    # V3 edition metadata belongs in the separate review report.
     doc = json.loads((target / 'manifest.json').read_text(encoding='utf-8'))
-    doc.update(candidateEdition='V3', baselineV2AtlasSha256=V2_ATLAS_SHA,
-               baselineV2ZipSha256=V2_ZIP_SHA)
-    (target / 'manifest.json').write_text(json.dumps(doc, indent=2) + '\n', encoding='utf-8')
     shutil.copyfile(target / 'two-facings.png', target / 'two-facings-v3.png')
     compare_sheet(baseline, target)
     revisions = revision_manifest(baseline, target, doc)
-    (target / 'revisions-v3.json').write_text(json.dumps(revisions, indent=2) + '\n', encoding='utf-8')
+    (target / 'revisions-v3.json').write_text(
+        json.dumps(revisions, indent=2) + '\n', encoding='utf-8'
+    )
     verify(target)
     print('V3 REVIEW-ONLY package:', target)
     return target
