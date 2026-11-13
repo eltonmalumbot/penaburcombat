@@ -120,9 +120,12 @@ def main() -> Path:
     shutil.copyfile(target / 'two-facings.png', target / 'two-facings-v3.png')
     compare_sheet(baseline, target)
     revisions = revision_manifest(baseline, target, doc)
-    (target / 'revisions-v3.json').write_text(
-        json.dumps(revisions, indent=2) + '\n', encoding='utf-8'
-    )
+    # Exclusive-create a fixed report name inside the fresh builder directory.
+    # Untrusted manifest data is JSON-encoded as values, never used as a path.
+    report = target / 'revisions-v3.json'
+    with report.open('x', encoding='utf-8') as handle:
+        json.dump(revisions, handle, indent=2)
+        handle.write('\n')
     verify(target)
     print('V3 REVIEW-ONLY package:', target)
     return target
