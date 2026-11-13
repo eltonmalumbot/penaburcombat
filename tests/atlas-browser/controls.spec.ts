@@ -91,3 +91,104 @@ test('keyboard and on-screen controls preserve the same move/guard priorities', 
   });
   expect(values).toEqual({ movementAndAttack: true, attackIsOneShot: true, released: true });
 });
+
+test('cancelled touches discard pending attacks, jumps and double-tap dash', async ({ page }) => {
+  const values = await page.evaluate(async () => {
+    const { InputController } = await import('/src/ui/input.ts' as string);
+    const input = new InputController(() => {}, () => {}, () => {});
+    const make = (key: string) => {
+      const button = document.createElement('button');
+      button.className = 'touch'; button.dataset.key = key; document.body.append(button);
+      input.bind(button, key);
+      return button;
+    };
+    const j = make('j'), w = make('w'), a = make('a');
+    const emit = (button: HTMLButtonElement, type: string, id: number) =>
+      button.dispatchEvent(new PointerEvent(type, {
+        pointerId: id, pointerType: 'touch', button: 0,
+        clientX: 40, clientY: 40, bubbles: true, cancelable: true,
+      }));
+    input.setEnabled(true);
+    emit(j, 'pointerdown', 101); emit(j, 'pointercancel', 101);
+    const cancelledAttack = input.sample().attack;
+    emit(w, 'pointerdown', 102); emit(w, 'lostpointercapture', 102);
+    const captureLostJump = input.sample().jump;
+    // A completed press must remain a genuine one-shot input.
+    emit(j, 'pointerdown', 103); emit(j, 'pointerup', 103);
+    const completedAttack = input.sample().attack;
+    const noAttackRepeat = input.sample().attack;
+    // Complete a first direction tap, then cancel the second (dash) tap.
+    emit(a, 'pointerdown', 104); input.sample(); emit(a, 'pointerup', 104);
+    emit(a, 'pointerdown', 105); emit(a, 'pointercancel', 105);
+    const cancelledDash = input.sample().dash;
+    input.clear();
+    return { cancelledAttack, captureLostJump, completedAttack, noAttackRepeat, cancelledDash };
+  });
+  expect(values).toEqual({
+    cancelledAttack: null, captureLostJump: false, completedAttack: 'light',
+    noAttackRepeat: null, cancelledDash: false,
+  });
+});
+
+test('one cancelled finger cannot discard another finger or keyboard press', async ({ page }) => {
+  const values = await page.evaluate(async () => {
+    const { InputController } = await import('/src/ui/input.ts' as string);
+    const input = new InputController(() => {}, () => {}, () => {});
+    const j = document.createElement('button');
+    j.className = 'touch'; j.dataset.key = 'j'; document.body.append(j);
+    input.bind(j, 'j'); input.setEnabled(true);
+    const touch = (type: string, id: number) => j.dispatchEvent(new PointerEvent(type, {
+      pointerId: id, pointerType: 'touch', bubbles: true, cancelable: true,
+    }));
+    touch('pointerdown', 31); touch('pointerdown', 32); touch('pointercancel', 31);
+    const survivingFinger = input.sample().attack;
+    touch('pointerup', 32); input.sample();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', code: 'KeyJ', bubbles: true }));
+    touch('pointerdown', 33); touch('pointercancel', 33);
+    const survivingKeyboard = input.sample().attack;
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'j', code: 'KeyJ', bubbles: true }));
+    const noRepeat = input.sample().attack;
+    input.clear();
+    return { survivingFinger, survivingKeyboard, noRepeat };
+  });
+  expect(values).toEqual({
+    survivingFinger: 'light', survivingKeyboard: 'light', noRepeat: null,
+  });
+});
+
+test('retargeting a D-pad finger replaces stale input and pagehide clears everything', async ({ page }) => {
+  const values = await page.evaluate(async () => {
+    const { InputController } = await import('/src/ui/input.ts' as string);
+    let backgrounded = 0;
+    const input = new InputController(() => {}, () => {}, () => { backgrounded++; });
+    const group = document.createElement('div');
+    const a = document.createElement('button'), w = document.createElement('button');
+    for (const [button, key] of [[a, 'a'], [w, 'w']] as const) {
+      button.className = 'touch'; button.dataset.key = key; group.append(button);
+      input.bind(button, key);
+    }
+    document.body.append(group);
+    input.setEnabled(true);
+    const emit = (type: string, id: number) => a.dispatchEvent(new PointerEvent(type, {
+      pointerId: id, pointerType: 'touch', clientX: 80, clientY: 60,
+      bubbles: true, cancelable: true,
+    }));
+    const original = document.elementFromPoint.bind(document);
+    emit('pointerdown', 56);
+    document.elementFromPoint = () => w;
+    emit('pointermove', 56);
+    const jumped = input.sample().jump;
+    const movement = input.sample().move;
+    window.dispatchEvent(new Event('pagehide'));
+    const afterPagehide = input.sample();
+    const clearedHeld = !a.classList.contains('is-held') && !w.classList.contains('is-held');
+    document.elementFromPoint = original;
+    input.clear();
+    return { jumped, movement, afterPagehide, clearedHeld, backgrounded };
+  });
+  expect(values.jumped).toBe(true);
+  expect(values.movement).toBe(0);
+  expect(values.afterPagehide).toEqual({ move: 0, guard: false, jump: false, dash: false, attack: null });
+  expect(values.clearedHeld).toBe(true);
+  expect(values.backgrounded).toBe(1);
+});
