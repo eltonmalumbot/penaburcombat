@@ -46,3 +46,59 @@ test('reduced-motion preference suppresses extra hit effects', async ({ page }) 
   });
   expect(result).toBe(true);
 });
+
+test('reduced-motion preference can change during a match without retaining hit flashes or shake', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  const activeBefore = await page.evaluate(async () => {
+    const { GameRenderer } = await import('/src/render/renderer.ts' as string);
+    const { CombatEngine } = await import('/src/game/engine.ts' as string);
+    const canvas = document.createElement('canvas');
+    canvas.style.width = '960px';
+    document.body.append(canvas);
+    const renderer = new GameRenderer(canvas);
+    const state = new CombatEngine('Ali', { ai: false }).state;
+    renderer.draw(state, 0, false);
+    const baseline = canvas.toDataURL();
+    renderer.effects([{ type: 'hit', x: 620, y: 390, color: '#39defa', blocked: false }]);
+    renderer.draw(state, 0, false);
+    const active = canvas.toDataURL() !== baseline;
+    Object.assign(window, { __motionQATest: { renderer, state, canvas, baseline } });
+    return active;
+  });
+  expect(activeBefore).toBe(true);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const muted = await page.evaluate(async () => {
+    const { GameRenderer } = await import('/src/render/renderer.ts' as string);
+    const { CombatEngine } = await import('/src/game/engine.ts' as string);
+    const saved = (window as unknown as { __motionQATest: {
+      renderer: InstanceType<typeof GameRenderer>;
+      state: InstanceType<typeof CombatEngine>['state'];
+      canvas: HTMLCanvasElement;
+      baseline: string;
+    } }).__motionQATest;
+    saved.renderer.draw(saved.state, 0, false); // Clears visual feedback already in flight.
+    const cleared = saved.canvas.toDataURL() === saved.baseline;
+    saved.renderer.effects([{ type: 'hit', x: 620, y: 390, color: '#39defa', blocked: false }]);
+    saved.renderer.draw(saved.state, 0, false);
+    return { cleared, newHitSuppressed: saved.canvas.toDataURL() === saved.baseline };
+  });
+  expect(muted).toEqual({ cleared: true, newHitSuppressed: true });
+
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const restored = await page.evaluate(async () => {
+    const { GameRenderer } = await import('/src/render/renderer.ts' as string);
+    const { CombatEngine } = await import('/src/game/engine.ts' as string);
+    const saved = (window as unknown as { __motionQATest: {
+      renderer: InstanceType<typeof GameRenderer>;
+      state: InstanceType<typeof CombatEngine>['state'];
+      canvas: HTMLCanvasElement;
+      baseline: string;
+    } }).__motionQATest;
+    saved.renderer.effects([{ type: 'hit', x: 620, y: 390, color: '#39defa', blocked: false }]);
+    saved.renderer.draw(saved.state, 0, false);
+    return saved.canvas.toDataURL() !== saved.baseline;
+  });
+  expect(restored).toBe(true);
+});
