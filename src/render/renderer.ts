@@ -152,7 +152,8 @@ export class GameRenderer {
   private readonly atlases = new Map<FighterId, SpriteAtlas>();
   private aliReviewAtlas: SpriteAtlas | null = null;
   private preparation = 0;
-  private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // MatchMedia is live: accessibility preferences can change mid-match.
+  private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   private sparks: Spark[] = [];
   private impactCues: ImpactCue[] = [];
   private shake = 0;
@@ -190,12 +191,16 @@ export class GameRenderer {
   resize(): void {
     const width = this.canvas.getBoundingClientRect().width || 1280;
     const scale = Math.max(.3, Math.min(2, width / 1280 * Math.min(2, window.devicePixelRatio || 1)));
-    this.canvas.width = Math.round(1280 * scale); this.canvas.height = Math.round(720 * scale);
+    const nextWidth = Math.round(1280 * scale), nextHeight = Math.round(720 * scale);
+    // Assigning the same Canvas dimensions still erases pixels and resets
+    // 2D context state, triggering avoidable reallocations on mobile layouts.
+    if (this.canvas.width === nextWidth && this.canvas.height === nextHeight) return;
+    this.canvas.width = nextWidth; this.canvas.height = nextHeight;
   }
 
   effects(events: CombatEvent[]): void {
     for (const event of events) {
-      if (event.type !== 'hit' || this.reducedMotion) continue;
+      if (event.type !== 'hit' || this.reducedMotion.matches) continue;
       this.impactCues = addImpactCue(this.impactCues, event);
       this.shake = event.blocked ? 2 : 6;
       for (let i = 0; i < 12 && this.sparks.length < 144; i++) {
@@ -207,6 +212,13 @@ export class GameRenderer {
 
   draw(match: Match, dt: number, paused: boolean): void {
     const ctx = this.ctx;
+    // Clear in-flight visual feedback immediately when the OS preference
+    // changes. The engine's damage, collision and attack clocks are untouched.
+    if (this.reducedMotion.matches) {
+      this.shake = 0;
+      if (this.sparks.length) this.sparks = [];
+      if (this.impactCues.length) this.impactCues = [];
+    }
     if (!paused) {
       this.time += dt; this.shake = Math.max(0, this.shake - dt * 24);
       this.impactCues = advanceImpactCues(this.impactCues, dt);
