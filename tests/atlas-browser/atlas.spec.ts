@@ -247,3 +247,51 @@ test('approved Ali/Elton cutouts animate staged fallback attacks without mutatin
     expect(value.unchanged).toBe(true);
   }
 });
+
+test('repeated mobile resize keeps Canvas pixels and context state without allocating a new backing store', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { GameRenderer } = await import('/src/render/renderer.ts' as string);
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'display:block;width:640px;height:360px;';
+    document.body.append(canvas);
+    const renderer = new GameRenderer(canvas);
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#12e5d0';
+    ctx.fillRect(10, 10, 10, 10);
+    const pixel = () => [...ctx.getImageData(12, 12, 1, 1).data];
+    const before = pixel();
+    const firstSize = [canvas.width, canvas.height];
+    const widthProperty = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'width')!;
+    const heightProperty = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'height')!;
+    let widthWrites = 0, heightWrites = 0;
+    Object.defineProperty(canvas, 'width', {
+      configurable: true, get: () => widthProperty.get!.call(canvas),
+      set: (value: number) => { widthWrites++; widthProperty.set!.call(canvas, value); },
+    });
+    Object.defineProperty(canvas, 'height', {
+      configurable: true, get: () => heightProperty.get!.call(canvas),
+      set: (value: number) => { heightWrites++; heightProperty.set!.call(canvas, value); },
+    });
+    for (let i = 0; i < 4; i++) renderer.resize(); // Same viewport/DPR.
+    const afterNoop = pixel();
+    const colorPreserved = ctx.fillStyle === '#12e5d0';
+    const noWrites = widthWrites === 0 && heightWrites === 0;
+    canvas.style.width = '900px';
+    renderer.resize();
+    const afterChange = [canvas.width, canvas.height];
+    const changedOnce = widthWrites === 1 && heightWrites === 1;
+    renderer.resize(); // No extra reset after a genuine change.
+    return {
+      before, afterNoop, firstSize, afterChange, colorPreserved,
+      noWrites, changedOnce, stillOnlyOneWrite: widthWrites === 1 && heightWrites === 1,
+    };
+  });
+  expect(result.before).toEqual([18, 229, 208, 255]);
+  expect(result.afterNoop).toEqual(result.before);
+  expect(result.colorPreserved).toBe(true);
+  expect(result.noWrites).toBe(true);
+  expect(result.changedOnce).toBe(true);
+  expect(result.stillOnlyOneWrite).toBe(true);
+  expect(result.afterChange[0]).toBeGreaterThan(result.firstSize[0]);
+  expect(result.afterChange[1]).toBeGreaterThan(result.firstSize[1]);
+});
